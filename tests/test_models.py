@@ -27,7 +27,7 @@ def test_game_config_replace():
 
 def test_game_config_defaults():
     cfg = GameConfig()
-    assert cfg.channels == ("01", "02", "03", "04", "05")
+    assert cfg.channels == ("01", "02", "03")
     assert cfg.route_min_length == 2
     assert cfg.route_max_hops == 6
     assert cfg.collision_mode == CollisionMode.OUTPUT_ONLY

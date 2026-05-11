@@ -4,7 +4,7 @@ DEFAULT_CONFIG = GameConfig()
 
 FAST_CONFIG = GameConfig(
     player_count=3,
-    score_to_win=12,
+    score_to_win=1200,
     max_rounds=8,
     starting_hand_size=4,
     draw_per_turn=1,
@@ -17,7 +17,7 @@ FAST_CONFIG = GameConfig(
 
 COMPETITIVE_CONFIG = GameConfig(
     player_count=5,
-    score_to_win=30,
+    score_to_win=3000,
     max_rounds=20,
     channels=("01", "02", "03", "04", "05", "06"),
     channel_shapes=("circle", "square", "triangle", "diamond", "hexagon", "star"),

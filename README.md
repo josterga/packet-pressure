@@ -17,7 +17,7 @@ Each round starts by dealing **seed cards** face-up into the shared tableau — 
 Playing a card can do one of four things depending on card type (see below). After you play, the tableau is checked for collisions, then routes are updated.
 
 ### Channels
-The network has five channels: **CH01** (teal), **CH02** (orange), **CH03** (purple), **CH04** (red), **CH05** (blue). Route cards carry traffic *from* one channel *to* another. A card's **input channel** is where it receives, its **output channel** is where it forwards.
+The network has three channels by default: **CH01** (teal), **CH02** (orange), **CH03** (purple). The number of channels is configurable — competitive presets use more. Route cards carry traffic *from* one channel *to* another. A card's **input channel** is where it receives, its **output channel** is where it forwards.
 
 ### Building Routes
 A route is a chain of cards where each card's output channel matches the next card's input channel:
@@ -28,12 +28,14 @@ A route is a chain of cards where each card's output channel matches the next ca
 
 Any player can extend any open route. Whoever plays the **endpoint card** (the last card when a route terminates or scores) earns the points — even if they didn't start the route.
 
-Routes must be at least **2 cards long** to score. Routes are capped at **6 hops** and cannot loop back to their starting channel.
+Routes must be at least **2 cards long** to score. Routes are capped at **6 hops**. Two loop-prevention rules apply:
+- A card cannot appear twice in the same route
+- A route cannot output back to the first card's entry channel, even via different cards
 
 ### Scoring
 Score is awarded at **end of round** for eligible routes. Only the **endpoint card's packet value** scores — there is no cumulative sum. The player who owns the endpoint collects those points.
 
-Routes that are still open (not yet terminated) carry over to the next round.
+Open routes that haven't scored are **lost at round end** — the entire tableau is discarded. Only player hands persist between rounds.
 
 ### End of Round
 All cards on the tableau are discarded at round end. Any route that didn't score this round is gone. Players keep their hands. New seeds are dealt and play continues.
@@ -43,7 +45,7 @@ All cards on the tableau are discarded at round end. Any route that didn't score
 ## Card Types
 
 ### Route Card
-Forwards a packet from one channel to another. Extends an existing route whose last output channel matches this card's input channel, or starts a new route from any seed card.
+Forwards a packet from one channel to another. Extends an existing route whose last output channel matches this card's input channel, or starts a new route if it doesn't match any open route.
 
 - **Input channel**: must match the route's current tail
 - **Output channel**: becomes the new tail
@@ -107,12 +109,12 @@ Key flags:
 
 ## Config Presets
 
-| Preset | Players | Score to win | Rounds | Deck |
-|---|---|---|---|---|
-| `default` | 4 | 20 | 15 | 80 |
-| `fast` | 3 | 12 | 8 | 60 |
-| `competitive` | 5 | 30 | 20 | 100 |
-| `no_special` | 4 | 20 | 15 | 80 (ROUTE only) |
+| Preset | Players | Score to win | Rounds | Deck | Channels |
+|---|---|---|---|---|---|
+| `default` | 4 | 2000 | 15 | 80 | 3 |
+| `fast` | 3 | 1200 | 8 | 60 | 3 |
+| `competitive` | 5 | 3000 | 20 | 100 | 6 |
+| `no_special` | 4 | 2000 | 15 | 80 (ROUTE only) | 3 |
 
 ## Policies
 

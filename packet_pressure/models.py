@@ -69,12 +69,12 @@ EVT_GAME_OVER = "GAME_OVER"
 @dataclass(frozen=True)
 class GameConfig:
     player_count: int = 4
-    score_to_win: int = 20
+    score_to_win: int = 2000
     max_rounds: int = 15
 
-    channels: tuple[str, ...] = ("01", "02", "03", "04", "05")
-    channel_shapes: tuple[str, ...] = ("circle", "square", "triangle", "diamond", "hexagon")
-    channel_colors: tuple[str, ...] = ("teal", "orange", "purple", "red", "blue")
+    channels: tuple[str, ...] = ("01", "02", "03")
+    channel_shapes: tuple[str, ...] = ("circle", "square", "triangle")
+    channel_colors: tuple[str, ...] = ("teal", "orange", "purple")
 
     colors: tuple[str, ...] = ("red", "blue", "green", "yellow")
 
