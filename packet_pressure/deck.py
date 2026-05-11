@@ -72,7 +72,7 @@ class DeckBuilder:
             weights = np.array([d[1] for d in dist], dtype=float)
             weights /= weights.sum()
         else:
-            pairs = [(i, o) for i in channels for o in channels]
+            pairs = [(i, o) for i in channels for o in channels if i != o]
             weights = np.ones(len(pairs), dtype=float) / len(pairs)
 
         cards = []
