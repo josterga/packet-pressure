@@ -210,15 +210,32 @@ def render_route_block(route: "RouteState", state: "GameState") -> str:
 
 
 def render_tableau(state: "GameState") -> str:
+    from .models import TerminationReason
     cfg = state.config
     lines: list[str] = []
 
-    valid_routes = [r for r in state.tableau.routes if r.is_valid]
+    active_routes = [r for r in state.tableau.routes if r.is_valid and r.termination_reason == TerminationReason.ACTIVE]
+    done_routes   = [r for r in state.tableau.routes if r.is_valid and r.termination_reason != TerminationReason.ACTIVE]
     invalid_routes = [r for r in state.tableau.routes if not r.is_valid]
 
-    for route in valid_routes:
+    for route in active_routes:
         lines.append(render_route_block(route, state))
         lines.append("")
+
+    if done_routes:
+        lines.append(_dim("  ── DONE ──"))
+        for route in done_routes:
+            chain = _route_channel_chain(route, cfg)
+            scoring = " ✓" if route.is_scoring_candidate else ""
+            header = _dim(f"  {route.route_id}  [{route.termination_reason.value}{scoring}]  {chain}")
+            cards = [state.lookup_card(cid) for cid in route.card_ids]
+            cards = [c for c in cards if c is not None]
+            card_row = render_cards_row(cards, cfg) if cards else ""
+            lines.append(header)
+            if card_row:
+                for ln in card_row.splitlines():
+                    lines.append(_dim(ln))
+            lines.append("")
 
     if invalid_routes:
         lines.append(_dim("  ── BROKEN ──"))
