@@ -55,8 +55,6 @@ class GameMetrics:
     turn_pct_extending_vs_starting: float
 
     avg_legal_moves_per_turn: float = 0.0
-    color_bonus_awarded: int = 0
-    color_homogeneity_avg: float = 0.0
 
 
 @dataclass
@@ -191,11 +189,6 @@ class MetricsCollector:
         total_route_events = len(extend_events) + len(start_events)
         turn_pct = len(extend_events) / total_route_events if total_route_events else 0.0
 
-        # Color metrics
-        color_bonus = 0
-        if cfg.color_mode.value == "scoring_bonus":
-            color_bonus = route_metrics.get("color_bonus_awarded", 0)
-
         return GameMetrics(
             game_seed=self.game_seed,
             policy_names=[p.policy_name for p in s.players],
@@ -203,8 +196,6 @@ class MetricsCollector:
                 "player_count": cfg.player_count,
                 "route_min_length": cfg.route_min_length,
                 "route_max_hops": cfg.route_max_hops,
-                "collision_mode": cfg.collision_mode.value,
-                "color_mode": cfg.color_mode.value,
             },
             total_rounds_played=total_rounds,
             winner=winner,
@@ -228,7 +219,6 @@ class MetricsCollector:
             dead_rounds_count=dead_rounds,
             turn_pct_extending_vs_starting=turn_pct,
             avg_legal_moves_per_turn=avg_legal_moves,
-            color_bonus_awarded=color_bonus,
         )
 
     def _parse_events(self) -> dict[str, list[dict]]:
@@ -294,5 +284,4 @@ class MetricsCollector:
             "pct_loop": loop_count / total_inval,
             "pct_return_first": return_first_count / total_inval,
             "seed_in_scored_routes": 0,  # simplified; full tracking would need card registry
-            "color_bonus_awarded": 0,
         }

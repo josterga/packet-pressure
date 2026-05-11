@@ -1,4 +1,4 @@
-from .models import CollisionResolutionTiming, ColorMode, GameConfig
+from .models import GameConfig
 
 DEFAULT_CONFIG = GameConfig()
 
@@ -24,9 +24,6 @@ COMPETITIVE_CONFIG = GameConfig(
     channel_shapes=("circle", "square", "triangle", "diamond", "hexagon", "star"),
     channel_colors=("teal", "orange", "purple", "red", "blue", "green"),
     broadcast_multiplier=3,
-    color_mode=ColorMode.SCORING_BONUS,
-    color_bonus_same_route=2,
-    collision_resolution_timing=CollisionResolutionTiming.END_OF_ROUND,
     deck_size=100,
 )
 
@@ -36,11 +33,4 @@ NO_SPECIAL_CONFIG = GameConfig(
         ("broadcast", 0.0),
         ("interference", 0.0),
     ),
-    color_mode=ColorMode.IGNORE,
-)
-
-COLOR_SWEEP_BASE = GameConfig(
-    color_mode=ColorMode.SCORING_BONUS,
-    color_bonus_same_route=0,
-    color_bonus_multiplier=1.0,
 )

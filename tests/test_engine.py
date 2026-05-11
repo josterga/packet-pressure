@@ -12,8 +12,6 @@ from packet_pressure.engine import GameEngine
 from packet_pressure.models import (
     Card,
     CardType,
-    CollisionMode,
-    CollisionResolutionTiming,
     GameConfig,
     GameState,
     PlacementContext,
@@ -234,50 +232,6 @@ class TestBroadcast:
         owner, score = engine._score_route(route)
         assert owner == "P1"
         assert score == 600  # 200 * 3
-
-
-# ---------------------------------------------------------------------------
-# Collision
-# ---------------------------------------------------------------------------
-
-class TestCollision:
-    def test_output_only_collision_removes_both(self):
-        cfg = dataclasses.replace(
-            GameConfig(),
-            collision_mode=CollisionMode.OUTPUT_ONLY,
-            collision_resolution_timing=CollisionResolutionTiming.IMMEDIATE,
-            player_count=3,
-        )
-        engine = make_engine(config=cfg, n_policies=3)
-        s = engine.state
-
-        c1 = make_card("PKT-COL1", in_ch="01", out_ch="02", owner="P0")
-        c2 = make_card("PKT-COL2", in_ch="03", out_ch="02", owner="P1")
-        for c in (c1, c2):
-            s.register_card(c)
-            s.tableau.active_cards[c.card_id] = c
-
-        engine._check_collisions()
-
-        assert "PKT-COL1" not in s.tableau.active_cards
-        assert "PKT-COL2" not in s.tableau.active_cards
-        assert "PKT-COL1" in s.tableau.collided_card_ids
-        assert "PKT-COL2" in s.tableau.collided_card_ids
-
-    def test_no_collision_when_unique_outputs(self):
-        engine = make_engine(n_policies=3)
-        s = engine.state
-
-        c1 = make_card("PKT-NC1", in_ch="01", out_ch="02", owner="P0")
-        c2 = make_card("PKT-NC2", in_ch="01", out_ch="03", owner="P1")
-        for c in (c1, c2):
-            s.register_card(c)
-            s.tableau.active_cards[c.card_id] = c
-
-        engine._check_collisions()
-
-        assert "PKT-NC1" in s.tableau.active_cards
-        assert "PKT-NC2" in s.tableau.active_cards
 
 
 # ---------------------------------------------------------------------------

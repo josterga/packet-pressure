@@ -13,7 +13,6 @@ from .config_presets import (
 )
 from .models import GameConfig
 from .policies import (
-    ColorAwareRouteBuilder,
     DenialCollision,
     GreedyEndpoint,
     RandomLegal,
@@ -33,7 +32,6 @@ _POLICY_MAP = {
     "greedy": GreedyEndpoint(),
     "denial": DenialCollision(),
     "builder": RouteBuilder(),
-    "color_builder": ColorAwareRouteBuilder(),
 }
 
 

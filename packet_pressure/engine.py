@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -21,9 +20,6 @@ from .models import (
     EVT_SCORE_AWARDED,
     Card,
     CardType,
-    CollisionMode,
-    CollisionResolutionTiming,
-    ColorMode,
     GameConfig,
     GameState,
     PlacementContext,
@@ -263,50 +259,6 @@ class GameEngine:
                 route.termination_reason = TerminationReason.INTERFERENCE
                 s.log(EVT_ROUTE_INVALIDATED, route_id=route.route_id, reason="interference")
 
-    def _check_collisions(self) -> None:
-        s = self.state
-        cfg = self.config
-        output_map: dict[str, list[str]] = defaultdict(list)
-
-        for cid, card in s.tableau.active_cards.items():
-            if card.card_type == CardType.INTERFERENCE:
-                continue
-            if card.output_channel and card.output_channel not in ("TERM",):
-                # Skip cards whose output is an already-interfered channel (handled by interference)
-                output_map[card.output_channel].append(cid)
-
-            if cfg.collision_mode == CollisionMode.INPUT_AND_OUTPUT:
-                if card.input_channel and card.input_channel not in ("ANY",):
-                    # We'll check input collisions separately via a second pass
-                    pass
-
-        colliders: set[str] = set()
-        for ch, cids in output_map.items():
-            if len(cids) >= 2:
-                colliders.update(cids)
-                s.log(EVT_COLLISION, reason="output_collision", channel=ch, card_ids=cids)
-
-        if cfg.collision_mode == CollisionMode.INPUT_AND_OUTPUT:
-            input_map: dict[str, list[str]] = defaultdict(list)
-            for cid, card in s.tableau.active_cards.items():
-                if card.input_channel and card.input_channel not in ("ANY",):
-                    input_map[card.input_channel].append(cid)
-            for ch, cids in input_map.items():
-                if len(cids) >= 2:
-                    colliders.update(cids)
-                    s.log(EVT_COLLISION, reason="input_collision", channel=ch, card_ids=cids)
-
-        for cid in colliders:
-            s.tableau.collided_card_ids.add(cid)
-            s.tableau.active_cards.pop(cid, None)
-
-        if colliders:
-            for route in s.tableau.routes:
-                if route.is_valid and any(cid in colliders for cid in route.card_ids):
-                    route.is_valid = False
-                    route.termination_reason = TerminationReason.COLLISION
-                    s.log(EVT_ROUTE_INVALIDATED, route_id=route.route_id, reason="collision")
-
     def _update_routes(self, new_card: Card) -> None:
         s = self.state
 
@@ -342,7 +294,6 @@ class GameEngine:
             route_id=s.tableau.next_route_id(),
             card_ids=[card.card_id],
             owner_sequence=[card.owner_id or ""],
-            colors_in_route=[card.color],
             channels_in_route=[card.output_channel] if card.output_channel else [],
             entry_channel=card.input_channel,
             endpoint_card_id=card.card_id,
@@ -400,7 +351,6 @@ class GameEngine:
 
         route.card_ids.append(card.card_id)
         route.owner_sequence.append(card.owner_id or "")
-        route.colors_in_route.append(card.color)
         if card.output_channel and card.output_channel not in ("TERM",):
             route.channels_in_route.append(card.output_channel)
         route.endpoint_card_id = card.card_id
@@ -488,21 +438,8 @@ class GameEngine:
             multiplier = endpoint_card.special("multiplier", cfg.broadcast_multiplier)
             base_score = base_score * multiplier
 
-        if cfg.color_mode == ColorMode.SCORING_BONUS:
-            base_score = self._apply_color_bonus(route, base_score)
-
         owner = endpoint_card.owner_id
         return owner, base_score
-
-    def _apply_color_bonus(self, route: RouteState, base_score: int) -> int:
-        cfg = self.config
-        if not route.colors_in_route:
-            return base_score
-        dominant = max(set(route.colors_in_route), key=route.colors_in_route.count)
-        monochrome_count = route.colors_in_route.count(dominant)
-        if monochrome_count == len(route.colors_in_route):
-            return int(base_score * cfg.color_bonus_multiplier) + cfg.color_bonus_same_route
-        return base_score
 
     def _discard_tableau(self) -> None:
         s = self.state

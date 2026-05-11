@@ -17,22 +17,6 @@ class CardType(str, Enum):
     INTERFERENCE = "interference"
 
 
-class CollisionMode(str, Enum):
-    OUTPUT_ONLY = "output_only"
-    INPUT_AND_OUTPUT = "input_and_output"
-
-
-class CollisionResolutionTiming(str, Enum):
-    IMMEDIATE = "immediate"
-    END_OF_ROUND = "end_of_round"
-
-
-class ColorMode(str, Enum):
-    IGNORE = "ignore"
-    TAG_ONLY = "tag_only"
-    SCORING_BONUS = "scoring_bonus"
-
-
 class TerminationReason(str, Enum):
     ACTIVE = "active"
     ACK = "ack"
@@ -88,9 +72,6 @@ class GameConfig:
 
     deck_size: int = 80
 
-    collision_mode: CollisionMode = CollisionMode.OUTPUT_ONLY
-    collision_resolution_timing: CollisionResolutionTiming = CollisionResolutionTiming.IMMEDIATE
-
     no_loops: bool = True
     no_return_to_first_hop: bool = False
 
@@ -104,10 +85,6 @@ class GameConfig:
     )
     route_card_distribution: tuple[tuple[tuple[str, str], float], ...] = ()
     packet_values: tuple[int, ...] = (100, 100, 200, 200, 300, 400, 500, 600, 700)
-
-    color_mode: ColorMode = ColorMode.IGNORE
-    color_bonus_same_route: int = 1
-    color_bonus_multiplier: float = 1.5
 
     def channel_index(self, ch: str) -> int | None:
         try:
@@ -184,7 +161,6 @@ class RouteState:
     route_id: str
     card_ids: list[str] = field(default_factory=list)
     owner_sequence: list[str] = field(default_factory=list)
-    colors_in_route: list[str] = field(default_factory=list)
     channels_in_route: list[str] = field(default_factory=list)  # output channels per hop
     entry_channel: str | None = None  # input channel of the first card in the route
     is_valid: bool = True

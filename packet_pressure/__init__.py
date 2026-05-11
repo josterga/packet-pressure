@@ -1,5 +1,4 @@
 from .config_presets import (
-    COLOR_SWEEP_BASE,
     COMPETITIVE_CONFIG,
     DEFAULT_CONFIG,
     FAST_CONFIG,
@@ -8,9 +7,6 @@ from .config_presets import (
 from .models import (
     Card,
     CardType,
-    CollisionMode,
-    CollisionResolutionTiming,
-    ColorMode,
     GameConfig,
     GameState,
     PlacementContext,
@@ -20,7 +16,6 @@ from .models import (
     TerminationReason,
 )
 from .policies import (
-    ColorAwareRouteBuilder,
     DenialCollision,
     GreedyEndpoint,
     RandomLegal,
@@ -32,9 +27,6 @@ __all__ = [
     "GameConfig",
     "Card",
     "CardType",
-    "CollisionMode",
-    "CollisionResolutionTiming",
-    "ColorMode",
     "TerminationReason",
     "GameState",
     "PlayerState",
@@ -45,7 +37,6 @@ __all__ = [
     "GreedyEndpoint",
     "DenialCollision",
     "RouteBuilder",
-    "ColorAwareRouteBuilder",
     "run_simulation",
     "run_batch",
     "sweep_parameter",
@@ -53,5 +44,4 @@ __all__ = [
     "FAST_CONFIG",
     "COMPETITIVE_CONFIG",
     "NO_SPECIAL_CONFIG",
-    "COLOR_SWEEP_BASE",
 ]

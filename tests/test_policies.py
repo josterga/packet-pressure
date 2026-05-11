@@ -106,16 +106,14 @@ class TestDenialCollision:
 class TestFullGames:
     def test_all_policies_complete_game(self):
         from packet_pressure.simulation import run_simulation
-        from packet_pressure.policies import ColorAwareRouteBuilder
 
         policies = [
             RandomLegal(),
             GreedyEndpoint(),
             DenialCollision(),
             RouteBuilder(),
-            ColorAwareRouteBuilder(),
         ]
-        config = dataclasses.replace(FAST_CONFIG, player_count=5)
+        config = dataclasses.replace(FAST_CONFIG, player_count=4)
         metrics = run_simulation(config, policies, seed=42)
         assert metrics.total_rounds_played >= 1
         assert metrics.winner is not None

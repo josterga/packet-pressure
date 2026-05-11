@@ -114,12 +114,12 @@ Key flags:
 |---|---|---|---|---|---|---|---|
 | `default` | 4 | 4 | 2000 | 15 | 80 | 3 | 6 |
 | `fast` | 3 | 3 | 1200 | 8 | 60 | 3 | 4 |
-| `competitive`¹ | 5 | 5 | 3000 | 20 | 100 | 6 | 6 |
+| `competitive` | 5 | 5 | 3000 | 20 | 100 | 6 | 6 |
 | `no_special` | 4 | 4 | 2000 | 15 | 80 (ROUTE only) | 3 | 6 |
 
 Seeds per round match player count so every player has a fair chance of an opening move.
 
-¹ `competitive` uses broadcast multiplier ×3 (all other presets use the default ×2).
+`competitive` uses broadcast multiplier ×3 (all other presets use the default ×2).
 
 ## Policies
 
@@ -127,9 +127,8 @@ Seeds per round match player count so every player has a fair chance of an openi
 |---|---|
 | `random` | Picks a random legal play |
 | `greedy` | Maximises immediate score |
-| `denial` | Prioritises disrupting opponents via JAM |
+| `denial` | Prioritises disrupting opponents via JAM; falls back to ACK-stealing scoreable routes |
 | `builder` | Focuses on completing long routes |
-| `color_builder` | Like `builder`, with color-bonus awareness |
 
 ## Interactive Play
 

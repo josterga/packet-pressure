@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from .models import (
     Card,
     CardType,
-    ColorMode,
     GameState,
     PlacementContext,
     PlayerState,
@@ -60,12 +59,9 @@ class PlayerPolicy(ABC):
                     ctx = ExtendedPlacementContext(target_channel=ch)
                     plays.append((card, ctx))
             elif card.card_type == CardType.ACK:
-                if open_routes:
-                    for route in open_routes:
-                        ctx = PlacementContext(target_route_id=route.route_id)
-                        plays.append((card, ctx))
-                else:
-                    plays.append((card, PlacementContext()))
+                for route in open_routes:
+                    ctx = PlacementContext(target_route_id=route.route_id)
+                    plays.append((card, ctx))
             else:
                 extendable = [
                     r for r in open_routes
@@ -265,12 +261,11 @@ class DenialCollision(PlayerPolicy):
                     jam_ctx = ExtendedPlacementContext(target_channel=last_out)
                     return card, jam_ctx
 
-        # Otherwise: find a route card that outputs to the same channel (creates collision)
-        if last_out:
+        # Fallback: ACK the route to steal its score before the opponent can claim it
+        if target_route.length >= state.config.route_min_length:
             for card, ctx in plays:
-                if card.card_type not in (CardType.INTERFERENCE, CardType.ACK):
-                    if card.output_channel == last_out:
-                        return card, PlacementContext(target_route_id=target_route.route_id)
+                if card.card_type == CardType.ACK:
+                    return card, PlacementContext(target_route_id=target_route.route_id)
 
         return None
 
@@ -330,51 +325,4 @@ class RouteBuilder(PlayerPolicy):
     def _color_preference_score(
         self, card: Card, route: RouteState, state: GameState
     ) -> float:
-        return 0.0
-
-
-# ---------------------------------------------------------------------------
-# 5. ColorAwareRouteBuilder
-# ---------------------------------------------------------------------------
-
-class ColorAwareRouteBuilder(RouteBuilder):
-    name = "color_aware_route_builder"
-
-    def choose_play(self, state: GameState, player: PlayerState) -> tuple[Card, PlacementContext]:
-        cfg = state.config
-        if cfg.color_mode == ColorMode.IGNORE:
-            return super().choose_play(state, player)
-
-        plays = self.legal_plays(state, player)
-        open_routes = self._open_routes(state)
-
-        best_score = -1.0
-        best_play: tuple[Card, PlacementContext] | None = None
-
-        for card, ctx in plays:
-            if card.card_type in (CardType.ACK, CardType.INTERFERENCE):
-                continue
-            for route in open_routes:
-                if self._can_card_extend_route(card, route, state):
-                    ep_val = self._estimate_endpoint_value(card, route, state)
-                    color_bonus = self._color_preference_score(card, route, state)
-                    total = ep_val + color_bonus
-                    if total > best_score:
-                        best_score = total
-                        best_play = (card, PlacementContext(target_route_id=route.route_id))
-
-        if best_play is not None:
-            return best_play
-
-        return super().choose_play(state, player)
-
-    def _color_preference_score(
-        self, card: Card, route: RouteState, state: GameState
-    ) -> float:
-        cfg = state.config
-        if cfg.color_mode == ColorMode.IGNORE or not route.colors_in_route:
-            return 0.0
-        dominant = max(set(route.colors_in_route), key=route.colors_in_route.count)
-        if card.color == dominant:
-            return float(cfg.color_bonus_same_route)
         return 0.0

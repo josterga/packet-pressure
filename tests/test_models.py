@@ -3,8 +3,6 @@ import pytest
 from packet_pressure.models import (
     Card,
     CardType,
-    CollisionMode,
-    ColorMode,
     GameConfig,
     RouteState,
     TableauState,
@@ -30,8 +28,6 @@ def test_game_config_defaults():
     assert cfg.channels == ("01", "02", "03")
     assert cfg.route_min_length == 2
     assert cfg.route_max_hops == 6
-    assert cfg.collision_mode == CollisionMode.OUTPUT_ONLY
-    assert cfg.color_mode == ColorMode.IGNORE
 
 
 def test_game_config_channel_helpers():
