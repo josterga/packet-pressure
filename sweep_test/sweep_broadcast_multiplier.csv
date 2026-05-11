@@ -1,0 +1,5 @@
+broadcast_multiplier,n_games,avg_total_rounds,collision_avg,route_length_avg,dead_round_rate,win_rate_random_legal,avg_score_random_legal,win_rate_greedy_endpoint,avg_score_greedy_endpoint,win_rate_denial_collision,avg_score_denial_collision,win_rate_route_builder,avg_score_route_builder
+1,100,1.71,1.466,2.14,0.415,0.12,71.0,0.3,177.0,0.1,48.0,0.48,253.0
+2,100,1.94,1.518,2.09,0.485,0.08,43.0,0.34,191.0,0.13,72.0,0.45,261.0
+3,100,1.84,1.536,2.09,0.457,0.12,66.0,0.28,146.0,0.15,78.0,0.45,244.0
+4,100,1.94,1.437,2.14,0.485,0.15,100.0,0.38,325.0,0.13,76.0,0.34,202.0
