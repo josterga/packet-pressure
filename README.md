@@ -33,7 +33,7 @@ Routes must be at least **2 cards long** to score. Routes are capped at **6 hops
 ### Scoring
 Score is awarded at **end of round** for eligible routes. Only the **endpoint card's packet value** scores — there is no cumulative sum. The player who owns the endpoint collects those points.
 
-Open routes that haven't scored are **lost at round end** — the entire tableau is discarded. Only player hands persist between rounds. Finish routes within the round or lose them.
+At round end, **all valid routes of at least 2 cards score**, whether they were explicitly terminated (by ACK, Broadcast, or hitting the hop limit) or still open. A route that was never terminated simply scores with whoever owns its current endpoint card. Routes shorter than 2 cards are lost without scoring. After scoring, the entire tableau is discarded — only player hands carry over. Hands are then topped back up to the starting hand size before the next round begins.
 
 ---
 
@@ -50,8 +50,8 @@ Forwards a packet from one channel to another. Extends an existing route whose l
 Terminates a chosen route immediately. Input is `ANY` (matches any open route). Output is `TERM`.
 
 - When played, you choose which open route to ACK
-- Whoever plays the ACK claims that route's score — even if they played no other card in it
-- Route must be ≥ 2 cards to score
+- The ACK card becomes the endpoint of that route, so **the ACK card's own packet value** is what scores — even if you played no other card in the route
+- Route must be ≥ 2 cards (including the ACK) to score
 - The terminated route stays visible in the tableau but can no longer be extended; it scores at end of round
 
 ### Broadcast
