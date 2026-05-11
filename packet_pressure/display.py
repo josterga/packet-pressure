@@ -262,7 +262,7 @@ def render_tableau(state: "GameState") -> str:
         lines.append(render_cards_row(unrouted, cfg))
         lines.append("")
 
-    if not valid_routes and not invalid_routes and not unrouted:
+    if not active_routes and not done_routes and not invalid_routes and not unrouted:
         lines.append(_dim("  (tableau empty)"))
 
     return "\n".join(lines)
