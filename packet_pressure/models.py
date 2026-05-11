@@ -81,7 +81,7 @@ class GameConfig:
     starting_hand_size: int = 5
     draw_per_turn: int = 1
     turns_per_player_per_round: int = 1
-    seed_cards_per_round: int = 2
+    seed_cards_per_round: int = 4
 
     route_min_length: int = 2
     route_max_hops: int = 6

@@ -75,6 +75,14 @@ class HumanPolicy(PlayerPolicy):
                 channel = self._prompt_channel(state)
                 return card, ExtendedPlacementContext(target_channel=channel)
 
+            if card.card_type == CardType.ACK:
+                open_routes = [r for r in state.tableau.routes if r.is_open()]
+                if not open_routes:
+                    print("  No open routes to ACK.")
+                    continue
+                route_id = self._prompt_route(state, open_routes)
+                return card, PlacementContext(target_route_id=route_id)
+
             # Use the best matching context from legal_plays
             plays = self.legal_plays(state, player)
             matching = [(c, ctx) for c, ctx in plays if c.card_id == card.card_id]
@@ -103,42 +111,60 @@ class HumanPolicy(PlayerPolicy):
         print("  YOUR HAND")
         print(render_hand(player, state, hints=hints))
 
-    def _build_hints(self, state: GameState, player: PlayerState) -> list[str]:
-        hints = []
+    def _build_hints(self, state: GameState, player: PlayerState) -> list[list[str]]:
         open_routes = [r for r in state.tableau.routes if r.is_open()]
         cfg = state.config
+        hints = []
 
         for card in player.hand:
+            card_hints: list[str] = []
+
             if card.card_type == CardType.INTERFERENCE:
-                hints.append("→ jam a channel")
-                continue
+                for ch in cfg.channels:
+                    card_hints.append(f"→ jam CH{ch}")
 
-            best_hint = None
-            for route in open_routes:
-                if not self._can_card_extend_route(card, route, state):
-                    continue
-                new_len = route.length + 1
-                if card.card_type == CardType.ACK:
+            elif card.card_type == CardType.ACK:
+                for route in open_routes:
+                    new_len = route.length + 1
                     scoring = new_len >= cfg.route_min_length
-                    best_hint = f"→ steal {route.route_id} (ACK {'✓' if scoring else ''})"
-                elif card.card_type == CardType.BROADCAST:
-                    best_hint = f"→ {route.route_id} ×{cfg.broadcast_multiplier}"
-                else:
-                    best_hint = f"→ extend {route.route_id}"
-                break
+                    card_hints.append(
+                        f"→ ACK {route.route_id} len {route.length}{'  ✓' if scoring else ''}"
+                    )
+                if not card_hints:
+                    card_hints = ["→ (no open routes)"]
 
-            if best_hint is None:
-                seed_ids = {c.card_id for c in state.tableau.seed_cards}
-                can_seed = any(
-                    card.input_channel == state.lookup_card(sid).output_channel
-                    for sid in seed_ids
-                    if state.lookup_card(sid) is not None
-                )
-                best_hint = "→ from seed" if can_seed else "→ new route"
+            else:
+                for route in open_routes:
+                    if not self._can_card_extend_route(card, route, state):
+                        continue
+                    if card.card_type == CardType.BROADCAST:
+                        card_hints.append(
+                            f"→ BCST {route.route_id} ×{cfg.broadcast_multiplier} len {route.length}"
+                        )
+                    else:
+                        card_hints.append(f"→ extend {route.route_id} (len {route.length})")
+                if not card_hints:
+                    card_hints = ["→ new route"]
 
-            hints.append(best_hint)
+            hints.append(card_hints)
 
         return hints
+
+    def _prompt_route(self, state: GameState, open_routes: list) -> str:
+        from .display import _render_route_line
+        print()
+        for i, route in enumerate(open_routes):
+            print(f"  [{i + 1}]  {_render_route_line(route, state).strip()}")
+        while True:
+            try:
+                raw = input(f"  ACK which route [1-{len(open_routes)}]: ").strip()
+            except (EOFError, KeyboardInterrupt):
+                raise SystemExit(0)
+            if raw.isdigit():
+                idx = int(raw) - 1
+                if 0 <= idx < len(open_routes):
+                    return open_routes[idx].route_id
+            print(f"  Enter a number between 1 and {len(open_routes)}.")
 
     def _prompt_channel(self, state: GameState) -> str:
         channels = state.config.channels
@@ -171,21 +197,27 @@ class InteractiveGame:
         ai_policies: list[PlayerPolicy],
         seed: int | None = None,
         opponent_delay: float = 0.5,
+        solo: bool = False,
     ) -> None:
-        if len(ai_policies) != config.player_count - 1:
-            raise ValueError(
-                f"Expected {config.player_count - 1} AI policies "
-                f"(total players {config.player_count} minus 1 human), "
-                f"got {len(ai_policies)}"
-            )
-
         self.config = config
         self.human_index = human_index
         self.opponent_delay = opponent_delay
+        self.solo = solo
 
-        human_policy = HumanPolicy(human_index=human_index)
-        all_policies: list[PlayerPolicy] = list(ai_policies)
-        all_policies.insert(human_index, human_policy)
+        if solo:
+            all_policies: list[PlayerPolicy] = [
+                HumanPolicy(human_index=i) for i in range(config.player_count)
+            ]
+        else:
+            if len(ai_policies) != config.player_count - 1:
+                raise ValueError(
+                    f"Expected {config.player_count - 1} AI policies "
+                    f"(total players {config.player_count} minus 1 human), "
+                    f"got {len(ai_policies)}"
+                )
+            human_policy = HumanPolicy(human_index=human_index)
+            all_policies = list(ai_policies)
+            all_policies.insert(human_index, human_policy)
 
         rng = np.random.default_rng(seed)
         deck = DeckBuilder(config, rng).build()
@@ -194,7 +226,11 @@ class InteractiveGame:
     def run(self) -> GameState:
         state = self._engine.state
         print("\n  Welcome to Packet Pressure!")
-        print(f"  You are {state.players[self.human_index].player_id}")
+        if self.solo:
+            players = "  ·  ".join(p.player_id for p in state.players)
+            print(f"  Solo mode — players: {players}")
+        else:
+            print(f"  You are {state.players[self.human_index].player_id}")
         print(f"  First to {self.config.score_to_win} pts wins  ·  {self.config.max_rounds} rounds max")
         input("\n  Press Enter to start…")
 
@@ -224,7 +260,7 @@ class InteractiveGame:
                 state.turn_number += 1
 
                 new_events = state.event_log[log_before:]
-                if p_idx == self.human_index:
+                if self.solo or p_idx == self.human_index:
                     self._print_human_turn_result(new_events, state)
                 else:
                     self._print_opponent_turn(new_events, state, p_idx)
@@ -239,7 +275,8 @@ class InteractiveGame:
 
     def _print_between_turns(self, state: GameState) -> None:
         print()
-        print(render_scores(state, human_index=self.human_index))
+        hi = -1 if self.solo else self.human_index
+        print(render_scores(state, human_index=hi))
         print()
         print(render_tableau(state))
 
@@ -305,15 +342,19 @@ class InteractiveGame:
 
         ranked = sorted(state.players, key=lambda p: p.score, reverse=True)
         for rank, p in enumerate(ranked):
-            is_you = state.players.index(p) == self.human_index
-            tag = " ← you" if is_you else ""
+            tag = ""
+            if not self.solo and state.players.index(p) == self.human_index:
+                tag = " ← you"
             print(f"  #{rank + 1}  {p.player_id} [{p.policy_name}]{'':>4}{p.score}{tag}")
 
-        you = state.players[self.human_index]
         winner = ranked[0]
         print()
-        if you.player_id == winner.player_id:
-            print(f"  You won with {you.score} points!")
+        if self.solo:
+            print(f"  {winner.player_id} wins with {winner.score} points!")
         else:
-            print(f"  {winner.player_id} wins with {winner.score}.  Your score: {you.score}")
+            you = state.players[self.human_index]
+            if you.player_id == winner.player_id:
+                print(f"  You won with {you.score} points!")
+            else:
+                print(f"  {winner.player_id} wins with {winner.score}.  Your score: {you.score}")
         print()

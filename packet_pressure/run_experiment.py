@@ -81,6 +81,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Play as a human against AI opponents (single game, no batch output)",
     )
     parser.add_argument(
+        "--solo",
+        action="store_true",
+        help="Hot-seat mode: human controls every player's turn",
+    )
+    parser.add_argument(
         "--human-index",
         type=int,
         default=0,
@@ -99,8 +104,8 @@ def main(argv: list[str] | None = None) -> int:
 
     config: GameConfig = _PRESET_MAP[args.preset]
 
-    # Interactive mode: launch a single human-vs-AI game
-    if args.interactive:
+    # Interactive / solo mode: launch a single human game
+    if args.interactive or args.solo:
         return _run_interactive(args, config)
 
     policies = [_POLICY_MAP[p] for p in args.policies]
@@ -190,32 +195,41 @@ def _run_interactive(args: object, config: GameConfig) -> int:
     import dataclasses
     from .interactive import InteractiveGame
 
-    # Default: 3-player game (human + 2 AIs) using fast preset feel
-    n_opponents = getattr(args, "policies", None)
-    if n_opponents:
-        ai_policy_names = [p for p in args.policies]  # type: ignore[attr-defined]
-    else:
-        ai_policy_names = ["greedy", "denial"]
-
-    ai_policies = [_POLICY_MAP[p] for p in ai_policy_names]
-    n_players = len(ai_policies) + 1
-    config = dataclasses.replace(config, player_count=n_players)
-
-    human_index = getattr(args, "human_index", 0)
-    if human_index >= n_players:
-        print(f"--human-index must be < {n_players}", file=sys.stderr)
-        return 1
-
+    solo = getattr(args, "solo", False)
     delay = getattr(args, "opponent_delay", 0.5)
     seed = getattr(args, "seed", None)
 
-    game = InteractiveGame(
-        config=config,
-        human_index=human_index,
-        ai_policies=ai_policies,
-        seed=seed,
-        opponent_delay=delay,
-    )
+    if solo:
+        # Determine player count from --policies if provided, else default to 3
+        policy_names = getattr(args, "policies", None) or ["greedy", "denial"]
+        n_players = len(policy_names) + 1
+        config = dataclasses.replace(config, player_count=n_players)
+        game = InteractiveGame(
+            config=config,
+            human_index=0,
+            ai_policies=[],
+            seed=seed,
+            opponent_delay=0.0,
+            solo=True,
+        )
+    else:
+        policy_names = getattr(args, "policies", None) or ["greedy", "denial"]
+        ai_policies = [_POLICY_MAP[p] for p in policy_names]
+        n_players = len(ai_policies) + 1
+        config = dataclasses.replace(config, player_count=n_players)
+
+        human_index = getattr(args, "human_index", 0)
+        if human_index >= n_players:
+            print(f"--human-index must be < {n_players}", file=sys.stderr)
+            return 1
+
+        game = InteractiveGame(
+            config=config,
+            human_index=human_index,
+            ai_policies=ai_policies,
+            seed=seed,
+            opponent_delay=delay,
+        )
     game.run()
     return 0
 

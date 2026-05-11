@@ -50,6 +50,8 @@ class PlayerPolicy(ABC):
         plays: list[tuple[Card, PlacementContext]] = []
         tableau_ids = set(state.tableau.active_cards)
 
+        open_routes = [r for r in state.tableau.routes if r.is_open()]
+
         for card in player.hand:
             if card.card_id in tableau_ids:
                 continue
@@ -57,6 +59,13 @@ class PlayerPolicy(ABC):
                 for ch in state.config.channels:
                     ctx = ExtendedPlacementContext(target_channel=ch)
                     plays.append((card, ctx))
+            elif card.card_type == CardType.ACK:
+                if open_routes:
+                    for route in open_routes:
+                        ctx = PlacementContext(target_route_id=route.route_id)
+                        plays.append((card, ctx))
+                else:
+                    plays.append((card, PlacementContext()))
             else:
                 ctx = PlacementContext()
                 plays.append((card, ctx))

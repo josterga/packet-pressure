@@ -54,6 +54,7 @@ class GameMetrics:
     dead_rounds_count: int
     turn_pct_extending_vs_starting: float
 
+    avg_legal_moves_per_turn: float = 0.0
     color_bonus_awarded: int = 0
     color_homogeneity_avg: float = 0.0
 
@@ -73,6 +74,7 @@ class BatchResult:
     route_length_avg: float = 0.0
     dead_round_rate: float = 0.0
     avg_scoring_routes: float = 0.0
+    avg_legal_moves_per_turn: float = 0.0
 
     def __post_init__(self) -> None:
         self._aggregate()
@@ -112,6 +114,7 @@ class BatchResult:
             sum(gm.total_rounds_played for gm in self.games) or 1
         )
         self.avg_scoring_routes = sum(gm.scoring_routes_count for gm in self.games) / n
+        self.avg_legal_moves_per_turn = sum(gm.avg_legal_moves_per_turn for gm in self.games) / n
 
 
 class MetricsCollector:
@@ -149,6 +152,8 @@ class MetricsCollector:
 
         # Special card plays
         play_events = events.get(EVT_CARD_PLAYED, [])
+        legal_counts = [e["legal_move_count"] for e in play_events if "legal_move_count" in e]
+        avg_legal_moves = sum(legal_counts) / len(legal_counts) if legal_counts else 0.0
         ack_plays = sum(1 for e in play_events if e.get("card_type") == CardType.ACK.value)
         broadcast_plays = sum(1 for e in play_events if e.get("card_type") == CardType.BROADCAST.value)
         interference_plays = sum(1 for e in play_events if e.get("card_type") == CardType.INTERFERENCE.value)
@@ -222,6 +227,7 @@ class MetricsCollector:
             seed_utilization_rate=seed_utilization_rate,
             dead_rounds_count=dead_rounds,
             turn_pct_extending_vs_starting=turn_pct,
+            avg_legal_moves_per_turn=avg_legal_moves,
             color_bonus_awarded=color_bonus,
         )
 

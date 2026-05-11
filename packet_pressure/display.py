@@ -259,18 +259,21 @@ def _render_route_line(route: "RouteState", state: "GameState") -> str:
 # ---------------------------------------------------------------------------
 
 def render_hand(player: "PlayerState", state: "GameState",
-                hints: list[str] | None = None) -> str:
+                hints: "list[list[str]] | None" = None) -> str:
     if not player.hand:
         return "  (hand empty)"
     labels = [str(i + 1) for i in range(len(player.hand))]
     block = render_cards_row(player.hand, state.config, labels=labels)
     lines = [block]
     if hints:
-        hint_row = ""
-        for hint in hints:
-            width = _CARD_WIDTH + 2 + 2  # card width + borders + gap
-            hint_row += hint[:width].ljust(width)
-        lines.append("  " + hint_row)
+        col_width = _CARD_WIDTH + 2 + 2
+        max_lines = max(len(h) for h in hints)
+        for i in range(max_lines):
+            row = ""
+            for card_hints in hints:
+                h = card_hints[i] if i < len(card_hints) else ""
+                row += h[:col_width].ljust(col_width)
+            lines.append("  " + row)
     return "\n".join(lines)
 
 
@@ -281,7 +284,7 @@ def render_hand(player: "PlayerState", state: "GameState",
 def render_scores(state: "GameState", human_index: int = 0) -> str:
     parts = []
     for i, p in enumerate(state.players):
-        label = "you" if i == human_index else p.policy_name
+        label = "you" if (human_index >= 0 and i == human_index) else p.player_id
         parts.append(f"{_bold(label)}  {p.score}")
     return "  " + "  │  ".join(parts)
 

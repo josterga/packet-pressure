@@ -65,6 +65,7 @@ def _write_per_game_csv(batch_result: BatchResult, filepath: Path) -> None:
             "seed_utilization_rate": round(gm.seed_utilization_rate, 3),
             "dead_rounds_count": gm.dead_rounds_count,
             "turn_pct_extending_vs_starting": round(gm.turn_pct_extending_vs_starting, 3),
+            "avg_legal_moves_per_turn": round(gm.avg_legal_moves_per_turn, 2),
         }
         for i, (pid, score) in enumerate(gm.final_scores.items()):
             row[f"score_p{i}"] = score
@@ -87,6 +88,7 @@ def _write_aggregate_csv(batch_result: BatchResult, filepath: Path) -> None:
         "route_length_avg": round(br.route_length_avg, 2),
         "dead_round_rate": round(br.dead_round_rate, 3),
         "avg_scoring_routes": round(br.avg_scoring_routes, 2),
+        "avg_legal_moves_per_turn": round(br.avg_legal_moves_per_turn, 2),
     }
     for policy in br.policy_names:
         safe = policy.replace(" ", "_")

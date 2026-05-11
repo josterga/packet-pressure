@@ -186,6 +186,7 @@ class GameEngine:
 
         # 2. Policy chooses
         policy = self.policies[player_index]
+        legal_count = len(policy.legal_plays(s, player))
         card, context = policy.choose_play(s, player)
 
         # 3. Validate
@@ -196,9 +197,9 @@ class GameEngine:
         player.hand.remove(card)
         player.play_history.append(card.card_id)
 
-        # For interference, policy provides target channel via context
         target_channel = getattr(context, "target_channel", None)
-        owned_card = self._apply_play(player_index, card, target_channel)
+        target_route_id = getattr(context, "target_route_id", None)
+        owned_card = self._apply_play(player_index, card, target_channel, legal_count, target_route_id)
 
         # 5. Resolve card effects
         self._resolve_card_effects(owned_card)
@@ -210,17 +211,20 @@ class GameEngine:
         # 7. Update routes
         self._update_routes(owned_card)
 
-    def _apply_play(self, player_index: int, card: Card, target_channel: str | None) -> Card:
+    def _apply_play(self, player_index: int, card: Card, target_channel: str | None,
+                    legal_count: int = 0, target_route_id: str | None = None) -> Card:
         s = self.state
         player_id = s.players[player_index].player_id
         owned = card.with_owner(player_id)
         s.register_card(owned)
 
+        extra: list[tuple[str, object]] = []
         if card.card_type == CardType.INTERFERENCE and target_channel:
-            owned = dataclasses.replace(
-                owned,
-                special_properties=(("target_channel", target_channel),),
-            )
+            extra.append(("target_channel", target_channel))
+        if card.card_type == CardType.ACK and target_route_id:
+            extra.append(("target_route_id", target_route_id))
+        if extra:
+            owned = dataclasses.replace(owned, special_properties=tuple(extra))
             s.register_card(owned)
 
         s.tableau.active_cards[owned.card_id] = owned
@@ -229,6 +233,7 @@ class GameEngine:
             card_id=owned.card_id,
             card_type=owned.card_type.value,
             player_id=player_id,
+            legal_move_count=legal_count,
         )
         return owned
 
@@ -314,9 +319,14 @@ class GameEngine:
         if new_card.card_type == CardType.INTERFERENCE:
             return
 
+        target_route_id = new_card.special("target_route_id")
+
         extended_any = False
         for route in s.tableau.routes:
             if not route.is_open():
+                continue
+            # ACK with a specific target only terminates that one route
+            if target_route_id and route.route_id != target_route_id:
                 continue
             if self._can_extend(route, new_card):
                 self._extend_route(route, new_card)
