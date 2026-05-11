@@ -108,8 +108,6 @@ class PlayerPolicy(ABC):
         if cfg.no_return_to_first_hop and route.first_input_channel is not None:
             if card.output_channel == route.first_input_channel:
                 return False
-        if card.output_channel and card.output_channel in route.channels_in_route:
-            return False
         if route.length >= cfg.route_max_hops:
             return False
         if card.output_channel in state.tableau.interfered_channels:

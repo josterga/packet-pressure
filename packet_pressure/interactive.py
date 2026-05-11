@@ -150,7 +150,7 @@ class HumanPolicy(PlayerPolicy):
                             f"→ BCST {route.route_id} ×{cfg.broadcast_multiplier} len {route.length}"
                         )
                     else:
-                        card_hints.append(f"→ extend {route.route_id} (len {route.length})")
+                        card_hints.append(f"→ {route.route_id} (len {route.length})")
                 if not card_hints:
                     card_hints = ["→ new route"]
 

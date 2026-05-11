@@ -384,10 +384,6 @@ class GameEngine:
             if card.output_channel == route.first_input_channel:
                 return False
 
-        # No output channel reuse within this route (prevents channel loops)
-        if card.output_channel and card.output_channel in route.channels_in_route:
-            return False
-
         # Hop limit
         if route.length >= cfg.route_max_hops:
             return False
