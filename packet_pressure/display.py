@@ -184,50 +184,68 @@ def render_cards_row(cards: "list[Card]", config: "GameConfig",
 # Tableau rendering
 # ---------------------------------------------------------------------------
 
+def _route_channel_chain(route: "RouteState", cfg: "GameConfig") -> str:
+    parts = []
+    if route.entry_channel:
+        parts.append(channel_symbol(route.entry_channel, cfg))
+    for ch in route.channels_in_route:
+        parts.append(channel_symbol(ch, cfg))
+    from .models import TerminationReason
+    if route.termination_reason != TerminationReason.ACTIVE:
+        parts.append(_dim("END"))
+    return " → ".join(parts)
+
+
+def render_route_block(route: "RouteState", state: "GameState") -> str:
+    cfg = state.config
+    scoring = " ✓" if route.is_scoring_candidate else ""
+    chain = _route_channel_chain(route, cfg)
+    header = f"  {_bold(route.route_id)}  [len {route.length}{scoring}]  {chain}"
+
+    cards = [state.lookup_card(cid) for cid in route.card_ids]
+    cards = [c for c in cards if c is not None]
+    card_row = render_cards_row(cards, cfg) if cards else "  (no cards)"
+
+    return header + "\n" + card_row
+
+
 def render_tableau(state: "GameState") -> str:
     cfg = state.config
     lines: list[str] = []
 
-    seed_ids = {c.card_id for c in state.tableau.seed_cards}
-    all_active = list(state.tableau.active_cards.values())
-
-    # Seeds row
-    seed_cards = [c for c in all_active if c.card_id in seed_ids]
-    if seed_cards:
-        lines.append(_bold("  SEEDS"))
-        lines.append(render_cards_row(seed_cards, cfg))
-        lines.append("")
-
-    # Per-player cards (excluding seeds)
-    player_cards: dict[str, list] = {}
-    for card in all_active:
-        if card.card_id in seed_ids:
-            continue
-        owner = card.owner_id or "?"
-        player_cards.setdefault(owner, []).append(card)
-
-    for owner in sorted(player_cards):
-        lines.append(_bold(f"  {owner}"))
-        lines.append(render_cards_row(player_cards[owner], cfg))
-        lines.append("")
-
-    # Routes
-    open_routes = [r for r in state.tableau.routes if r.is_valid]
+    valid_routes = [r for r in state.tableau.routes if r.is_valid]
     invalid_routes = [r for r in state.tableau.routes if not r.is_valid]
 
-    if open_routes:
-        lines.append(_bold("  ROUTES"))
-        for route in open_routes:
-            lines.append(_render_route_line(route, state))
+    for route in valid_routes:
+        lines.append(render_route_block(route, state))
         lines.append("")
 
     if invalid_routes:
-        lines.append(_dim("  BROKEN"))
+        lines.append(_dim("  ── BROKEN ──"))
         for route in invalid_routes:
-            lines.append(_dim(f"    {route.route_id}  ✗  {route.termination_reason.value}"))
+            chain = _route_channel_chain(route, cfg)
+            header = _dim(f"  {route.route_id}  ✗  {route.termination_reason.value}  {chain}")
+            cards = [state.lookup_card(cid) for cid in route.card_ids]
+            cards = [c for c in cards if c is not None]
+            card_row = render_cards_row(cards, cfg) if cards else ""
+            lines.append(header)
+            if card_row:
+                for ln in card_row.splitlines():
+                    lines.append(_dim(ln))
+            lines.append("")
+
+    # Defensive: show any active cards not accounted for in any route
+    all_route_card_ids: set[str] = set()
+    for route in state.tableau.routes:
+        all_route_card_ids.update(route.card_ids)
+    unrouted = [c for c in state.tableau.active_cards.values()
+                if c.card_id not in all_route_card_ids]
+    if unrouted:
+        lines.append(_dim("  (unrouted)"))
+        lines.append(render_cards_row(unrouted, cfg))
         lines.append("")
 
-    if not seed_cards and not player_cards and not open_routes and not invalid_routes:
+    if not valid_routes and not invalid_routes and not unrouted:
         lines.append(_dim("  (tableau empty)"))
 
     return "\n".join(lines)
