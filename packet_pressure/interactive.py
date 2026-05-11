@@ -223,8 +223,10 @@ class InteractiveGame:
                 engine._run_turn(p_idx)
                 state.turn_number += 1
 
-                if p_idx != self.human_index:
-                    new_events = state.event_log[log_before:]
+                new_events = state.event_log[log_before:]
+                if p_idx == self.human_index:
+                    self._print_human_turn_result(new_events, state)
+                else:
                     self._print_opponent_turn(new_events, state, p_idx)
                     if self.opponent_delay > 0:
                         time.sleep(self.opponent_delay)
@@ -233,6 +235,17 @@ class InteractiveGame:
         self._print_round_end(state)
         engine._discard_tableau()
         engine._advance_round()
+
+    def _print_human_turn_result(self, events: list[dict], state: GameState) -> None:
+        lines = []
+        for evt in events:
+            rendered = render_event(evt, state)
+            if rendered:
+                lines.append(rendered.strip())
+        if lines:
+            print()
+            for line in lines:
+                print(f"  {line}")
 
     def _print_opponent_turn(
         self, events: list[dict], state: GameState, p_idx: int
