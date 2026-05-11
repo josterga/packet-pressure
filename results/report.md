@@ -3,9 +3,9 @@
 ### Configuration
 
 - Players: 4
-- Score to win: 12
+- Score to win: 1200
 - Max rounds: 8
-- Channels: 01, 02, 03, 04, 05
+- Channels: 01, 02, 03
 - Route min length: 2
 - Route max hops: 4
 - Collision mode: output_only
@@ -16,21 +16,20 @@
 
 | Policy | Win Rate | Avg Score | Score Variance |
 |---|---|---|---|
-| random_legal | 8.0% | 26 | 6324 |
-| greedy_endpoint | 28.0% | 228 | 179216 |
-| denial_collision | 22.0% | 136 | 77904 |
-| route_builder | 42.0% | 220 | 103600 |
+| random_legal | 6.0% | 484 | 148144 |
+| greedy_endpoint | 30.0% | 842 | 318836 |
+| denial_collision | 12.0% | 420 | 300000 |
+| route_builder | 52.0% | 1254 | 745284 |
 
 ### Game Quality Metrics
 
-- Avg rounds per game: 1.8
-- Avg route length: 2.15
-- Dead round rate: 45.1%
-- Avg scoring routes per game: 1.5
-- Avg collisions per round: 1.29
+- Avg rounds per game: 3.3
+- Avg route length: 2.18
+- Dead round rate: 9.1%
+- Avg scoring routes per game: 7.3
+- Avg collisions per round: 0.35
 
 ### Key Observations
 
-- Dominant policy: **route_builder** (42.0% win rate)
-- ⚠ High dead round rate (>30%) — consider increasing seed cards or reducing route_min_length
+- Dominant policy: **route_builder** (52.0% win rate)
 - Routes barely exceed minimum length — consider reducing route_min_length or increasing hand size

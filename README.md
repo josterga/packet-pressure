@@ -26,7 +26,7 @@ A route is a chain of cards where each card's output channel matches the next ca
 
 Any player can extend any open route. Whoever plays the **endpoint card** (the last card in the route when it terminates or scores at round end) earns the points — even if they didn't start the route. The game rewards being the finisher, not the builder.
 
-Routes must be at least **2 cards long** to score. Routes are capped at **6 hops**. One loop-prevention rule applies:
+Routes must be at least **2 cards long** to score. Routes are capped at **6 hops** by default (4 in the `fast` preset). One loop-prevention rule applies:
 - A card cannot appear twice in the same route (`no_loops`)
 - A route cannot output to a channel it has already visited (prevents channel loops within the route)
 
@@ -110,14 +110,16 @@ Key flags:
 
 ## Config Presets
 
-| Preset | Players | Seeds/round | Score to win | Rounds | Deck | Channels |
-|---|---|---|---|---|---|---|
-| `default` | 4 | 4 | 2000 | 15 | 80 | 3 |
-| `fast` | 3 | 3 | 1200 | 8 | 60 | 3 |
-| `competitive` | 5 | 5 | 3000 | 20 | 100 | 6 |
-| `no_special` | 4 | 4 | 2000 | 15 | 80 (ROUTE only) | 3 |
+| Preset | Players | Seeds/round | Score to win | Rounds | Deck | Channels | Max hops |
+|---|---|---|---|---|---|---|---|
+| `default` | 4 | 4 | 2000 | 15 | 80 | 3 | 6 |
+| `fast` | 3 | 3 | 1200 | 8 | 60 | 3 | 4 |
+| `competitive`¹ | 5 | 5 | 3000 | 20 | 100 | 6 | 6 |
+| `no_special` | 4 | 4 | 2000 | 15 | 80 (ROUTE only) | 3 | 6 |
 
 Seeds per round match player count so every player has a fair chance of an opening move.
+
+¹ `competitive` uses broadcast multiplier ×3 (all other presets use the default ×2).
 
 ## Policies
 
@@ -132,6 +134,8 @@ Seeds per round match player count so every player has a fair chance of an openi
 ## Interactive Play
 
 `--interactive` puts you in one player slot; AIs fill the rest. `--solo` gives you control of every player's turn — useful for learning rules and exploring game states without AI interference.
+
+Player count in interactive and solo modes is determined by `--policies` (default: `greedy denial`), giving 3 players total. Pass `--policies greedy denial builder` for 4, etc. The preset's player count is ignored in these modes.
 
 Each turn shows your full hand with all legal plays listed per card. After you play, the result (extension, block, JAM, etc.) prints immediately before opponent turns.
 

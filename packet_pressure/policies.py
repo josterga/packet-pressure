@@ -67,8 +67,15 @@ class PlayerPolicy(ABC):
                 else:
                     plays.append((card, PlacementContext()))
             else:
-                ctx = PlacementContext()
-                plays.append((card, ctx))
+                extendable = [
+                    r for r in open_routes
+                    if self._can_card_extend_route(card, r, state)
+                ]
+                if extendable:
+                    for route in extendable:
+                        plays.append((card, PlacementContext(target_route_id=route.route_id)))
+                else:
+                    plays.append((card, PlacementContext()))
 
         return plays if plays else self._fallback_play(state, player)
 

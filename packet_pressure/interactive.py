@@ -86,7 +86,15 @@ class HumanPolicy(PlayerPolicy):
             # Use the best matching context from legal_plays
             plays = self.legal_plays(state, player)
             matching = [(c, ctx) for c, ctx in plays if c.card_id == card.card_id]
-            ctx = matching[0][1] if matching else PlacementContext()
+            if not matching:
+                return card, PlacementContext()
+            if len(matching) == 1:
+                return card, matching[0][1]
+            # Multiple routes available — ask the user which one to target
+            route_ids = [ctx.target_route_id for _, ctx in matching if ctx.target_route_id]
+            open_routes = [r for r in state.tableau.routes if r.route_id in route_ids]
+            route_id = self._prompt_route(state, open_routes, prompt="  Extend which route")
+            ctx = next((c for _, c in matching if c.target_route_id == route_id), matching[0][1])
             return card, ctx
 
     def _print_turn(
@@ -150,14 +158,14 @@ class HumanPolicy(PlayerPolicy):
 
         return hints
 
-    def _prompt_route(self, state: GameState, open_routes: list) -> str:
+    def _prompt_route(self, state: GameState, open_routes: list, prompt: str = "  ACK which route") -> str:
         from .display import _render_route_line
         print()
         for i, route in enumerate(open_routes):
             print(f"  [{i + 1}]  {_render_route_line(route, state).strip()}")
         while True:
             try:
-                raw = input(f"  ACK which route [1-{len(open_routes)}]: ").strip()
+                raw = input(f"  {prompt} [1-{len(open_routes)}]: ").strip()
             except (EOFError, KeyboardInterrupt):
                 raise SystemExit(0)
             if raw.isdigit():
