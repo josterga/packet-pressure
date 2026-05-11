@@ -92,7 +92,7 @@ class GameConfig:
     collision_resolution_timing: CollisionResolutionTiming = CollisionResolutionTiming.IMMEDIATE
 
     no_loops: bool = True
-    no_return_to_first_hop: bool = True
+    no_return_to_first_hop: bool = False
 
     broadcast_multiplier: int = 2
     interference_scope: str = "single"

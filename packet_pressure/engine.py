@@ -204,10 +204,6 @@ class GameEngine:
         # 5. Resolve card effects
         self._resolve_card_effects(owned_card)
 
-        # 6. Collision check (IMMEDIATE)
-        if self.config.collision_resolution_timing == CollisionResolutionTiming.IMMEDIATE:
-            self._check_collisions()
-
         # 7. Update routes
         self._update_routes(owned_card)
 
@@ -388,6 +384,10 @@ class GameEngine:
             if card.output_channel == route.first_input_channel:
                 return False
 
+        # No output channel reuse within this route (prevents channel loops)
+        if card.output_channel and card.output_channel in route.channels_in_route:
+            return False
+
         # Hop limit
         if route.length >= cfg.route_max_hops:
             return False
@@ -441,10 +441,6 @@ class GameEngine:
     def _end_of_round_scoring(self) -> None:
         s = self.state
         cfg = self.config
-
-        # End-of-round collision resolution (if not IMMEDIATE)
-        if cfg.collision_resolution_timing == CollisionResolutionTiming.END_OF_ROUND:
-            self._check_collisions()
 
         # Mark all still-open valid routes as scoring candidates if long enough
         for route in s.tableau.routes:
