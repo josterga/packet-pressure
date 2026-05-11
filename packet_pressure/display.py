@@ -94,7 +94,7 @@ def _strip_ansi(s: str) -> str:
     return _re.sub(r"\033\[[0-9;]*m", "", s)
 
 
-def render_card_lines(card: "Card", config: "GameConfig") -> list[str]:
+def render_card_lines(card: "Card", config: "GameConfig", dim: bool = False) -> list[str]:
     """Return lines representing the card as a terminal block."""
     w = _CARD_WIDTH
 
@@ -133,8 +133,9 @@ def render_card_lines(card: "Card", config: "GameConfig") -> list[str]:
     owner_line = pad(f"  {owner:<4}  {card.card_id}")
 
     # Colored border chars — left = input channel color, right = output channel color
-    in_ansi = _border_ansi(card.input_channel, config)
-    out_ansi = _border_ansi(card.output_channel, config)
+    # Skip colors when dim=True so the caller's _dim() wrapper isn't broken by nested RESETs
+    in_ansi = "" if dim else _border_ansi(card.input_channel, config)
+    out_ansi = "" if dim else _border_ansi(card.output_channel, config)
     L = _c("│", in_ansi) if in_ansi else "│"
     R = _c("│", out_ansi) if out_ansi else "│"
     top = f"{_c('┌', in_ansi) if in_ansi else '┌'}{'─' * w}{_c('┐', out_ansi) if out_ansi else '┐'}"
@@ -152,12 +153,12 @@ def render_card_lines(card: "Card", config: "GameConfig") -> list[str]:
 
 
 def render_cards_row(cards: "list[Card]", config: "GameConfig",
-                     labels: list[str] | None = None) -> str:
+                     labels: list[str] | None = None, dim: bool = False) -> str:
     """Render a horizontal row of card blocks with optional labels above."""
     if not cards:
         return "  (none)"
 
-    all_lines = [render_card_lines(c, config) for c in cards]
+    all_lines = [render_card_lines(c, config, dim=dim) for c in cards]
     height = max(len(lines) for lines in all_lines)
 
     # Pad each card block to the same height
@@ -233,7 +234,7 @@ def render_tableau(state: "GameState") -> str:
             header = _dim(f"  {route.route_id}  [{route.termination_reason.value}{scoring}]  {chain}")
             cards = [state.lookup_card(cid) for cid in route.card_ids]
             cards = [c for c in cards if c is not None]
-            card_row = render_cards_row(cards, cfg) if cards else ""
+            card_row = render_cards_row(cards, cfg, dim=True) if cards else ""
             lines.append(header)
             if card_row:
                 for ln in card_row.splitlines():
@@ -247,7 +248,7 @@ def render_tableau(state: "GameState") -> str:
             header = _dim(f"  {route.route_id}  ✗  {route.termination_reason.value}  {chain}")
             cards = [state.lookup_card(cid) for cid in route.card_ids]
             cards = [c for c in cards if c is not None]
-            card_row = render_cards_row(cards, cfg) if cards else ""
+            card_row = render_cards_row(cards, cfg, dim=True) if cards else ""
             lines.append(header)
             if card_row:
                 for ln in card_row.splitlines():
