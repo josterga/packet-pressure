@@ -204,7 +204,7 @@ class GameEngine:
         # 5. Resolve card effects
         self._resolve_card_effects(owned_card)
 
-        # 7. Update routes
+        # 6. Update routes
         self._update_routes(owned_card)
 
     def _apply_play(self, player_index: int, card: Card, target_channel: str | None,
@@ -383,6 +383,10 @@ class GameEngine:
         if cfg.no_return_to_first_hop and route.first_input_channel is not None:
             if card.output_channel == route.first_input_channel:
                 return False
+
+        # No output channel reuse within this route (prevents channel loops)
+        if card.output_channel and card.output_channel in route.channels_in_route:
+            return False
 
         # Hop limit
         if route.length >= cfg.route_max_hops:
