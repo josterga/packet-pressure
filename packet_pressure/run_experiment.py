@@ -54,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         "--policies",
         nargs="+",
         choices=list(_POLICY_MAP),
-        default=["random", "greedy", "denial", "builder"],
+        default=None,
     )
     parser.add_argument(
         "--sweep-param",
@@ -106,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.interactive or args.solo:
         return _run_interactive(args, config)
 
-    policies = [_POLICY_MAP[p] for p in args.policies]
+    policies = [_POLICY_MAP[p] for p in (args.policies or ["random", "greedy", "denial", "builder"])]
 
     # Adjust player_count to match number of policies
     if len(policies) != config.player_count:
