@@ -15,7 +15,6 @@ class CardType(str, Enum):
     ACK = "ack"
     BROADCAST = "broadcast"
     INTERFERENCE = "interference"
-    SEED = "seed"
 
 
 class CollisionMode(str, Enum):

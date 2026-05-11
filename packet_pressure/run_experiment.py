@@ -49,7 +49,8 @@ def main(argv: list[str] | None = None) -> int:
         help="Named GameConfig preset",
     )
     parser.add_argument("--n-games", type=int, default=200)
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--seed", type=int, default=None,
+                        help="RNG seed (omit for a random game each run)")
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument(
         "--policies",
@@ -74,10 +75,34 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--output-dir", type=str, default="./results")
     parser.add_argument("--no-plots", action="store_true")
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Play as a human against AI opponents (single game, no batch output)",
+    )
+    parser.add_argument(
+        "--human-index",
+        type=int,
+        default=0,
+        metavar="N",
+        help="Which player slot the human takes (0-based, default 0)",
+    )
+    parser.add_argument(
+        "--opponent-delay",
+        type=float,
+        default=0.5,
+        metavar="SECS",
+        help="Pause after each AI turn (default 0.5s)",
+    )
 
     args = parser.parse_args(argv)
 
     config: GameConfig = _PRESET_MAP[args.preset]
+
+    # Interactive mode: launch a single human-vs-AI game
+    if args.interactive:
+        return _run_interactive(args, config)
+
     policies = [_POLICY_MAP[p] for p in args.policies]
 
     # Adjust player_count to match number of policies
@@ -158,6 +183,40 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  dead_round_rate={batch.dead_round_rate:.1%}")
         print(f"\nResults written to {output}/")
 
+    return 0
+
+
+def _run_interactive(args: object, config: GameConfig) -> int:
+    import dataclasses
+    from .interactive import InteractiveGame
+
+    # Default: 3-player game (human + 2 AIs) using fast preset feel
+    n_opponents = getattr(args, "policies", None)
+    if n_opponents:
+        ai_policy_names = [p for p in args.policies]  # type: ignore[attr-defined]
+    else:
+        ai_policy_names = ["greedy", "denial"]
+
+    ai_policies = [_POLICY_MAP[p] for p in ai_policy_names]
+    n_players = len(ai_policies) + 1
+    config = dataclasses.replace(config, player_count=n_players)
+
+    human_index = getattr(args, "human_index", 0)
+    if human_index >= n_players:
+        print(f"--human-index must be < {n_players}", file=sys.stderr)
+        return 1
+
+    delay = getattr(args, "opponent_delay", 0.5)
+    seed = getattr(args, "seed", None)
+
+    game = InteractiveGame(
+        config=config,
+        human_index=human_index,
+        ai_policies=ai_policies,
+        seed=seed,
+        opponent_delay=delay,
+    )
+    game.run()
     return 0
 
 

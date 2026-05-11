@@ -138,22 +138,21 @@ class GameEngine:
     def _begin_round(self) -> None:
         s = self.state
         s.log(EVT_ROUND_START, round=s.round_number)
-        # Pull seed cards from deck into tableau
-        seed_cards = []
-        remaining = []
+        # Draw route cards only as seeds — skip specials back to bottom of deck.
+        seed_cards: list[Card] = []
+        skipped: list[Card] = []
         needed = self.config.seed_cards_per_round
-        found = 0
-        for card in s.deck:
-            if found < needed and card.card_type == CardType.SEED:
+        while len(seed_cards) < needed and s.deck:
+            card = s.deck.pop(0)
+            if card.card_type == CardType.ROUTE:
                 seed_cards.append(card)
-                found += 1
             else:
-                remaining.append(card)
-        s.deck = remaining
+                skipped.append(card)
+        # Return skipped specials to the bottom of the deck
+        s.deck.extend(skipped)
         s.tableau.seed_cards = seed_cards
         for card in seed_cards:
             s.tableau.active_cards[card.card_id] = card
-        # Seed cards can start routes
         for card in seed_cards:
             self._try_start_route(card)
 

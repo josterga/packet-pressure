@@ -61,7 +61,7 @@ class TestRouteExtension:
         engine = make_engine(n_policies=3)
         s = engine.state
         # Manually place a seed and a route
-        seed = make_card("SEED-0001", CardType.SEED, in_ch="01", out_ch="02", owner="P0")
+        seed = make_card("SEED-0001", CardType.ROUTE, in_ch="01", out_ch="02", owner="P0")
         s.tableau.active_cards[seed.card_id] = seed
         s.register_card(seed)
         engine._try_start_route(seed)
@@ -82,7 +82,7 @@ class TestRouteExtension:
     def test_channel_mismatch_does_not_extend(self):
         engine = make_engine(n_policies=3)
         s = engine.state
-        seed = make_card("SEED-0002", CardType.SEED, in_ch="01", out_ch="02", owner="P0")
+        seed = make_card("SEED-0002", CardType.ROUTE, in_ch="01", out_ch="02", owner="P0")
         s.tableau.active_cards[seed.card_id] = seed
         s.register_card(seed)
         engine._try_start_route(seed)
