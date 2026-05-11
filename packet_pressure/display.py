@@ -70,6 +70,16 @@ def channel_tag(ch: str | None, config: "GameConfig") -> str:
     return channel_symbol(ch, config)
 
 
+def _border_ansi(ch: str | None, config: "GameConfig") -> str:
+    """Return the ANSI color code for a channel's border, or '' if not applicable."""
+    if not _USE_COLOR or ch is None or ch in ("ANY", "TERM"):
+        return ""
+    idx = config.channel_index(ch)
+    if idx is None or idx >= len(config.channel_colors):
+        return ""
+    return _CHANNEL_ANSI.get(config.channel_colors[idx], "")
+
+
 # ---------------------------------------------------------------------------
 # Card block rendering  (returns a list of lines, all same width)
 # ---------------------------------------------------------------------------
@@ -95,57 +105,50 @@ def render_card_lines(card: "Card", config: "GameConfig") -> list[str]:
     in_tag = channel_tag(card.input_channel, config)
     out_tag = channel_tag(card.output_channel, config)
 
-    # Line 1: IN / OUT header — left-align IN, right-align OUT within card width
+    # Header: "IN CH02    CH03 OUT" — IN flush-left, OUT flush-right
     in_label = f"IN {in_tag}"
-    out_label = f"OUT {out_tag}"
+    out_label = f"{out_tag} OUT"
     in_plain = _strip_ansi(in_label)
     out_plain = _strip_ansi(out_label)
-    # Total visible = 1 (lead) + in + gap + out + 1 (trail) = w
     gap = max(1, w - len(in_plain) - len(out_plain) - 2)
     header = " " + in_label + " " * gap + out_label + " "
 
-    # Line 2: card type indicator
+    # Card type indicator (ROUTE cards get no body line — borders show direction)
     from .models import CardType
     if card.card_type == CardType.ACK:
-        type_line = pad("  ─── ACK ───  ")
+        type_line: str | None = pad("  ─── ACK ───  ")
     elif card.card_type == CardType.BROADCAST:
         mult = card.special("multiplier", 2)
         type_line = pad(f"  BCST  ×{mult}    ")
     elif card.card_type == CardType.INTERFERENCE:
         type_line = pad("  JAM  ≋≋≋≋   ")
     else:
-        # Route: show channel arrow
-        if card.input_channel and card.output_channel:
-            arrow = f"  {channel_tag(card.input_channel, config)} → {channel_tag(card.output_channel, config)}"
-        else:
-            arrow = ""
-        type_line = pad(arrow)
+        type_line = None
 
-    # Line 3: packet value
-    val_str = f"  PKT  {card.packet_value:<6}"
-    val_line = pad(val_str)
+    # Packet value
+    val_line = pad(f"  PKT  {card.packet_value:<6}")
 
-    # Line 4: owner / card id
+    # Owner / card id
     owner = card.owner_id or ""
     owner_line = pad(f"  {owner:<4}  {card.card_id}")
 
-    top    = f"┌{'─' * w}┐"
-    bot    = f"└{'─' * w}┘"
-    sep    = f"│{'─' * w}│"
+    # Colored border chars — left = input channel color, right = output channel color
+    in_ansi = _border_ansi(card.input_channel, config)
+    out_ansi = _border_ansi(card.output_channel, config)
+    L = _c("│", in_ansi) if in_ansi else "│"
+    R = _c("│", out_ansi) if out_ansi else "│"
+    top = f"{_c('┌', in_ansi) if in_ansi else '┌'}{'─' * w}{_c('┐', out_ansi) if out_ansi else '┐'}"
+    bot = f"{_c('└', in_ansi) if in_ansi else '└'}{'─' * w}{_c('┘', out_ansi) if out_ansi else '┘'}"
+    sep = f"{L}{'─' * w}{R}"
 
     def row(content: str) -> str:
-        return f"│{content}│"
+        return f"{L}{content}{R}"
 
-    return [
-        top,
-        row(pad(header)),
-        sep,
-        row(type_line),
-        row(val_line),
-        sep,
-        row(owner_line),
-        bot,
-    ]
+    lines = [top, row(pad(header)), sep]
+    if type_line is not None:
+        lines.append(row(type_line))
+    lines += [row(val_line), sep, row(owner_line), bot]
+    return lines
 
 
 def render_cards_row(cards: "list[Card]", config: "GameConfig",
