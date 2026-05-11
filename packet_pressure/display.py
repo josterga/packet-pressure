@@ -188,11 +188,27 @@ def render_tableau(state: "GameState") -> str:
     cfg = state.config
     lines: list[str] = []
 
-    # Seeds
-    seed_cards = state.tableau.seed_cards
+    seed_ids = {c.card_id for c in state.tableau.seed_cards}
+    all_active = list(state.tableau.active_cards.values())
+
+    # Seeds row
+    seed_cards = [c for c in all_active if c.card_id in seed_ids]
     if seed_cards:
         lines.append(_bold("  SEEDS"))
         lines.append(render_cards_row(seed_cards, cfg))
+        lines.append("")
+
+    # Per-player cards (excluding seeds)
+    player_cards: dict[str, list] = {}
+    for card in all_active:
+        if card.card_id in seed_ids:
+            continue
+        owner = card.owner_id or "?"
+        player_cards.setdefault(owner, []).append(card)
+
+    for owner in sorted(player_cards):
+        lines.append(_bold(f"  {owner}"))
+        lines.append(render_cards_row(player_cards[owner], cfg))
         lines.append("")
 
     # Routes
@@ -211,7 +227,7 @@ def render_tableau(state: "GameState") -> str:
             lines.append(_dim(f"    {route.route_id}  ✗  {route.termination_reason.value}"))
         lines.append("")
 
-    if not open_routes and not invalid_routes and not seed_cards:
+    if not seed_cards and not player_cards and not open_routes and not invalid_routes:
         lines.append(_dim("  (tableau empty)"))
 
     return "\n".join(lines)

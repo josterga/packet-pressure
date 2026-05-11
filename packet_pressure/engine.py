@@ -144,11 +144,15 @@ class GameEngine:
         needed = self.config.seed_cards_per_round
         while len(seed_cards) < needed and s.deck:
             card = s.deck.pop(0)
-            if card.card_type == CardType.ROUTE:
-                seed_cards.append(card)
-            else:
+            if card.card_type != CardType.ROUTE:
                 skipped.append(card)
-        # Return skipped specials to the bottom of the deck
+                continue
+            # Reject seeds that share an output channel with an already-accepted seed
+            if any(c.output_channel == card.output_channel for c in seed_cards):
+                skipped.append(card)
+                continue
+            seed_cards.append(card)
+        # Return skipped cards to the bottom of the deck
         s.deck.extend(skipped)
         s.tableau.seed_cards = seed_cards
         for card in seed_cards:
