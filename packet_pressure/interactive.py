@@ -73,7 +73,19 @@ class HumanPolicy(PlayerPolicy):
             card = player.hand[idx]
 
             if card.card_type == CardType.NOISE:
-                channel = self._prompt_channel(state)
+                scoring_card_ids: set[str] = set()
+                for r in state.tableau.routes:
+                    if r.is_valid and r.length >= state.config.route_min_length:
+                        scoring_card_ids.update(r.card_ids)
+                target_channels = sorted({
+                    state.lookup_card(cid).output_channel
+                    for cid in scoring_card_ids
+                    if state.lookup_card(cid) and state.lookup_card(cid).output_channel not in (None, "TERM")
+                })
+                if not target_channels:
+                    print("  No scoring routes to disrupt — choose another card.")
+                    continue
+                channel = self._prompt_channel(state, target_channels)
                 return card, ExtendedPlacementContext(target_channel=channel)
 
             if card.card_type == CardType.TERMINAL:
@@ -160,10 +172,12 @@ class HumanPolicy(PlayerPolicy):
                         continue
                     if card.card_type == CardType.AMPLIFIER:
                         card_hints.append(f"→ AMP {route.route_id} ×{cfg.amplifier_multiplier}")
+                    elif card.card_type == CardType.FILTER:
+                        card_hints.append(f"→ FLT {route.route_id}")
                     else:
                         card_hints.append(f"→ {route.route_id}")
                 if not card_hints:
-                    cap_reached = sum(1 for r in state.tableau.routes if r.is_valid) >= cfg.seed_nodes_per_round
+                    cap_reached = sum(1 for r in state.tableau.routes if r.is_open()) >= cfg.seed_nodes_per_round
                     if not cap_reached:
                         card_hints = ["→ new route"]
 
@@ -187,8 +201,7 @@ class HumanPolicy(PlayerPolicy):
                     return open_routes[idx].route_id
             print(f"  Enter a number between 1 and {len(open_routes)}.")
 
-    def _prompt_channel(self, state: GameState) -> str:
-        channels = state.config.channels
+    def _prompt_channel(self, state: GameState, channels: list[str]) -> str:
         opts = "  ".join(f"{channel_symbol(ch, state.config)} {ch}" for ch in channels)
         print(f"\n  Noise which channel?  {opts}")
         while True:

@@ -220,7 +220,7 @@ class GameEngine:
         extra: list[tuple[str, object]] = []
         if card.card_type == CardType.NOISE and target_channel:
             extra.append(("target_channel", target_channel))
-        if card.card_type == CardType.TERMINAL and target_route_id:
+        if target_route_id:
             extra.append(("target_route_id", target_route_id))
         if extra:
             owned = dataclasses.replace(owned, special_properties=tuple(extra))
