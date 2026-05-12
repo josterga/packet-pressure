@@ -72,7 +72,7 @@ def print_splash() -> None:
     print(_c(_bg2, f"{_DIM}{_ORANGE}"))
     print()
     print(f"       {name}")
-    print(f"       {tagline}")
+    print(f"      {tagline}")
     print()
     print(_c(_bg3, f"{_DIM}{_PURPLE}"))
     print(_c(_bg4, f"{_DIM}{_TEAL}"))
@@ -366,13 +366,18 @@ def render_round_header(state: "GameState") -> str:
     cfg = state.config
     turns_total = cfg.turns_per_player_per_round * cfg.player_count
     turn_info = f"  ·  Turn {state.turn_number + 1} of {turns_total}" if cfg.turns_per_player_per_round > 1 else ""
-    return (
-        f"\n{'━' * 60}\n"
+    plain = (
+        f"  PACKET PRESSURE  ·  "
+        f"Round {state.round_number} of {cfg.max_rounds}{turn_info}  ·  "
+        f"Score to win: {cfg.score_to_win}"
+    )
+    bar = "━" * max(60, len(plain))
+    content = (
         f"  {_bold('PACKET PRESSURE')}  ·  "
         f"Round {state.round_number} of {cfg.max_rounds}{turn_info}  ·  "
-        f"Score to win: {cfg.score_to_win}\n"
-        f"{'━' * 60}"
+        f"Score to win: {cfg.score_to_win}"
     )
+    return f"\n{bar}\n{content}\n{bar}"
 
 
 # ---------------------------------------------------------------------------

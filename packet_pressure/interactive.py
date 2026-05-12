@@ -136,15 +136,22 @@ class HumanPolicy(PlayerPolicy):
             card_hints: list[str] = []
 
             if card.card_type == CardType.NOISE:
-                for ch in cfg.channels:
+                scoring_card_ids: set[str] = set()
+                for r in state.tableau.routes:
+                    if r.is_valid and r.length >= cfg.route_min_length:
+                        scoring_card_ids.update(r.card_ids)
+                target_channels: set[str] = set()
+                for cid in scoring_card_ids:
+                    c = state.lookup_card(cid)
+                    if c and c.output_channel and c.output_channel not in ("TERM",):
+                        target_channels.add(c.output_channel)
+                for ch in sorted(target_channels):
                     card_hints.append(f"→ noise CH{ch}")
 
             elif card.card_type == CardType.TERMINAL:
                 for route in open_routes:
                     if route.length >= cfg.route_min_length:
                         card_hints.append(f"→ TERM {route.route_id} ✓")
-                if not card_hints:
-                    card_hints = ["→ (no scoring routes)"]
 
             else:
                 for route in open_routes:
