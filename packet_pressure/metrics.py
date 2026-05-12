@@ -277,11 +277,15 @@ class MetricsCollector:
 
         avg_length = sum(all_route_lengths) / len(all_route_lengths) if all_route_lengths else 0.0
 
+        route_start_events = events.get(EVT_ROUTE_STARTED, [])
+        seed_route_ids = {e["route_id"] for e in route_start_events if e.get("seed")}
+        seed_in_scored = sum(1 for e in score_events if e.get("route_id") in seed_route_ids)
+
         return {
             "avg_length": avg_length,
             "length_histogram": dict(length_histogram),
             "pct_hop_limit": hop_limit_count / total_term,
             "pct_loop": loop_count / total_inval,
             "pct_return_first": return_first_count / total_inval,
-            "seed_in_scored_routes": 0,  # simplified; full tracking would need card registry
+            "seed_in_scored_routes": seed_in_scored,
         }

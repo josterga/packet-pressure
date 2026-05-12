@@ -156,7 +156,7 @@ class GameEngine:
         for card in seed_nodes:
             s.tableau.active_cards[card.card_id] = card
         for card in seed_nodes:
-            self._try_start_route(card)
+            self._try_start_route(card, is_seed=True)
 
     def _advance_round(self) -> None:
         # Replenish hands up to starting_hand_size
@@ -307,7 +307,7 @@ class GameEngine:
         if not extended_any:
             self._try_start_route(new_card)
 
-    def _try_start_route(self, card: Card) -> None:
+    def _try_start_route(self, card: Card, is_seed: bool = False) -> None:
         if card.card_type in (CardType.TERMINAL, CardType.NOISE):
             return
         if card.card_id in self.state.tableau.collided_card_ids:
@@ -332,7 +332,7 @@ class GameEngine:
             route.is_scoring_candidate = route.length >= s.config.route_min_length
 
         s.tableau.routes.append(route)
-        s.log(EVT_ROUTE_STARTED, route_id=route.route_id, card_id=card.card_id)
+        s.log(EVT_ROUTE_STARTED, route_id=route.route_id, card_id=card.card_id, seed=is_seed)
 
     def _can_extend(self, route: RouteState, card: Card) -> bool:
         cfg = self.config

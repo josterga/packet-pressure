@@ -135,14 +135,14 @@ The player still draws a card but does not place one on the tableau.
 
 ## Card Types
 
-### Relay Node
+### Relay Node ⇒
 Forwards a packet from one channel to another. Extends an existing open route whose last output channel matches this node's input channel. If no open route can be extended (channel mismatch, channel loop, hop limit, or card-reuse rule) and the concurrent cap is not reached, starts a new route instead.
 
 - **Input channel**: must match the route's current tail
 - **Output channel**: becomes the new tail; cannot be a channel the route has already visited
 - **Packet value**: scores if this node is the exit node
 
-### Terminal Node
+### Terminal Node ⊣
 Terminates a chosen route immediately. Input is `ANY` (matches any open route). Output is `TERM`.
 
 - Only playable on routes that are already ≥ 2 nodes — terminal node is a steal/close card, not a route-builder
@@ -150,21 +150,21 @@ Terminates a chosen route immediately. Input is `ANY` (matches any open route). 
 - The terminal node becomes the exit node, so **the terminal node's own packet value** is what scores — even if you played no other node in the route
 - The terminated route stays visible in the tableau but can no longer be extended; it scores at end of round
 
-### Amplifier Node
+### Amplifier Node ⊕
 Extends a route like a relay node — input channel must match the route's current tail, output channel becomes the new tail. If the amplifier node is the exit node when scoring happens, the score is `packet_value × multiplier` (default ×2) instead of the raw value.
 
 - The multiplier **only applies if the amplifier is the exit node at scoring time** — if another player extends the route past it, the bonus is lost and the new exit node scores at face value
 - Can be extended further by other nodes (it does not terminate the route)
 - Self-loop channel pairs (in = out) are not generated
 
-### Noise
+### Noise ⚠
 Disrupts a channel, destroying all nodes in **scoring-eligible routes** (≥ 2 nodes) that output to that channel. Those routes are immediately invalidated.
 
 - Only playable when at least one scoring-eligible route exists; the target channel must be one used by a node in such a route
 - Routes shorter than 2 nodes are not affected — noise is precision disruption, not a blanket nuke
 - Also invalidates your own scoring routes if they output to the noised channel
 
-### Filter Node
+### Filter Node ⊘
 Extends a route like a relay node — input channel must match the route's current tail, output channel becomes the new tail. If a noise card targets the filter node's input channel, the entire route is immune: the noise is absorbed without invalidating any cards.
 
 - Protects the route it's part of from noise targeting its input channel
