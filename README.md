@@ -55,86 +55,6 @@ The player who scored the most points in a round goes first in the next round. G
 
 ---
 
-## Valid Moves Reference
-
-Conditions and the actions each card type may legally take. All checks are enforced by `policies.legal_plays()` when generating moves and by `engine._can_extend()` / `engine._try_start_route()` when resolving them.
-
-### 1. Concurrent route cap
-
-| Condition | Relay ⇒ / Amplifier ⊕ / Filter ⊘ | Terminal ⊣ | Noise ⚠ |
-|-----------|----------------------------------|------------|---------|
-| open routes < `seed_nodes_per_round` | extend an existing route **or** start a new route | see §5 | see §6 |
-| open routes = `seed_nodes_per_round` (cap full) | extend an existing route only — cannot start | see §5 | see §6 |
-
-### 2. Relay node ⇒ — extension checks (all must pass)
-
-`policies._can_card_extend_route()` · `engine._can_extend()`
-
-| # | Condition | When it applies |
-|---|-----------|-----------------|
-| 1 | `card.input_channel ∈ {ANY, route.last_output_channel}` | always |
-| 2 | `card.card_id ∉ route.card_ids` | `no_loops = True` (default on) |
-| 3 | `card.output_channel ∉ route.channels_in_route` | always |
-| 4 | `card.output_channel ≠ route.first_input_channel` | `no_return_to_first_hop = True` (default off) |
-| 5 | `route.length < route_max_hops` | always |
-
-If no open route passes all five checks and the cap is not reached → the card **starts a new route**.  
-If no open route passes and the cap is full → the card is **unplayable this turn**.  
-No special effect on scoring; packet value scores only if this is the exit node at scoring time.
-
-### 3. Amplifier node ⊕ — same extension checks as §2, plus scoring bonus
-
-| Condition | Effect |
-|-----------|--------|
-| Amplifier is the exit node when scoring | score = `packet_value × amplifier_multiplier` (default ×2) |
-| Another node is played on top of it | bonus is lost; the new exit node scores at its own face value |
-
-Amplifier does **not** terminate the route. Can be extended further.
-
-### 4. Filter node ⊘ — same extension checks as §2, plus noise immunity
-
-| Condition | Effect |
-|-----------|--------|
-| Noise targets `filter.input_channel` | entire route is immune — no cards destroyed, route stays valid |
-| Noise targets any other channel | filter provides no protection |
-
-The filter must be **in the route** to grant immunity. Protection is passive; no player action needed. Filter does not terminate the route and can be extended.
-
-### 5. Terminal node ⊣ — terminate a scoring-eligible route
-
-`policies.legal_plays()` lines 69-73 · `engine._apply_play()` line 223
-
-| Condition | Required |
-|-----------|----------|
-| Route must be open | `is_valid = True` and not yet terminated |
-| Route must be scoring-eligible | `route.length ≥ route_min_length` (default 2) |
-
-Player must declare which eligible route to terminate. Input is `ANY`, so it always passes the channel check. Scores its **own** packet value as exit node regardless of who built the route. A terminal card cannot start a new route.
-
-### 6. Noise card ⚠ — disrupt a channel
-
-`policies.legal_plays()` lines 57-68 · `engine._apply_noise()`
-
-| Condition | Required |
-|-----------|----------|
-| Scoring-eligible routes exist | ≥ 1 route with `is_valid = True` and `length ≥ route_min_length` |
-| Target channel | output channel of any card in a scoring-eligible route (not `TERM`) |
-
-One legal play is generated per distinct valid target channel. Noise **does not** affect routes shorter than `route_min_length`. A route containing a Filter node whose `input_channel` equals the targeted channel is fully immune. May destroy your own scoring routes if they output to the targeted channel and are not filter-shielded.
-
-### 7. Pass turn
-
-All of the following must hold simultaneously:
-
-- No terminal plays available (no scoring-eligible open routes)
-- No noise plays available (no valid target channel exists)
-- No relay / amplifier / filter card in hand can extend any open route
-- Concurrent cap is full (no room to start a new route)
-
-The player still draws a card but does not place one on the tableau.
-
----
-
 ## Card Types
 
 ### Relay Node ⇒
@@ -251,6 +171,86 @@ Collisions are **route-scoped only** — nodes in different routes do not collid
 Within a route, a node cannot output to a channel the route has already visited. If a node would create a channel loop (e.g., a route already passed through CH02, and a new node would output back to CH02), it cannot extend that route and instead starts a new one.
 
 Seed nodes are dealt with unique output channels to prevent immediate conflicts at round start.
+
+---
+
+## Valid Moves Reference
+
+Conditions and the actions each card type may legally take. All checks are enforced by `policies.legal_plays()` when generating moves and by `engine._can_extend()` / `engine._try_start_route()` when resolving them.
+
+### 1. Concurrent route cap
+
+| Condition | Relay ⇒ / Amplifier ⊕ / Filter ⊘ | Terminal ⊣ | Noise ⚠ |
+|-----------|----------------------------------|------------|---------|
+| open routes < `seed_nodes_per_round` | extend an existing route **or** start a new route | see §5 | see §6 |
+| open routes = `seed_nodes_per_round` (cap full) | extend an existing route only — cannot start | see §5 | see §6 |
+
+### 2. Relay node ⇒ — extension checks (all must pass)
+
+`policies._can_card_extend_route()` · `engine._can_extend()`
+
+| # | Condition | When it applies |
+|---|-----------|-----------------|
+| 1 | `card.input_channel ∈ {ANY, route.last_output_channel}` | always |
+| 2 | `card.card_id ∉ route.card_ids` | `no_loops = True` (default on) |
+| 3 | `card.output_channel ∉ route.channels_in_route` | always |
+| 4 | `card.output_channel ≠ route.first_input_channel` | `no_return_to_first_hop = True` (default off) |
+| 5 | `route.length < route_max_hops` | always |
+
+If no open route passes all five checks and the cap is not reached → the card **starts a new route**.  
+If no open route passes and the cap is full → the card is **unplayable this turn**.  
+No special effect on scoring; packet value scores only if this is the exit node at scoring time.
+
+### 3. Amplifier node ⊕ — same extension checks as §2, plus scoring bonus
+
+| Condition | Effect |
+|-----------|--------|
+| Amplifier is the exit node when scoring | score = `packet_value × amplifier_multiplier` (default ×2) |
+| Another node is played on top of it | bonus is lost; the new exit node scores at its own face value |
+
+Amplifier does **not** terminate the route. Can be extended further.
+
+### 4. Filter node ⊘ — same extension checks as §2, plus noise immunity
+
+| Condition | Effect |
+|-----------|--------|
+| Noise targets `filter.input_channel` | entire route is immune — no cards destroyed, route stays valid |
+| Noise targets any other channel | filter provides no protection |
+
+The filter must be **in the route** to grant immunity. Protection is passive; no player action needed. Filter does not terminate the route and can be extended.
+
+### 5. Terminal node ⊣ — terminate a scoring-eligible route
+
+`policies.legal_plays()` lines 69-73 · `engine._apply_play()` line 223
+
+| Condition | Required |
+|-----------|----------|
+| Route must be open | `is_valid = True` and not yet terminated |
+| Route must be scoring-eligible | `route.length ≥ route_min_length` (default 2) |
+
+Player must declare which eligible route to terminate. Input is `ANY`, so it always passes the channel check. Scores its **own** packet value as exit node regardless of who built the route. A terminal card cannot start a new route.
+
+### 6. Noise card ⚠ — disrupt a channel
+
+`policies.legal_plays()` lines 57-68 · `engine._apply_noise()`
+
+| Condition | Required |
+|-----------|----------|
+| Scoring-eligible routes exist | ≥ 1 route with `is_valid = True` and `length ≥ route_min_length` |
+| Target channel | output channel of any card in a scoring-eligible route (not `TERM`) |
+
+One legal play is generated per distinct valid target channel. Noise **does not** affect routes shorter than `route_min_length`. A route containing a Filter node whose `input_channel` equals the targeted channel is fully immune. May destroy your own scoring routes if they output to the targeted channel and are not filter-shielded.
+
+### 7. Pass turn
+
+All of the following must hold simultaneously:
+
+- No terminal plays available (no scoring-eligible open routes)
+- No noise plays available (no valid target channel exists)
+- No relay / amplifier / filter card in hand can extend any open route
+- Concurrent cap is full (no room to start a new route)
+
+The player still draws a card but does not place one on the tableau.
 
 ---
 
