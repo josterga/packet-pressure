@@ -157,8 +157,69 @@ python -m packet_pressure.run_experiment \
 
 Results for each value are written as separate batches under `--output-dir`. Batch CSV output includes `avg_legal_moves_per_turn` — a measure of game branching factor useful for tuning.
 
-## Running Tests
+## Testing & Tuning
+
+### Running the suite
 
 ```bash
-pytest tests/
+pytest tests/                        # all tests
+pytest tests/test_engine.py -v       # one file, verbose
+pytest -k "Interference"             # one class by name
 ```
+
+### What each suite verifies
+
+| File | What you learn |
+|---|---|
+| `test_engine.py` | Core rule correctness: channel matching, hop limit, loop prevention, ACK wildcard/scoring, Broadcast multiplier at scoring, JAM precision (spares routes shorter than `route_min_length`), endpoint-only scoring, full-game determinism |
+| `test_simulation.py` | Simulation harness: `run_simulation` returns valid `GameMetrics`, batch win rates sum to ~1, `sweep_parameter` updates config correctly and leaves the base config unchanged |
+| `test_metrics.py` | Metric validity: scores non-negative, winner valid, 5 rate metrics ∈ [0,1], policy names recorded, round count within `max_rounds` |
+| `test_models.py` | Data integrity: frozen dataclasses reject mutation, `Card`/`Route`/`Tableau` state, ID generation |
+| `test_policies.py` | AI legal-move safety: every policy returns a card from the player's hand, JAM requires a scoring-eligible target, all 4 policies complete a full game without errors |
+
+### Key batch metrics and what they signal
+
+After a batch run, the CSV output and printed summary include these fields:
+
+| Metric | High value means | Low value means |
+|---|---|---|
+| `pct_routes_stopped_by_hop_limit` | Hop limit is the binding constraint — routes are dense | Routes are being stolen (ACK) or jammed before they max out |
+| `broadcast_score_rate` | Broadcast cards are frequently the endpoint when scoring | Broadcast cards are getting extended past or jammed |
+| `ack_steal_rate` | ACK is used aggressively to close opponents' routes | Players are either building or JAMming instead |
+| `seed_utilization_rate` | Seeds regularly get extended into scoring routes | Lots of orphaned single-card seeds (no one extended them) |
+| `turn_pct_extending_vs_starting` | Players build on existing routes more than they start fresh | Players frequently start isolated routes |
+| `avg_legal_moves_per_turn` | High branching factor — game state is complex | Few choices per turn — useful floor for tuning |
+
+### What to tune and how
+
+Use `--sweep-param` to vary a single `GameConfig` field across values and compare results:
+
+```bash
+# Does the hop limit actually constrain routes?
+python -m packet_pressure.run_experiment \
+  --sweep-param route_max_hops --sweep-values 2 3 4 6 \
+  --n-games 500 --seed 0
+
+# How much does the Broadcast multiplier shift win rates?
+python -m packet_pressure.run_experiment \
+  --sweep-param broadcast_multiplier --sweep-values 1 2 3 4 \
+  --n-games 500 --seed 0
+
+# Does player count change strategy balance?
+python -m packet_pressure.run_experiment \
+  --sweep-param player_count --sweep-values 2 3 4 5 \
+  --n-games 500 --seed 0
+```
+
+Each sweep value runs as a separate batch under `--output-dir`, producing per-value CSVs and plots.
+
+### Game mode quick reference
+
+| Mode | Command | What it does |
+|---|---|---|
+| AI batch | `python -m packet_pressure.run_experiment` | N games, all AI, outputs stats and plots |
+| Human vs AI | `--interactive` | You play one slot; AI fills the rest |
+| Solo / hot-seat | `--solo` | You control every player's turn — no AI |
+| Deterministic | add `--seed 42` | Any mode becomes fully reproducible |
+
+In both interactive modes, player count is set by `--policies` (default: `greedy denial` → 3 players total). Add more policy names for more players. The preset's player count is ignored.
