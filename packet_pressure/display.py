@@ -201,7 +201,11 @@ def render_card_lines(card: "Card", config: "GameConfig", dim: bool = False) -> 
         mult = card.special("multiplier", 2)
         type_line = pad(f"  ⊕  AMP  ×{mult}  ")
     elif card.card_type == CardType.NOISE:
-        type_line = pad("  ⚠  NOISE ≋≋   ")
+        target_ch = card.special("target_channel")
+        if target_ch:
+            type_line = pad(f"  ⚠  ≋≋ {channel_symbol(target_ch, config)} ")
+        else:
+            type_line = pad("  ⚠  NOISE ≋≋   ")
     elif card.card_type == CardType.FILTER:
         type_line = pad(f"  ⊘  FLT-CH{card.input_channel} ")
     else:
