@@ -7,6 +7,7 @@ import numpy as np
 from .deck import DeckBuilder
 from .display import (
     channel_symbol,
+    print_how_to_play,
     render_event,
     render_hand,
     render_round_header,
@@ -252,6 +253,7 @@ class InteractiveGame:
         else:
             print(f"  You are {state.players[self.human_index].player_id}")
         print(f"  First to {self.config.score_to_win} pts wins  ·  {self.config.max_rounds} rounds max")
+        print_how_to_play()
         input("\n  Press Enter to start…")
 
         while not self._engine._is_terminal():

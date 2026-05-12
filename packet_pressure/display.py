@@ -79,6 +79,54 @@ def print_splash() -> None:
     print()
 
 
+def print_how_to_play() -> None:
+    _TEAL   = _CHANNEL_ANSI["teal"]
+    _ORANGE = _CHANNEL_ANSI["orange"]
+    _PURPLE = _CHANNEL_ANSI["purple"]
+    _RED    = _CHANNEL_ANSI["red"]
+    _GREEN  = _CHANNEL_ANSI["green"]
+
+    def _section(title: str) -> None:
+        print(f"\n  {_bold(title)}")
+
+    def _row(symbol: str, color: str, label: str, desc: str) -> None:
+        sym = _c(symbol, color) if color else symbol
+        print(f"    {sym}  {_bold(label)} — {_dim(desc)}")
+
+    print()
+    print(f"  {_bold('HOW TO PLAY')}")
+
+    _section("GOAL")
+    print("    " + _dim("First to reach the score target wins. If no one does,"))
+    print("    " + _dim("most points after the final round wins."))
+
+    _section("YOUR TURN")
+    print("    " + _dim("Draw one card, then play one card onto the tableau."))
+    print("    " + _dim("Cards extend open routes or start new ones."))
+
+    _section("ROUTES")
+    print("    " + _dim("A route chains when each node's output channel matches"))
+    print("    " + _dim("the next node's input channel. Routes need 2+ nodes to"))
+    print("    " + _dim("score. No channel can appear twice in the same route."))
+
+    _section("CARD TYPES")
+    _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if no match")
+    _row("⊣", _ORANGE, "Terminal",  "closes any open route (≥ 2 nodes); terminal's own value scores")
+    _row("⊕", _PURPLE, "Amplifier", "extends like a relay; if exit node at scoring, value ×2")
+    _row("⚠", _RED,    "Noise",     "invalidates all scoring-eligible routes on a chosen channel")
+    _row("⊘", _GREEN,  "Filter",    "extends like a relay; absorbs noise targeting its input channel")
+
+    _section("SCORING")
+    print("    " + _dim("At round end, all valid routes (≥ 2 nodes) score."))
+    print("    " + _dim("Only the exit node's packet value counts — no sum."))
+    print("    " + _dim("The exit node's owner collects the points."))
+
+    _section("TURN ORDER")
+    print("    " + _dim("Round winner goes first next round — a disadvantage,"))
+    print("    " + _dim("since you act before others can react to what you build."))
+    print()
+
+
 def channel_symbol(ch: str, config: "GameConfig") -> str:
     """Return colored channel label — pure ASCII so terminal width is always predictable."""
     if ch == "ANY":
