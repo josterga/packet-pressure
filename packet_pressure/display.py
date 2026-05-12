@@ -116,16 +116,16 @@ def render_card_lines(card: "Card", config: "GameConfig", dim: bool = False) -> 
     # Card type indicator (ROUTE cards get no body line — borders show direction)
     from .models import CardType
     if card.card_type == CardType.TERMINAL:
-        type_line: str | None = pad("  ─── TERM ──  ")
+        type_line: str | None = pad("  ⊣  ─ TERM ─   ")
     elif card.card_type == CardType.AMPLIFIER:
         mult = card.special("multiplier", 2)
-        type_line = pad(f"  AMP   ×{mult}    ")
+        type_line = pad(f"  ⊕  AMP  ×{mult}  ")
     elif card.card_type == CardType.NOISE:
-        type_line = pad("  NOISE ≋≋≋≋   ")
+        type_line = pad("  ⚠  NOISE ≋≋   ")
     elif card.card_type == CardType.FILTER:
-        type_line = pad(f"  FLT-CH{card.input_channel}    ")
+        type_line = pad(f"  ⊘  FLT-CH{card.input_channel} ")
     else:
-        type_line = None
+        type_line = pad("  ⇒             ")
 
     # Packet value
     val_line = pad(f"  PKT  {card.packet_value:<6}")

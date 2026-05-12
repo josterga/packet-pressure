@@ -88,64 +88,65 @@ Extends a route like a relay node — input channel must match the route's curre
 
 In the terminal UI, each card's left border is colored by input channel and right border by output channel (teal = CH01, orange = CH02, purple = CH03).
 
-**Relay node** — forwards a packet from one channel to another.
+**Relay node** ⇒ — forwards a packet from one channel to another.
 
 ```
 ┌──────────────────┐
 │ IN CH01 CH02 OUT │
 │──────────────────│
+│  ⇒               │
 │  PKT  200        │
 │──────────────────│
 │        PKT-0001  │
 └──────────────────┘
 ```
 
-**Terminal node** — closes any open route immediately; earns points on its own packet value.
+**Terminal node** ⊣ — closes any open route immediately; earns points on its own packet value.
 
 ```
 ┌──────────────────┐
 │ IN ANY   END OUT │
 │──────────────────│
-│  ─── TERM ──     │
+│  ⊣  ─ TERM ─     │
 │  PKT  500        │
 │──────────────────│
 │        TERM-0001 │
 └──────────────────┘
 ```
 
-**Amplifier node** — extends a route; multiplies packet value (×2 default) if it's the exit node at scoring.
+**Amplifier node** ⊕ — extends a route; multiplies packet value (×2 default) if it's the exit node at scoring.
 
 ```
 ┌──────────────────┐
 │ IN CH02 CH03 OUT │
 │──────────────────│
-│  AMP   ×2        │
+│  ⊕  AMP  ×2      │
 │  PKT  300        │
 │──────────────────│
 │        AMP-0001  │
 └──────────────────┘
 ```
 
-**Noise** — disrupts a channel, invalidating all scoring-eligible routes that output to it.
+**Noise** ⚠ — disrupts a channel, invalidating all scoring-eligible routes that output to it.
 
 ```
 ┌──────────────────┐
 │ IN  --   --  OUT │
 │──────────────────│
-│  NOISE ≋≋≋≋      │
+│  ⚠  NOISE ≋≋     │
 │  PKT  0          │
 │──────────────────│
 │       NOISE-0001 │
 └──────────────────┘
 ```
 
-**Filter node** — extends a route and absorbs noise targeting its input channel, protecting the route.
+**Filter node** ⊘ — extends a route and absorbs noise targeting its input channel, protecting the route.
 
 ```
 ┌──────────────────┐
 │ IN CH01 CH02 OUT │
 │──────────────────│
-│  FLT-CH01        │
+│  ⊘  FLT-CH01     │
 │  PKT  200        │
 │──────────────────│
 │        FLT-0001  │
