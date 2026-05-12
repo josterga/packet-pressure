@@ -12,7 +12,7 @@ FAST_CONFIG = GameConfig(
     channels=("01", "02"),
     channel_shapes=("circle", "square"),
     channel_colors=("teal", "orange"),
-    seed_cards_per_round=2,
+    seed_nodes_per_round=2,
     route_min_length=2,
     route_max_hops=3,
     deck_size=60,
@@ -25,15 +25,15 @@ COMPETITIVE_CONFIG = GameConfig(
     channels=("01", "02", "03", "04"),
     channel_shapes=("circle", "square", "triangle", "diamond"),
     channel_colors=("teal", "orange", "purple", "red"),
-    seed_cards_per_round=4,
-    broadcast_multiplier=3,
+    seed_nodes_per_round=4,
+    amplifier_multiplier=3,
     deck_size=100,
 )
 
 NO_SPECIAL_CONFIG = GameConfig(
     special_distribution=(
-        ("ack", 0.0),
-        ("broadcast", 0.0),
-        ("interference", 0.0),
+        ("terminal", 0.0),
+        ("amplifier", 0.0),
+        ("noise", 0.0),
     ),
 )

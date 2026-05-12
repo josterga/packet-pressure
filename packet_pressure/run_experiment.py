@@ -14,7 +14,7 @@ from .config_presets import (
 from .models import GameConfig
 from .policies import (
     DenialCollision,
-    GreedyEndpoint,
+    GreedyExitNode,
     RandomLegal,
     RouteBuilder,
 )
@@ -29,7 +29,7 @@ _PRESET_MAP = {
 
 _POLICY_MAP = {
     "random": RandomLegal(),
-    "greedy": GreedyEndpoint(),
+    "greedy": GreedyExitNode(),
     "denial": DenialCollision(),
     "builder": RouteBuilder(),
 }

@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from .models import (
     EVT_CARD_PLAYED,
     EVT_COLLISION,
-    EVT_INTERFERENCE_APPLIED,
+    EVT_NOISE_APPLIED,
     EVT_ROUND_END,
     EVT_ROUND_START,
     EVT_ROUTE_EXTENDED,
@@ -39,18 +39,18 @@ class GameMetrics:
     route_length_histogram: dict[int, int]
     pct_routes_stopped_by_hop_limit: float
     pct_invalid_loop_attempts: float
-    pct_endpoint_return_attempts: float
+    pct_exit_node_return_attempts: float
 
     collision_count_per_round: float
     collision_count_by_channel: dict[str, int]
-    interference_plays: int
-    ack_plays: int
-    broadcast_plays: int
+    noise_plays: int
+    terminal_plays: int
+    amplifier_plays: int
 
-    broadcast_score_rate: float
-    ack_steal_rate: float
+    amplifier_score_rate: float
+    terminal_steal_rate: float
 
-    seed_utilization_rate: float
+    seed_node_utilization_rate: float
     dead_rounds_count: int
     turn_pct_extending_vs_starting: float
 
@@ -152,32 +152,32 @@ class MetricsCollector:
         play_events = events.get(EVT_CARD_PLAYED, [])
         legal_counts = [e["legal_move_count"] for e in play_events if "legal_move_count" in e]
         avg_legal_moves = sum(legal_counts) / len(legal_counts) if legal_counts else 0.0
-        ack_plays = sum(1 for e in play_events if e.get("card_type") == CardType.ACK.value)
-        broadcast_plays = sum(1 for e in play_events if e.get("card_type") == CardType.BROADCAST.value)
-        interference_plays = sum(1 for e in play_events if e.get("card_type") == CardType.INTERFERENCE.value)
+        terminal_plays = sum(1 for e in play_events if e.get("card_type") == CardType.TERMINAL.value)
+        amplifier_plays = sum(1 for e in play_events if e.get("card_type") == CardType.AMPLIFIER.value)
+        noise_plays = sum(1 for e in play_events if e.get("card_type") == CardType.NOISE.value)
 
-        # Broadcast score rate
+        # Amplifier score rate
         term_events = events.get(EVT_ROUTE_TERMINATED, [])
-        broadcast_terms = [e for e in term_events if e.get("reason") == "broadcast"]
-        broadcast_score_rate = (
-            sum(1 for e in broadcast_terms if e.get("scoring")) / broadcast_plays
-            if broadcast_plays else 0.0
+        amplifier_terms = [e for e in term_events if e.get("reason") == "amplifier"]
+        amplifier_score_rate = (
+            sum(1 for e in amplifier_terms if e.get("scoring")) / amplifier_plays
+            if amplifier_plays else 0.0
         )
 
-        # ACK steal rate (ack terminated a route it didn't start)
-        ack_terms = [e for e in term_events if e.get("reason") == "ack"]
-        ack_steals = 0
-        for e in ack_terms:
+        # Terminal steal rate (terminal node terminated a route it didn't start)
+        terminal_terms = [e for e in term_events if e.get("reason") == "terminal"]
+        terminal_steals = 0
+        for e in terminal_terms:
             route_id = e.get("route_id")
             route = next((r for r in s.tableau.routes if r.route_id == route_id), None)
             if route and route.owner_sequence and len(set(route.owner_sequence)) > 1:
-                ack_steals += 1
-        ack_steal_rate = ack_steals / ack_plays if ack_plays else 0.0
+                terminal_steals += 1
+        terminal_steal_rate = terminal_steals / terminal_plays if terminal_plays else 0.0
 
-        # Seed utilization
+        # Seed node utilization
         seed_in_routes = route_metrics.get("seed_in_scored_routes", 0)
-        total_seeds = cfg.seed_cards_per_round * total_rounds
-        seed_utilization_rate = seed_in_routes / total_seeds if total_seeds else 0.0
+        total_seed_nodes = cfg.seed_nodes_per_round * total_rounds
+        seed_node_utilization_rate = seed_in_routes / total_seed_nodes if total_seed_nodes else 0.0
 
         # Dead rounds (rounds with no scoring routes)
         scored_rounds = len({e.get("round") for e in score_events})
@@ -207,15 +207,15 @@ class MetricsCollector:
             route_length_histogram=route_metrics.get("length_histogram", {}),
             pct_routes_stopped_by_hop_limit=route_metrics.get("pct_hop_limit", 0.0),
             pct_invalid_loop_attempts=route_metrics.get("pct_loop", 0.0),
-            pct_endpoint_return_attempts=route_metrics.get("pct_return_first", 0.0),
+            pct_exit_node_return_attempts=route_metrics.get("pct_return_first", 0.0),
             collision_count_per_round=collision_count_per_round,
             collision_count_by_channel=dict(collision_by_ch),
-            interference_plays=interference_plays,
-            ack_plays=ack_plays,
-            broadcast_plays=broadcast_plays,
-            broadcast_score_rate=broadcast_score_rate,
-            ack_steal_rate=ack_steal_rate,
-            seed_utilization_rate=seed_utilization_rate,
+            noise_plays=noise_plays,
+            terminal_plays=terminal_plays,
+            amplifier_plays=amplifier_plays,
+            amplifier_score_rate=amplifier_score_rate,
+            terminal_steal_rate=terminal_steal_rate,
+            seed_node_utilization_rate=seed_node_utilization_rate,
             dead_rounds_count=dead_rounds,
             turn_pct_extending_vs_starting=turn_pct,
             avg_legal_moves_per_turn=avg_legal_moves,

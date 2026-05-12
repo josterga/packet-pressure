@@ -10,7 +10,7 @@ from .models import (
     EVT_CARD_PLAYED,
     EVT_COLLISION,
     EVT_GAME_OVER,
-    EVT_INTERFERENCE_APPLIED,
+    EVT_NOISE_APPLIED,
     EVT_ROUND_END,
     EVT_ROUND_START,
     EVT_ROUTE_EXTENDED,
@@ -136,26 +136,26 @@ class GameEngine:
     def _begin_round(self) -> None:
         s = self.state
         s.log(EVT_ROUND_START, round=s.round_number)
-        # Seeds can be any card with channels (route, broadcast, shield) — skip ACK and interference.
-        seed_cards: list[Card] = []
+        # Seed nodes can be any card with channels (relay, amplifier, shield) — skip terminal and noise.
+        seed_nodes: list[Card] = []
         skipped: list[Card] = []
-        needed = self.config.seed_cards_per_round
-        while len(seed_cards) < needed and s.deck:
+        needed = self.config.seed_nodes_per_round
+        while len(seed_nodes) < needed and s.deck:
             card = s.deck.pop(0)
-            if card.card_type in (CardType.ACK, CardType.INTERFERENCE):
+            if card.card_type in (CardType.TERMINAL, CardType.NOISE):
                 skipped.append(card)
                 continue
-            # Reject seeds that share an output channel with an already-accepted seed
-            if any(c.output_channel == card.output_channel for c in seed_cards):
+            # Reject seeds that share an output channel with an already-accepted seed node
+            if any(c.output_channel == card.output_channel for c in seed_nodes):
                 skipped.append(card)
                 continue
-            seed_cards.append(card)
+            seed_nodes.append(card)
         # Return skipped cards to the bottom of the deck
         s.deck.extend(skipped)
-        s.tableau.seed_cards = seed_cards
-        for card in seed_cards:
+        s.tableau.seed_nodes = seed_nodes
+        for card in seed_nodes:
             s.tableau.active_cards[card.card_id] = card
-        for card in seed_cards:
+        for card in seed_nodes:
             self._try_start_route(card)
 
     def _advance_round(self) -> None:
@@ -218,9 +218,9 @@ class GameEngine:
         s.register_card(owned)
 
         extra: list[tuple[str, object]] = []
-        if card.card_type == CardType.INTERFERENCE and target_channel:
+        if card.card_type == CardType.NOISE and target_channel:
             extra.append(("target_channel", target_channel))
-        if card.card_type == CardType.ACK and target_route_id:
+        if card.card_type == CardType.TERMINAL and target_route_id:
             extra.append(("target_route_id", target_route_id))
         if extra:
             owned = dataclasses.replace(owned, special_properties=tuple(extra))
@@ -237,16 +237,16 @@ class GameEngine:
         return owned
 
     def _resolve_card_effects(self, card: Card) -> None:
-        if card.card_type == CardType.INTERFERENCE:
+        if card.card_type == CardType.NOISE:
             target = card.special("target_channel")
             if target:
-                self._apply_interference(target)
+                self._apply_noise(target)
 
-    def _apply_interference(self, channel: str) -> None:
+    def _apply_noise(self, channel: str) -> None:
         s = self.state
         cfg = self.config
-        s.tableau.interfered_channels.add(channel)
-        s.log(EVT_INTERFERENCE_APPLIED, channel=channel)
+        s.tableau.noisy_channels.add(channel)
+        s.log(EVT_NOISE_APPLIED, channel=channel)
 
         # Only disrupt cards belonging to scoring-eligible routes
         scoring_route_card_ids: set[str] = set()
@@ -273,22 +273,22 @@ class GameEngine:
         for cid in to_remove:
             del s.tableau.active_cards[cid]
             s.tableau.collided_card_ids.add(cid)
-            s.log(EVT_COLLISION, reason="interference", channel=channel, card_id=cid)
+            s.log(EVT_COLLISION, reason="noise", channel=channel, card_id=cid)
 
         for route in s.tableau.routes:
             if route.is_valid and route.length >= cfg.route_min_length and any(
                 cid in s.tableau.collided_card_ids for cid in route.card_ids
             ):
                 route.is_valid = False
-                route.termination_reason = TerminationReason.INTERFERENCE
-                s.log(EVT_ROUTE_INVALIDATED, route_id=route.route_id, reason="interference")
+                route.termination_reason = TerminationReason.NOISE
+                s.log(EVT_ROUTE_INVALIDATED, route_id=route.route_id, reason="noise")
 
     def _update_routes(self, new_card: Card) -> None:
         s = self.state
 
         if new_card.card_id in s.tableau.collided_card_ids:
             return
-        if new_card.card_type == CardType.INTERFERENCE:
+        if new_card.card_type == CardType.NOISE:
             return
 
         target_route_id = new_card.special("target_route_id")
@@ -297,7 +297,7 @@ class GameEngine:
         for route in s.tableau.routes:
             if not route.is_open():
                 continue
-            # ACK with a specific target only terminates that one route
+            # Terminal node with a specific target only terminates that one route
             if target_route_id and route.route_id != target_route_id:
                 continue
             if self._can_extend(route, new_card):
@@ -308,14 +308,14 @@ class GameEngine:
             self._try_start_route(new_card)
 
     def _try_start_route(self, card: Card) -> None:
-        if card.card_type in (CardType.ACK, CardType.INTERFERENCE):
+        if card.card_type in (CardType.TERMINAL, CardType.NOISE):
             return
         if card.card_id in self.state.tableau.collided_card_ids:
             return
 
         s = self.state
         valid_route_count = sum(1 for r in s.tableau.routes if r.is_valid)
-        if valid_route_count >= s.config.seed_cards_per_round:
+        if valid_route_count >= s.config.seed_nodes_per_round:
             return
         route = RouteState(
             route_id=s.tableau.next_route_id(),
@@ -323,7 +323,7 @@ class GameEngine:
             owner_sequence=[card.owner_id or ""],
             channels_in_route=[card.output_channel] if card.output_channel else [],
             entry_channel=card.input_channel,
-            endpoint_card_id=card.card_id,
+            exit_node_id=card.card_id,
             length=1,
         )
         # Check if already at hop limit after one card
@@ -331,10 +331,10 @@ class GameEngine:
             route.termination_reason = TerminationReason.HOP_LIMIT
             route.is_scoring_candidate = route.length >= s.config.route_min_length
 
-        # Check if output channel is interfered
-        if card.output_channel and card.output_channel in s.tableau.interfered_channels:
+        # Check if output channel is noisy
+        if card.output_channel and card.output_channel in s.tableau.noisy_channels:
             route.is_valid = False
-            route.termination_reason = TerminationReason.INTERFERENCE
+            route.termination_reason = TerminationReason.NOISE
 
         s.tableau.routes.append(route)
         s.log(EVT_ROUTE_STARTED, route_id=route.route_id, card_id=card.card_id)
@@ -380,17 +380,17 @@ class GameEngine:
         route.owner_sequence.append(card.owner_id or "")
         if card.output_channel and card.output_channel not in ("TERM",):
             route.channels_in_route.append(card.output_channel)
-        route.endpoint_card_id = card.card_id
+        route.exit_node_id = card.card_id
         route.length += 1
 
         s.log(EVT_ROUTE_EXTENDED, route_id=route.route_id, card_id=card.card_id,
               length=route.length)
 
         # Check termination conditions
-        if card.card_type == CardType.ACK:
-            route.termination_reason = TerminationReason.ACK
+        if card.card_type == CardType.TERMINAL:
+            route.termination_reason = TerminationReason.TERMINAL
             route.is_scoring_candidate = route.length >= cfg.route_min_length
-            s.log(EVT_ROUTE_TERMINATED, route_id=route.route_id, reason="ack",
+            s.log(EVT_ROUTE_TERMINATED, route_id=route.route_id, reason="terminal",
                   scoring=route.is_scoring_candidate)
 
         elif route.length >= cfg.route_max_hops:
@@ -399,11 +399,11 @@ class GameEngine:
             s.log(EVT_ROUTE_TERMINATED, route_id=route.route_id, reason="hop_limit",
                   scoring=route.is_scoring_candidate)
 
-        # Check if new output channel is interfered
-        if card.output_channel and card.output_channel in s.tableau.interfered_channels:
+        # Check if new output channel is noisy
+        if card.output_channel and card.output_channel in s.tableau.noisy_channels:
             route.is_valid = False
-            route.termination_reason = TerminationReason.INTERFERENCE
-            s.log(EVT_ROUTE_INVALIDATED, route_id=route.route_id, reason="interference_channel")
+            route.termination_reason = TerminationReason.NOISE
+            s.log(EVT_ROUTE_INVALIDATED, route_id=route.route_id, reason="noise_channel")
 
     # ------------------------------------------------------------------
     # End-of-round scoring
@@ -434,7 +434,7 @@ class GameEngine:
                         p.score += score
                         break
                 s.log(EVT_SCORE_AWARDED, route_id=route.route_id, player_id=player_id,
-                      score=score, endpoint_card_id=route.endpoint_card_id,
+                      score=score, exit_node_id=route.exit_node_id,
                       route_length=route.length,
                       termination_reason=route.termination_reason.value)
 
@@ -460,17 +460,17 @@ class GameEngine:
         s = self.state
         cfg = self.config
 
-        endpoint_card = s.lookup_card(route.endpoint_card_id) if route.endpoint_card_id else None
-        if endpoint_card is None:
+        exit_node = s.lookup_card(route.exit_node_id) if route.exit_node_id else None
+        if exit_node is None:
             return None, 0
 
-        base_score = endpoint_card.packet_value
+        base_score = exit_node.packet_value
 
-        if endpoint_card.card_type == CardType.BROADCAST:
-            multiplier = endpoint_card.special("multiplier", cfg.broadcast_multiplier)
+        if exit_node.card_type == CardType.AMPLIFIER:
+            multiplier = exit_node.special("multiplier", cfg.amplifier_multiplier)
             base_score = base_score * multiplier
 
-        owner = endpoint_card.owner_id
+        owner = exit_node.owner_id
         return owner, base_score
 
     def _discard_tableau(self) -> None:
@@ -478,9 +478,9 @@ class GameEngine:
         for card in s.tableau.active_cards.values():
             s.discard.append(card)
         s.tableau.active_cards.clear()
-        s.tableau.seed_cards.clear()
+        s.tableau.seed_nodes.clear()
         s.tableau.routes.clear()
-        s.tableau.interfered_channels.clear()
+        s.tableau.noisy_channels.clear()
         s.tableau.collided_card_ids.clear()
 
     # ------------------------------------------------------------------

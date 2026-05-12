@@ -16,32 +16,32 @@ class DeckBuilder:
 
     def build(self) -> list[Card]:
         special_dist = self.config.special_dist_dict()
-        n_ack = int(self.config.deck_size * special_dist.get("ack", 0.0))
-        n_broadcast = int(self.config.deck_size * special_dist.get("broadcast", 0.0))
-        n_interference = int(self.config.deck_size * special_dist.get("interference", 0.0))
+        n_terminal = int(self.config.deck_size * special_dist.get("terminal", 0.0))
+        n_amplifier = int(self.config.deck_size * special_dist.get("amplifier", 0.0))
+        n_noise = int(self.config.deck_size * special_dist.get("noise", 0.0))
         n_shield = int(self.config.deck_size * special_dist.get("shield", 0.0))
-        n_special = n_ack + n_broadcast + n_interference + n_shield
-        # Seeds are drawn from regular route cards at round start — no separate pool
-        n_route = max(0, self.config.deck_size - n_special)
+        n_special = n_terminal + n_amplifier + n_noise + n_shield
+        # Seed nodes are drawn from regular relay nodes at round start — no separate pool
+        n_relay = max(0, self.config.deck_size - n_special)
 
         cards: list[Card] = []
         idx = 0
 
-        route_cards = self._build_route_cards(n_route, idx)
-        cards.extend(route_cards)
-        idx += len(route_cards)
+        relay_nodes = self._build_relay_nodes(n_relay, idx)
+        cards.extend(relay_nodes)
+        idx += len(relay_nodes)
 
-        ack_cards = self._build_ack_cards(n_ack, idx)
-        cards.extend(ack_cards)
-        idx += len(ack_cards)
+        terminal_nodes = self._build_terminal_nodes(n_terminal, idx)
+        cards.extend(terminal_nodes)
+        idx += len(terminal_nodes)
 
-        broadcast_cards = self._build_broadcast_cards(n_broadcast, idx)
-        cards.extend(broadcast_cards)
-        idx += len(broadcast_cards)
+        amplifier_nodes = self._build_amplifier_nodes(n_amplifier, idx)
+        cards.extend(amplifier_nodes)
+        idx += len(amplifier_nodes)
 
-        interference_cards = self._build_interference_cards(n_interference, idx)
-        cards.extend(interference_cards)
-        idx += len(interference_cards)
+        noise_nodes = self._build_noise_nodes(n_noise, idx)
+        cards.extend(noise_nodes)
+        idx += len(noise_nodes)
 
         shield_cards = self._build_shield_cards(n_shield, idx)
         cards.extend(shield_cards)
@@ -58,19 +58,19 @@ class DeckBuilder:
             * cfg.player_count
             * cfg.max_rounds
         )
-        seed_cards = cfg.seed_cards_per_round * cfg.max_rounds
+        seed_nodes = cfg.seed_nodes_per_round * cfg.max_rounds
         slack = cfg.starting_hand_size * cfg.player_count
-        return hand_cards + draw_cards + seed_cards + slack
+        return hand_cards + draw_cards + seed_nodes + slack
 
     # ------------------------------------------------------------------
     # Private builders
     # ------------------------------------------------------------------
 
-    def _build_route_cards(self, count: int, start_id: int) -> list[Card]:
+    def _build_relay_nodes(self, count: int, start_id: int) -> list[Card]:
         channels = self.config.channels
         colors = self.config.colors
         packet_values = self.config.packet_values
-        dist = self.config.route_card_distribution
+        dist = self.config.relay_node_distribution
 
         if dist:
             pairs = [d[0] for d in dist]
@@ -89,7 +89,7 @@ class DeckBuilder:
             color = str(self.rng.choice(colors))
             cards.append(Card(
                 card_id=cid,
-                card_type=CardType.ROUTE,
+                card_type=CardType.RELAY,
                 input_channel=in_ch,
                 output_channel=out_ch,
                 packet_value=pv,
@@ -97,17 +97,17 @@ class DeckBuilder:
             ))
         return cards
 
-    def _build_ack_cards(self, count: int, start_id: int) -> list[Card]:
+    def _build_terminal_nodes(self, count: int, start_id: int) -> list[Card]:
         colors = self.config.colors
-        packet_values = self.config.ack_packet_values
+        packet_values = self.config.terminal_packet_values
         cards = []
         for i in range(count):
-            cid = f"ACK-{start_id + i:04d}"
+            cid = f"TERM-{start_id + i:04d}"
             pv = int(self.rng.choice(packet_values))
             color = str(self.rng.choice(colors))
             cards.append(Card(
                 card_id=cid,
-                card_type=CardType.ACK,
+                card_type=CardType.TERMINAL,
                 input_channel="ANY",
                 output_channel="TERM",
                 packet_value=pv,
@@ -115,14 +115,14 @@ class DeckBuilder:
             ))
         return cards
 
-    def _build_broadcast_cards(self, count: int, start_id: int) -> list[Card]:
+    def _build_amplifier_nodes(self, count: int, start_id: int) -> list[Card]:
         channels = self.config.channels
         colors = self.config.colors
         packet_values = self.config.packet_values
-        multiplier = self.config.broadcast_multiplier
+        multiplier = self.config.amplifier_multiplier
         cards = []
         for i in range(count):
-            cid = f"BCST-{start_id + i:04d}"
+            cid = f"AMP-{start_id + i:04d}"
             in_ch = str(self.rng.choice(channels))
             out_options = [c for c in channels if c != in_ch]
             out_ch = str(self.rng.choice(out_options)) if out_options else in_ch
@@ -130,7 +130,7 @@ class DeckBuilder:
             color = str(self.rng.choice(colors))
             cards.append(Card(
                 card_id=cid,
-                card_type=CardType.BROADCAST,
+                card_type=CardType.AMPLIFIER,
                 input_channel=in_ch,
                 output_channel=out_ch,
                 packet_value=pv,
@@ -139,15 +139,15 @@ class DeckBuilder:
             ))
         return cards
 
-    def _build_interference_cards(self, count: int, start_id: int) -> list[Card]:
+    def _build_noise_nodes(self, count: int, start_id: int) -> list[Card]:
         colors = self.config.colors
         cards = []
         for i in range(count):
-            cid = f"JAM-{start_id + i:04d}"
+            cid = f"NOISE-{start_id + i:04d}"
             color = str(self.rng.choice(colors))
             cards.append(Card(
                 card_id=cid,
-                card_type=CardType.INTERFERENCE,
+                card_type=CardType.NOISE,
                 input_channel=None,
                 output_channel=None,
                 packet_value=0,

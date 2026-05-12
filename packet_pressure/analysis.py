@@ -57,12 +57,12 @@ def _write_per_game_csv(batch_result: BatchResult, filepath: Path) -> None:
             "avg_route_length": round(gm.avg_route_length, 2),
             "pct_routes_stopped_by_hop_limit": round(gm.pct_routes_stopped_by_hop_limit, 3),
             "collision_count_per_round": round(gm.collision_count_per_round, 3),
-            "interference_plays": gm.interference_plays,
-            "ack_plays": gm.ack_plays,
-            "broadcast_plays": gm.broadcast_plays,
-            "broadcast_score_rate": round(gm.broadcast_score_rate, 3),
-            "ack_steal_rate": round(gm.ack_steal_rate, 3),
-            "seed_utilization_rate": round(gm.seed_utilization_rate, 3),
+            "noise_plays": gm.noise_plays,
+            "terminal_plays": gm.terminal_plays,
+            "amplifier_plays": gm.amplifier_plays,
+            "amplifier_score_rate": round(gm.amplifier_score_rate, 3),
+            "terminal_steal_rate": round(gm.terminal_steal_rate, 3),
+            "seed_node_utilization_rate": round(gm.seed_node_utilization_rate, 3),
             "dead_rounds_count": gm.dead_rounds_count,
             "turn_pct_extending_vs_starting": round(gm.turn_pct_extending_vs_starting, 3),
             "avg_legal_moves_per_turn": round(gm.avg_legal_moves_per_turn, 2),
@@ -173,8 +173,6 @@ def write_markdown_report(
         lines.append(f"- Channels: {', '.join(cfg.channels)}")
         lines.append(f"- Route min length: {cfg.route_min_length}")
         lines.append(f"- Route max hops: {cfg.route_max_hops}")
-        lines.append(f"- Collision mode: {cfg.collision_mode.value}")
-        lines.append(f"- Color mode: {cfg.color_mode.value}")
         lines.append(f"- Games simulated: {br.n_games}\n")
 
         lines.append("### Win Rates\n")
@@ -200,7 +198,7 @@ def write_markdown_report(
         top_policy = max(br.policy_names, key=lambda p: br.win_rates.get(p, 0.0))
         lines.append(f"- Dominant policy: **{top_policy}** ({br.win_rates.get(top_policy, 0.0):.1%} win rate)")
         if br.dead_round_rate > 0.3:
-            lines.append("- ⚠ High dead round rate (>30%) — consider increasing seed cards or reducing route_min_length")
+            lines.append("- ⚠ High dead round rate (>30%) — consider increasing seed nodes per round or reducing route_min_length")
         if br.collision_avg > 2.0:
             lines.append("- High collision rate — output channel distribution may be too concentrated")
         if br.route_length_avg < cfg.route_min_length + 0.5:

@@ -71,19 +71,19 @@ class HumanPolicy(PlayerPolicy):
 
             card = player.hand[idx]
 
-            if card.card_type == CardType.INTERFERENCE:
+            if card.card_type == CardType.NOISE:
                 channel = self._prompt_channel(state)
                 return card, ExtendedPlacementContext(target_channel=channel)
 
-            if card.card_type == CardType.ACK:
-                ackable = [
+            if card.card_type == CardType.TERMINAL:
+                terminable = [
                     r for r in state.tableau.routes
                     if r.is_open() and r.length >= state.config.route_min_length
                 ]
-                if not ackable:
-                    print("  No scoring routes to ACK (need ≥2 cards).")
+                if not terminable:
+                    print("  No scoring routes to terminate (need ≥2 cards).")
                     continue
-                route_id = self._prompt_route(state, ackable)
+                route_id = self._prompt_route(state, terminable)
                 return card, PlacementContext(target_route_id=route_id)
 
             # Use the best matching context from legal_plays
@@ -135,14 +135,14 @@ class HumanPolicy(PlayerPolicy):
         for card in player.hand:
             card_hints: list[str] = []
 
-            if card.card_type == CardType.INTERFERENCE:
+            if card.card_type == CardType.NOISE:
                 for ch in cfg.channels:
-                    card_hints.append(f"→ jam CH{ch}")
+                    card_hints.append(f"→ noise CH{ch}")
 
-            elif card.card_type == CardType.ACK:
+            elif card.card_type == CardType.TERMINAL:
                 for route in open_routes:
                     if route.length >= cfg.route_min_length:
-                        card_hints.append(f"→ ACK {route.route_id} ✓")
+                        card_hints.append(f"→ TERM {route.route_id} ✓")
                 if not card_hints:
                     card_hints = ["→ (no scoring routes)"]
 
@@ -150,12 +150,12 @@ class HumanPolicy(PlayerPolicy):
                 for route in open_routes:
                     if not self._can_card_extend_route(card, route, state):
                         continue
-                    if card.card_type == CardType.BROADCAST:
-                        card_hints.append(f"→ BCST {route.route_id} ×{cfg.broadcast_multiplier}")
+                    if card.card_type == CardType.AMPLIFIER:
+                        card_hints.append(f"→ AMP {route.route_id} ×{cfg.amplifier_multiplier}")
                     else:
                         card_hints.append(f"→ {route.route_id}")
                 if not card_hints:
-                    cap_reached = sum(1 for r in state.tableau.routes if r.is_valid) >= cfg.seed_cards_per_round
+                    cap_reached = sum(1 for r in state.tableau.routes if r.is_valid) >= cfg.seed_nodes_per_round
                     if not cap_reached:
                         card_hints = ["→ new route"]
 
@@ -163,7 +163,7 @@ class HumanPolicy(PlayerPolicy):
 
         return hints
 
-    def _prompt_route(self, state: GameState, open_routes: list, prompt: str = "  ACK which route") -> str:
+    def _prompt_route(self, state: GameState, open_routes: list, prompt: str = "  Terminate which route") -> str:
         from .display import _render_route_line
         print()
         for i, route in enumerate(open_routes):
@@ -182,7 +182,7 @@ class HumanPolicy(PlayerPolicy):
     def _prompt_channel(self, state: GameState) -> str:
         channels = state.config.channels
         opts = "  ".join(f"{channel_symbol(ch, state.config)} {ch}" for ch in channels)
-        print(f"\n  Jam which channel?  {opts}")
+        print(f"\n  Noise which channel?  {opts}")
         while True:
             try:
                 raw = input("  Channel: ").strip()
@@ -317,7 +317,7 @@ class InteractiveGame:
             rendered = render_event(evt, state)
             if rendered and any(
                 kw in rendered
-                for kw in ("played", "jammed", "SCORE", "invalidated", "terminated", "collision")
+                for kw in ("played", "noised", "SCORE", "invalidated", "terminated", "collision")
             ):
                 key_lines.append(rendered.strip())
 

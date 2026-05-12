@@ -17,7 +17,7 @@ from .models import (
 )
 from .policies import (
     DenialCollision,
-    GreedyEndpoint,
+    GreedyExitNode,
     RandomLegal,
     RouteBuilder,
 )
@@ -34,7 +34,7 @@ __all__ = [
     "TableauState",
     "PlacementContext",
     "RandomLegal",
-    "GreedyEndpoint",
+    "GreedyExitNode",
     "DenialCollision",
     "RouteBuilder",
     "run_simulation",

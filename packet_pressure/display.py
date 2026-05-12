@@ -115,13 +115,13 @@ def render_card_lines(card: "Card", config: "GameConfig", dim: bool = False) -> 
 
     # Card type indicator (ROUTE cards get no body line — borders show direction)
     from .models import CardType
-    if card.card_type == CardType.ACK:
-        type_line: str | None = pad("  ─── ACK ───  ")
-    elif card.card_type == CardType.BROADCAST:
+    if card.card_type == CardType.TERMINAL:
+        type_line: str | None = pad("  ─── TERM ──  ")
+    elif card.card_type == CardType.AMPLIFIER:
         mult = card.special("multiplier", 2)
-        type_line = pad(f"  BCST  ×{mult}    ")
-    elif card.card_type == CardType.INTERFERENCE:
-        type_line = pad("  JAM  ≋≋≋≋   ")
+        type_line = pad(f"  AMP   ×{mult}    ")
+    elif card.card_type == CardType.NOISE:
+        type_line = pad("  NOISE ≋≋≋≋   ")
     elif card.card_type == CardType.SHIELD:
         type_line = pad(f"  SHD-CH{card.input_channel}    ")
     else:
@@ -286,11 +286,11 @@ def _render_route_line(route: "RouteState", state: "GameState") -> str:
     scoring = " ✓" if route.is_scoring_candidate else ""
     status = f"  {_bold(route.route_id)}  [len {route.length}{scoring}]  {channel_chain}"
 
-    if route.endpoint_card_id:
-        ep = state.lookup_card(route.endpoint_card_id)
+    if route.exit_node_id:
+        ep = state.lookup_card(route.exit_node_id)
         if ep:
             owner = f" · {ep.owner_id}" if ep.owner_id else ""
-            status += f"  endpoint PKT {ep.packet_value}{owner}"
+            status += f"  exit node PKT {ep.packet_value}{owner}"
 
     return "    " + status
 
@@ -364,8 +364,8 @@ def render_event(event: dict, state: "GameState") -> str | None:
         if card is None:
             return None
         ct = event.get("card_type", "")
-        if ct == "interference":
-            return f"  {player}  played {card.card_id}  JAM"
+        if ct == "noise":
+            return f"  {player}  played {card.card_id}  NOISE"
         in_ch = channel_tag(card.input_channel, cfg)
         out_ch = channel_tag(card.output_channel, cfg)
         return f"  {player}  played {card.card_id}  {in_ch}→{out_ch}  PKT {card.packet_value}"
@@ -384,9 +384,9 @@ def render_event(event: dict, state: "GameState") -> str | None:
         ch = event.get("channel", "?")
         return _dim(f"  ⚡ collision on channel {channel_symbol(ch, cfg)}")
 
-    if etype == "INTERFERENCE_APPLIED":
+    if etype == "NOISE_APPLIED":
         ch = event.get("channel", "?")
-        return f"  {player}  jammed channel {channel_symbol(ch, cfg)}"
+        return f"  {player}  noised channel {channel_symbol(ch, cfg)}"
 
     if etype == "SCORE_AWARDED":
         pid = event.get("player_id", "?")

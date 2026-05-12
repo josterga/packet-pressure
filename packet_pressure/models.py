@@ -11,19 +11,19 @@ from typing import Any
 # ---------------------------------------------------------------------------
 
 class CardType(str, Enum):
-    ROUTE = "route"
-    ACK = "ack"
-    BROADCAST = "broadcast"
-    INTERFERENCE = "interference"
+    RELAY = "relay"
+    TERMINAL = "terminal"
+    AMPLIFIER = "amplifier"
+    NOISE = "noise"
     SHIELD = "shield"
 
 
 class TerminationReason(str, Enum):
     ACTIVE = "active"
-    ACK = "ack"
-    BROADCAST = "broadcast"
+    TERMINAL = "terminal"
+    AMPLIFIER = "amplifier"
     COLLISION = "collision"
-    INTERFERENCE = "interference"
+    NOISE = "noise"
     HOP_LIMIT = "hop_limit"
     LOOP_DETECTED = "loop_detected"
     RETURN_TO_FIRST = "return_to_first_hop"
@@ -38,7 +38,7 @@ EVT_ROUND_END = "ROUND_END"
 EVT_CARD_DRAWN = "CARD_DRAWN"
 EVT_CARD_PLAYED = "CARD_PLAYED"
 EVT_COLLISION = "COLLISION"
-EVT_INTERFERENCE_APPLIED = "INTERFERENCE_APPLIED"
+EVT_NOISE_APPLIED = "NOISE_APPLIED"
 EVT_ROUTE_STARTED = "ROUTE_STARTED"
 EVT_ROUTE_EXTENDED = "ROUTE_EXTENDED"
 EVT_ROUTE_TERMINATED = "ROUTE_TERMINATED"
@@ -66,7 +66,7 @@ class GameConfig:
     starting_hand_size: int = 5
     draw_per_turn: int = 1
     turns_per_player_per_round: int = 1
-    seed_cards_per_round: int = 3
+    seed_nodes_per_round: int = 3
 
     route_min_length: int = 2
     route_max_hops: int = 6
@@ -77,17 +77,17 @@ class GameConfig:
     no_return_to_first_hop: bool = False
     winner_goes_first: bool = True
 
-    broadcast_multiplier: int = 2
-    interference_scope: str = "single"
-    ack_packet_values: tuple[int, ...] = (400, 500, 600, 700)
+    amplifier_multiplier: int = 2
+    noise_scope: str = "single"
+    terminal_packet_values: tuple[int, ...] = (400, 500, 600, 700)
 
     special_distribution: tuple[tuple[str, float], ...] = (
-        ("ack", 0.10),
-        ("broadcast", 0.08),
-        ("interference", 0.07),
+        ("terminal", 0.10),
+        ("amplifier", 0.08),
+        ("noise", 0.07),
         ("shield", 0.06),
     )
-    route_card_distribution: tuple[tuple[tuple[str, str], float], ...] = ()
+    relay_node_distribution: tuple[tuple[tuple[str, str], float], ...] = ()
     packet_values: tuple[int, ...] = (100, 100, 200, 200, 300, 400, 500, 600, 700)
 
     def channel_index(self, ch: str) -> int | None:
@@ -170,7 +170,7 @@ class RouteState:
     entry_channel: str | None = None  # input channel of the first card in the route
     is_valid: bool = True
     is_scoring_candidate: bool = False
-    endpoint_card_id: str | None = None
+    exit_node_id: str | None = None
     length: int = 0
     termination_reason: TerminationReason = TerminationReason.ACTIVE
 
@@ -193,9 +193,9 @@ class RouteState:
 @dataclass
 class TableauState:
     active_cards: dict[str, Card] = field(default_factory=dict)
-    seed_cards: list[Card] = field(default_factory=list)
+    seed_nodes: list[Card] = field(default_factory=list)
     routes: list[RouteState] = field(default_factory=list)
-    interfered_channels: set[str] = field(default_factory=set)
+    noisy_channels: set[str] = field(default_factory=set)
     collided_card_ids: set[str] = field(default_factory=set)
     _route_counter: int = field(default=0, repr=False)
 

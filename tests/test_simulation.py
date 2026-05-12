@@ -3,7 +3,7 @@ import pytest
 
 from packet_pressure.config_presets import DEFAULT_CONFIG, FAST_CONFIG
 from packet_pressure.models import GameConfig
-from packet_pressure.policies import GreedyEndpoint, RandomLegal, RouteBuilder
+from packet_pressure.policies import GreedyExitNode, RandomLegal, RouteBuilder
 from packet_pressure.simulation import run_batch, run_simulation, sweep_parameter
 
 
@@ -39,7 +39,7 @@ class TestRunBatch:
         assert len(batch.games) == 10
 
     def test_batch_win_rates_sum_near_one(self):
-        policies = [RandomLegal(), GreedyEndpoint(), RouteBuilder()]
+        policies = [RandomLegal(), GreedyExitNode(), RouteBuilder()]
         batch = run_batch(FAST_CONFIG, policies, n_games=30, seed=7)
         total = sum(batch.win_rates.values())
         assert abs(total - 1.0) < 0.01

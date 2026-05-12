@@ -33,9 +33,9 @@ class TestMetricsCollector:
         m = self._get_metrics()
         for field_name in (
             "pct_routes_stopped_by_hop_limit",
-            "broadcast_score_rate",
-            "ack_steal_rate",
-            "seed_utilization_rate",
+            "amplifier_score_rate",
+            "terminal_steal_rate",
+            "seed_node_utilization_rate",
             "turn_pct_extending_vs_starting",
         ):
             val = getattr(m, field_name)

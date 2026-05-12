@@ -1,5 +1,5 @@
 """
-Engine tests: route extension rules, collision, interference, scoring, determinism.
+Engine tests: route extension rules, collision, noise, scoring, determinism.
 Uses small hand-crafted game states to test individual rules in isolation.
 """
 import dataclasses
@@ -27,7 +27,7 @@ from packet_pressure.policies import RandomLegal
 # Fixtures
 # ---------------------------------------------------------------------------
 
-def make_card(card_id, card_type=CardType.ROUTE, in_ch="01", out_ch="02",
+def make_card(card_id, card_type=CardType.RELAY, in_ch="01", out_ch="02",
               value=100, color="red", owner=None, **kwargs):
     return Card(
         card_id=card_id,
@@ -58,8 +58,8 @@ class TestRouteExtension:
     def test_channel_match_extends(self):
         engine = make_engine(n_policies=3)
         s = engine.state
-        # Manually place a seed and a route
-        seed = make_card("SEED-0001", CardType.ROUTE, in_ch="01", out_ch="02", owner="P0")
+        # Manually place a seed node and a relay node
+        seed = make_card("SEED-0001", CardType.RELAY, in_ch="01", out_ch="02", owner="P0")
         s.tableau.active_cards[seed.card_id] = seed
         s.register_card(seed)
         engine._try_start_route(seed)
@@ -75,12 +75,12 @@ class TestRouteExtension:
         engine._update_routes(card)
 
         assert route.length == 2
-        assert route.endpoint_card_id == "PKT-9001"
+        assert route.exit_node_id == "PKT-9001"
 
     def test_channel_mismatch_does_not_extend(self):
         engine = make_engine(n_policies=3)
         s = engine.state
-        seed = make_card("SEED-0002", CardType.ROUTE, in_ch="01", out_ch="02", owner="P0")
+        seed = make_card("SEED-0002", CardType.RELAY, in_ch="01", out_ch="02", owner="P0")
         s.tableau.active_cards[seed.card_id] = seed
         s.register_card(seed)
         engine._try_start_route(seed)
@@ -147,51 +147,51 @@ class TestRouteExtension:
 
 
 # ---------------------------------------------------------------------------
-# ACK
+# Terminal node
 # ---------------------------------------------------------------------------
 
-class TestACK:
-    def test_ack_wildcard_extends_any_route(self):
+class TestTerminalNode:
+    def test_terminal_wildcard_extends_any_route(self):
         engine = make_engine(n_policies=3)
         s = engine.state
 
         # Route ending on "03"
-        c1 = make_card("PKT-ACK1", in_ch="01", out_ch="03", owner="P0")
+        c1 = make_card("PKT-T1", in_ch="01", out_ch="03", owner="P0")
         s.register_card(c1)
         s.tableau.active_cards[c1.card_id] = c1
         engine._try_start_route(c1)
 
-        ack = Card(
-            card_id="ACK-0001",
-            card_type=CardType.ACK,
+        term = Card(
+            card_id="TERM-0001",
+            card_type=CardType.TERMINAL,
             input_channel="ANY",
             output_channel="TERM",
             packet_value=400,
             color="red",
             owner_id="P1",
         )
-        s.register_card(ack)
-        s.tableau.active_cards[ack.card_id] = ack
-        engine._update_routes(ack)
+        s.register_card(term)
+        s.tableau.active_cards[term.card_id] = term
+        engine._update_routes(term)
 
         route = s.tableau.routes[0]
-        assert route.termination_reason == TerminationReason.ACK
-        assert route.endpoint_card_id == "ACK-0001"
+        assert route.termination_reason == TerminationReason.TERMINAL
+        assert route.exit_node_id == "TERM-0001"
 
-    def test_ack_scores_if_min_length_met(self):
+    def test_terminal_scores_if_min_length_met(self):
         cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
         engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
 
-        c1 = make_card("PKT-ACK2", in_ch="01", out_ch="02", owner="P0")
+        c1 = make_card("PKT-T2", in_ch="01", out_ch="02", owner="P0")
         s.register_card(c1)
         s.tableau.active_cards[c1.card_id] = c1
         engine._try_start_route(c1)
 
-        ack = Card("ACK-0002", CardType.ACK, "ANY", "TERM", 400, "blue", owner_id="P1")
-        s.register_card(ack)
-        s.tableau.active_cards[ack.card_id] = ack
-        engine._update_routes(ack)
+        term = Card("TERM-0002", CardType.TERMINAL, "ANY", "TERM", 400, "blue", owner_id="P1")
+        s.register_card(term)
+        s.tableau.active_cards[term.card_id] = term
+        engine._update_routes(term)
 
         route = s.tableau.routes[0]
         assert route.length == 2
@@ -199,23 +199,23 @@ class TestACK:
 
 
 # ---------------------------------------------------------------------------
-# Broadcast
+# Amplifier node
 # ---------------------------------------------------------------------------
 
-class TestBroadcast:
-    def test_broadcast_multiplier_applied(self):
-        cfg = dataclasses.replace(GameConfig(), broadcast_multiplier=3, player_count=3)
+class TestAmplifierNode:
+    def test_amplifier_multiplier_applied(self):
+        cfg = dataclasses.replace(GameConfig(), amplifier_multiplier=3, player_count=3)
         engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
 
-        c1 = make_card("PKT-BC1", in_ch="01", out_ch="02", owner="P0")
+        c1 = make_card("PKT-A1", in_ch="01", out_ch="02", owner="P0")
         s.register_card(c1)
         s.tableau.active_cards[c1.card_id] = c1
         engine._try_start_route(c1)
 
-        bcst = Card(
-            card_id="BCST-0001",
-            card_type=CardType.BROADCAST,
+        amp = Card(
+            card_id="AMP-0001",
+            card_type=CardType.AMPLIFIER,
             input_channel="02",
             output_channel="03",
             packet_value=200,
@@ -223,38 +223,38 @@ class TestBroadcast:
             owner_id="P1",
             special_properties=(("multiplier", 3),),
         )
-        s.register_card(bcst)
-        s.tableau.active_cards[bcst.card_id] = bcst
-        engine._update_routes(bcst)
+        s.register_card(amp)
+        s.tableau.active_cards[amp.card_id] = amp
+        engine._update_routes(amp)
 
         route = s.tableau.routes[0]
-        # Broadcast no longer terminates — route stays active, multiplier applies at scoring
+        # Amplifier does not terminate — route stays active, multiplier applies at scoring
         assert route.termination_reason == TerminationReason.ACTIVE
-        assert route.endpoint_card_id == "BCST-0001"
+        assert route.exit_node_id == "AMP-0001"
         owner, score = engine._score_route(route)
         assert owner == "P1"
         assert score == 600  # 200 * 3
 
 
 # ---------------------------------------------------------------------------
-# Interference
+# Noise node
 # ---------------------------------------------------------------------------
 
-class TestInterference:
-    def test_interference_marks_channel(self):
+class TestNoiseNode:
+    def test_noise_marks_channel(self):
         engine = make_engine(n_policies=3)
         s = engine.state
-        engine._apply_interference("03")
-        assert "03" in s.tableau.interfered_channels
+        engine._apply_noise("03")
+        assert "03" in s.tableau.noisy_channels
 
-    def test_interference_removes_cards_on_channel(self):
-        # JAM only affects scoring-eligible routes (length >= route_min_length)
+    def test_noise_removes_cards_on_channel(self):
+        # Noise only affects scoring-eligible routes (length >= route_min_length)
         cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
         engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
 
-        c1 = make_card("PKT-JAM1", in_ch="01", out_ch="02", owner="P0")
-        c2 = make_card("PKT-JAM2", in_ch="02", out_ch="03", owner="P0")
+        c1 = make_card("PKT-N1", in_ch="01", out_ch="02", owner="P0")
+        c2 = make_card("PKT-N2", in_ch="02", out_ch="03", owner="P0")
         for c in (c1, c2):
             s.register_card(c)
             s.tableau.active_cards[c.card_id] = c
@@ -263,13 +263,13 @@ class TestInterference:
 
         assert s.tableau.routes[0].length == 2
 
-        engine._apply_interference("03")
+        engine._apply_noise("03")
 
-        assert "PKT-JAM2" not in s.tableau.active_cards
-        assert "PKT-JAM2" in s.tableau.collided_card_ids
+        assert "PKT-N2" not in s.tableau.active_cards
+        assert "PKT-N2" in s.tableau.collided_card_ids
 
-    def test_interference_spares_short_routes(self):
-        # Routes shorter than route_min_length are not affected by JAM
+    def test_noise_spares_short_routes(self):
+        # Routes shorter than route_min_length are not affected by noise
         cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
         engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
@@ -281,7 +281,7 @@ class TestInterference:
 
         assert s.tableau.routes[0].length == 1
 
-        engine._apply_interference("03")
+        engine._apply_noise("03")
 
         # Card survives — route is length 1, below min_length
         assert "PKT-SHORT" in s.tableau.active_cards
@@ -292,7 +292,7 @@ class TestInterference:
 # ---------------------------------------------------------------------------
 
 class TestScoring:
-    def test_endpoint_card_value_scores(self):
+    def test_exit_node_value_scores(self):
         cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
         engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
@@ -308,9 +308,9 @@ class TestScoring:
 
         route = s.tableau.routes[0]
         assert route.length == 2
-        assert route.endpoint_card_id == "PKT-SC2"
+        assert route.exit_node_id == "PKT-SC2"
 
-        # Only endpoint value counts
+        # Only exit node value counts
         owner, score = engine._score_route(route)
         assert score == 300
         assert owner == "P1"
@@ -353,7 +353,7 @@ class TestDeterminism:
 class TestTurnOrderRotation:
     def test_winner_goes_first_next_round(self):
         # Force a round where P1 scores by seeding a 2-card route ending with
-        # P1's endpoint, then verify first_player_index becomes 1 after scoring.
+        # P1's exit node, then verify first_player_index becomes 1 after scoring.
         cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3,
                                   winner_goes_first=True, max_rounds=2)
         engine = make_engine(config=cfg, n_policies=3)
@@ -397,10 +397,10 @@ class TestTurnOrderRotation:
         engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
 
-        # Route 1: P1 endpoint, value 300
+        # Route 1: P1 exit node, value 300
         a1 = make_card("PKT-T1", in_ch="01", out_ch="02", value=100, owner="P0")
         a2 = make_card("PKT-T2", in_ch="02", out_ch="03", value=300, owner="P1")
-        # Route 2: P2 endpoint, value 300 (tie)
+        # Route 2: P2 exit node, value 300 (tie)
         b1 = make_card("PKT-T3", in_ch="03", out_ch="01", value=100, owner="P0")
         b2 = make_card("PKT-T4", in_ch="01", out_ch="02", value=300, owner="P2")
         for c in (a1, a2, b1, b2):

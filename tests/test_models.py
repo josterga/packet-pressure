@@ -41,7 +41,7 @@ def test_game_config_channel_helpers():
 def test_card_frozen():
     card = Card(
         card_id="PKT-0001",
-        card_type=CardType.ROUTE,
+        card_type=CardType.RELAY,
         input_channel="01",
         output_channel="02",
         packet_value=200,
@@ -54,7 +54,7 @@ def test_card_frozen():
 def test_card_with_owner():
     card = Card(
         card_id="PKT-0001",
-        card_type=CardType.ROUTE,
+        card_type=CardType.RELAY,
         input_channel="01",
         output_channel="02",
         packet_value=200,
@@ -68,8 +68,8 @@ def test_card_with_owner():
 
 def test_card_special_accessor():
     card = Card(
-        card_id="BCST-0001",
-        card_type=CardType.BROADCAST,
+        card_id="AMP-0001",
+        card_type=CardType.AMPLIFIER,
         input_channel="01",
         output_channel="02",
         packet_value=300,
@@ -80,10 +80,10 @@ def test_card_special_accessor():
     assert card.special("nonexistent", default=99) == 99
 
 
-def test_ack_card_channels():
+def test_terminal_card_channels():
     card = Card(
-        card_id="ACK-0001",
-        card_type=CardType.ACK,
+        card_id="TERM-0001",
+        card_type=CardType.TERMINAL,
         input_channel="ANY",
         output_channel="TERM",
         packet_value=400,
@@ -107,7 +107,7 @@ def test_route_state_properties():
 
 
 def test_route_state_closed():
-    r = RouteState(route_id="R-0001", termination_reason=TerminationReason.ACK)
+    r = RouteState(route_id="R-0001", termination_reason=TerminationReason.TERMINAL)
     assert r.is_open() is False
 
 

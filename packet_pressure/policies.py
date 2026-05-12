@@ -14,7 +14,7 @@ from .models import (
 
 
 # ---------------------------------------------------------------------------
-# Extended placement context (interference needs a target channel)
+# Extended placement context (noise node needs a target channel)
 # ---------------------------------------------------------------------------
 
 @dataclass
@@ -54,7 +54,7 @@ class PlayerPolicy(ABC):
         for card in player.hand:
             if card.card_id in tableau_ids:
                 continue
-            if card.card_type == CardType.INTERFERENCE:
+            if card.card_type == CardType.NOISE:
                 scoring_card_ids: set[str] = set()
                 for r in state.tableau.routes:
                     if r.is_valid and r.length >= state.config.route_min_length:
@@ -66,14 +66,14 @@ class PlayerPolicy(ABC):
                         target_channels.add(c.output_channel)
                 for ch in target_channels:
                     plays.append((card, ExtendedPlacementContext(target_channel=ch)))
-            elif card.card_type == CardType.ACK:
+            elif card.card_type == CardType.TERMINAL:
                 for route in open_routes:
                     if route.length >= state.config.route_min_length:
                         ctx = PlacementContext(target_route_id=route.route_id)
                         plays.append((card, ctx))
             else:
                 valid_route_count = sum(1 for r in state.tableau.routes if r.is_valid)
-                cap_reached = valid_route_count >= state.config.seed_cards_per_round
+                cap_reached = valid_route_count >= state.config.seed_nodes_per_round
                 extendable = [
                     r for r in open_routes
                     if self._can_card_extend_route(card, r, state)
@@ -118,11 +118,11 @@ class PlayerPolicy(ABC):
             return False
         if route.length >= cfg.route_max_hops:
             return False
-        if card.output_channel in state.tableau.interfered_channels:
+        if card.output_channel in state.tableau.noisy_channels:
             return False
         return True
 
-    def _estimate_endpoint_value(
+    def _estimate_exit_node_value(
         self,
         card: Card,
         route: RouteState,
@@ -134,17 +134,17 @@ class PlayerPolicy(ABC):
             return 0.0
 
         base = float(card.packet_value)
-        if card.card_type == CardType.BROADCAST:
-            base *= card.special("multiplier", cfg.broadcast_multiplier)
-        if card.card_type == CardType.ACK:
-            # ACK ends the route; score is its own value
+        if card.card_type == CardType.AMPLIFIER:
+            base *= card.special("multiplier", cfg.amplifier_multiplier)
+        if card.card_type == CardType.TERMINAL:
+            # Terminal node ends the route; score is its own value
             pass
         return base
 
-    def _route_endpoint_value(self, route: RouteState, state: GameState) -> float:
-        if not route.endpoint_card_id:
+    def _route_exit_node_value(self, route: RouteState, state: GameState) -> float:
+        if not route.exit_node_id:
             return 0.0
-        card = state.lookup_card(route.endpoint_card_id)
+        card = state.lookup_card(route.exit_node_id)
         if card is None:
             return 0.0
         return float(card.packet_value)
@@ -171,11 +171,11 @@ class RandomLegal(PlayerPolicy):
 
 
 # ---------------------------------------------------------------------------
-# 2. GreedyEndpoint
+# 2. GreedyExitNode
 # ---------------------------------------------------------------------------
 
-class GreedyEndpoint(PlayerPolicy):
-    name = "greedy_endpoint"
+class GreedyExitNode(PlayerPolicy):
+    name = "greedy_exit_node"
 
     def choose_play(self, state: GameState, player: PlayerState) -> tuple[Card, PlacementContext]:
         plays = self.legal_plays(state, player)
@@ -186,19 +186,19 @@ class GreedyEndpoint(PlayerPolicy):
 
         for card, ctx in plays:
             score = 0.0
-            if card.card_type == CardType.INTERFERENCE:
-                pass  # interference never scores directly
-            elif card.card_type in (CardType.ACK, CardType.BROADCAST):
+            if card.card_type == CardType.NOISE:
+                pass  # noise never scores directly
+            elif card.card_type in (CardType.TERMINAL, CardType.AMPLIFIER):
                 for route in open_routes:
                     if self._can_card_extend_route(card, route, state):
-                        v = self._estimate_endpoint_value(card, route, state)
+                        v = self._estimate_exit_node_value(card, route, state)
                         if v > score:
                             score = v
                             ctx = PlacementContext(target_route_id=route.route_id)
             else:
                 for route in open_routes:
                     if self._can_card_extend_route(card, route, state):
-                        v = self._estimate_endpoint_value(card, route, state)
+                        v = self._estimate_exit_node_value(card, route, state)
                         if v > score:
                             score = v
                             ctx = PlacementContext(target_route_id=route.route_id)
@@ -234,7 +234,7 @@ class DenialCollision(PlayerPolicy):
                 return denial_play
 
         # Fall back to greedy
-        return GreedyEndpoint().choose_play(state, player)
+        return GreedyExitNode().choose_play(state, player)
 
     def _best_opponent_route(
         self,
@@ -250,7 +250,7 @@ class DenialCollision(PlayerPolicy):
             last_owner = route.owner_sequence[-1]
             if last_owner == player.player_id:
                 continue
-            val = self._route_endpoint_value(route, state)
+            val = self._route_exit_node_value(route, state)
             if val > best_value:
                 best_value = val
                 best_route = route
@@ -263,18 +263,18 @@ class DenialCollision(PlayerPolicy):
         target_route: RouteState,
         plays: list[tuple[Card, PlacementContext]],
     ) -> tuple[Card, PlacementContext] | None:
-        # Prefer interference on the target route's output channel
+        # Prefer noise on the target route's output channel
         last_out = target_route.last_output_channel
         if last_out:
             for card, ctx in plays:
-                if card.card_type == CardType.INTERFERENCE:
-                    jam_ctx = ExtendedPlacementContext(target_channel=last_out)
-                    return card, jam_ctx
+                if card.card_type == CardType.NOISE:
+                    noise_ctx = ExtendedPlacementContext(target_channel=last_out)
+                    return card, noise_ctx
 
-        # Fallback: ACK the route to steal its score before the opponent can claim it
+        # Fallback: terminate the route to steal its score before the opponent can claim it
         if target_route.length >= state.config.route_min_length:
             for card, ctx in plays:
-                if card.card_type == CardType.ACK:
+                if card.card_type == CardType.TERMINAL:
                     return card, PlacementContext(target_route_id=target_route.route_id)
 
         return None
@@ -292,41 +292,41 @@ class RouteBuilder(PlayerPolicy):
         open_routes = self._open_routes(state)
         cfg = state.config
 
-        # 1. Complete a route (play endpoint on route at min_length - 1)
+        # 1. Complete a route (play exit node on route at min_length - 1)
         for card, ctx in plays:
-            if card.card_type in (CardType.ACK, CardType.BROADCAST):
+            if card.card_type in (CardType.TERMINAL, CardType.AMPLIFIER):
                 for route in open_routes:
                     if route.length >= cfg.route_min_length - 1:
                         if self._can_card_extend_route(card, route, state):
                             return card, PlacementContext(target_route_id=route.route_id)
 
-        # 2. Extend route anchored on a seed card
-        seed_ids = {c.card_id for c in state.tableau.seed_cards}
+        # 2. Extend route anchored on a seed node
+        seed_node_ids = {c.card_id for c in state.tableau.seed_nodes}
         for card, ctx in plays:
-            if card.card_type in (CardType.ACK, CardType.INTERFERENCE):
+            if card.card_type in (CardType.TERMINAL, CardType.NOISE):
                 continue
             for route in open_routes:
-                if route.card_ids and route.card_ids[0] in seed_ids:
+                if route.card_ids and route.card_ids[0] in seed_node_ids:
                     if self._can_card_extend_route(card, route, state):
                         return card, PlacementContext(target_route_id=route.route_id)
 
         # 3. Extend any valid route
         for card, ctx in plays:
-            if card.card_type in (CardType.ACK, CardType.INTERFERENCE):
+            if card.card_type in (CardType.TERMINAL, CardType.NOISE):
                 continue
             for route in open_routes:
                 if self._can_card_extend_route(card, route, state):
-                    # Prefer routes not in interfered channels
-                    if card.output_channel not in state.tableau.interfered_channels:
+                    # Prefer routes not in noisy channels
+                    if card.output_channel not in state.tableau.noisy_channels:
                         return card, PlacementContext(target_route_id=route.route_id)
 
-        # 4. Start a new route anchored to seed (play onto a free seed channel)
+        # 4. Start a new route anchored to seed node (play onto a free seed channel)
         for card, ctx in plays:
-            if card.card_type in (CardType.ACK, CardType.INTERFERENCE):
+            if card.card_type in (CardType.TERMINAL, CardType.NOISE):
                 continue
-            for seed in state.tableau.seed_cards:
+            for seed in state.tableau.seed_nodes:
                 if card.input_channel == seed.output_channel:
-                    if card.output_channel not in state.tableau.interfered_channels:
+                    if card.output_channel not in state.tableau.noisy_channels:
                         return card, PlacementContext()
 
         # 5. Random fallback
