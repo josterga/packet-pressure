@@ -19,7 +19,8 @@ class DeckBuilder:
         n_ack = int(self.config.deck_size * special_dist.get("ack", 0.0))
         n_broadcast = int(self.config.deck_size * special_dist.get("broadcast", 0.0))
         n_interference = int(self.config.deck_size * special_dist.get("interference", 0.0))
-        n_special = n_ack + n_broadcast + n_interference
+        n_shield = int(self.config.deck_size * special_dist.get("shield", 0.0))
+        n_special = n_ack + n_broadcast + n_interference + n_shield
         # Seeds are drawn from regular route cards at round start — no separate pool
         n_route = max(0, self.config.deck_size - n_special)
 
@@ -40,6 +41,10 @@ class DeckBuilder:
 
         interference_cards = self._build_interference_cards(n_interference, idx)
         cards.extend(interference_cards)
+        idx += len(interference_cards)
+
+        shield_cards = self._build_shield_cards(n_shield, idx)
+        cards.extend(shield_cards)
 
         self.rng.shuffle(cards)  # type: ignore[arg-type]
         return list(cards)
@@ -94,7 +99,7 @@ class DeckBuilder:
 
     def _build_ack_cards(self, count: int, start_id: int) -> list[Card]:
         colors = self.config.colors
-        packet_values = self.config.packet_values
+        packet_values = self.config.ack_packet_values
         cards = []
         for i in range(count):
             cid = f"ACK-{start_id + i:04d}"
@@ -146,6 +151,28 @@ class DeckBuilder:
                 input_channel=None,
                 output_channel=None,
                 packet_value=0,
+                color=color,
+            ))
+        return cards
+
+    def _build_shield_cards(self, count: int, start_id: int) -> list[Card]:
+        channels = self.config.channels
+        colors = self.config.colors
+        packet_values = self.config.packet_values
+        cards = []
+        for i in range(count):
+            cid = f"SHD-{start_id + i:04d}"
+            in_ch = str(self.rng.choice(channels))
+            out_options = [c for c in channels if c != in_ch]
+            out_ch = str(self.rng.choice(out_options)) if out_options else in_ch
+            pv = int(self.rng.choice(packet_values))
+            color = str(self.rng.choice(colors))
+            cards.append(Card(
+                card_id=cid,
+                card_type=CardType.SHIELD,
+                input_channel=in_ch,
+                output_channel=out_ch,
+                packet_value=pv,
                 color=color,
             ))
         return cards

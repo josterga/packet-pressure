@@ -76,11 +76,14 @@ class HumanPolicy(PlayerPolicy):
                 return card, ExtendedPlacementContext(target_channel=channel)
 
             if card.card_type == CardType.ACK:
-                open_routes = [r for r in state.tableau.routes if r.is_open()]
-                if not open_routes:
-                    print("  No open routes to ACK.")
+                ackable = [
+                    r for r in state.tableau.routes
+                    if r.is_open() and r.length >= state.config.route_min_length
+                ]
+                if not ackable:
+                    print("  No scoring routes to ACK (need ≥2 cards).")
                     continue
-                route_id = self._prompt_route(state, open_routes)
+                route_id = self._prompt_route(state, ackable)
                 return card, PlacementContext(target_route_id=route_id)
 
             # Use the best matching context from legal_plays
@@ -133,13 +136,10 @@ class HumanPolicy(PlayerPolicy):
 
             elif card.card_type == CardType.ACK:
                 for route in open_routes:
-                    new_len = route.length + 1
-                    scoring = new_len >= cfg.route_min_length
-                    card_hints.append(
-                        f"→ ACK {route.route_id} len {route.length}{'  ✓' if scoring else ''}"
-                    )
+                    if route.length >= cfg.route_min_length:
+                        card_hints.append(f"→ ACK {route.route_id} len {route.length}  ✓")
                 if not card_hints:
-                    card_hints = ["→ (no open routes)"]
+                    card_hints = ["→ (no scoring routes)"]
 
             else:
                 for route in open_routes:

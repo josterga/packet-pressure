@@ -134,13 +134,13 @@ class GameEngine:
     def _begin_round(self) -> None:
         s = self.state
         s.log(EVT_ROUND_START, round=s.round_number)
-        # Draw route cards only as seeds — skip specials back to bottom of deck.
+        # Seeds can be any card with channels (route, broadcast, shield) — skip ACK and interference.
         seed_cards: list[Card] = []
         skipped: list[Card] = []
         needed = self.config.seed_cards_per_round
         while len(seed_cards) < needed and s.deck:
             card = s.deck.pop(0)
-            if card.card_type != CardType.ROUTE:
+            if card.card_type in (CardType.ACK, CardType.INTERFERENCE):
                 skipped.append(card)
                 continue
             # Reject seeds that share an output channel with an already-accepted seed
@@ -247,9 +247,21 @@ class GameEngine:
             if route.is_valid and route.length >= cfg.route_min_length:
                 scoring_route_card_ids.update(route.card_ids)
 
+        # Routes containing a Shield card whose input matches the targeted channel are immune
+        shielded_card_ids: set[str] = set()
+        for route in s.tableau.routes:
+            if route.is_valid and route.length >= cfg.route_min_length:
+                for cid in route.card_ids:
+                    card = s.lookup_card(cid)
+                    if card and card.card_type == CardType.SHIELD and card.input_channel == channel:
+                        shielded_card_ids.update(route.card_ids)
+                        break
+
         to_remove = [
             cid for cid, c in s.tableau.active_cards.items()
-            if c.output_channel == channel and cid in scoring_route_card_ids
+            if c.output_channel == channel
+            and cid in scoring_route_card_ids
+            and cid not in shielded_card_ids
         ]
         for cid in to_remove:
             del s.tableau.active_cards[cid]

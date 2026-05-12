@@ -15,6 +15,7 @@ class CardType(str, Enum):
     ACK = "ack"
     BROADCAST = "broadcast"
     INTERFERENCE = "interference"
+    SHIELD = "shield"
 
 
 class TerminationReason(str, Enum):
@@ -77,11 +78,13 @@ class GameConfig:
 
     broadcast_multiplier: int = 2
     interference_scope: str = "single"
+    ack_packet_values: tuple[int, ...] = (400, 500, 600, 700)
 
     special_distribution: tuple[tuple[str, float], ...] = (
         ("ack", 0.10),
         ("broadcast", 0.08),
         ("interference", 0.07),
+        ("shield", 0.06),
     )
     route_card_distribution: tuple[tuple[tuple[str, str], float], ...] = ()
     packet_values: tuple[int, ...] = (100, 100, 200, 200, 300, 400, 500, 600, 700)

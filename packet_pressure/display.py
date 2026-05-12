@@ -122,6 +122,8 @@ def render_card_lines(card: "Card", config: "GameConfig", dim: bool = False) -> 
         type_line = pad(f"  BCST  ×{mult}    ")
     elif card.card_type == CardType.INTERFERENCE:
         type_line = pad("  JAM  ≋≋≋≋   ")
+    elif card.card_type == CardType.SHIELD:
+        type_line = pad(f"  SHD-CH{card.input_channel}    ")
     else:
         type_line = None
 
