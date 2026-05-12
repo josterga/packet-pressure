@@ -413,7 +413,8 @@ def render_scores(state: "GameState", human_index: int = 0) -> str:
 def render_round_header(state: "GameState") -> str:
     cfg = state.config
     turns_total = cfg.turns_per_player_per_round * cfg.player_count
-    turn_info = f"  ·  Turn {state.turn_number + 1} of {turns_total}" if cfg.turns_per_player_per_round > 1 else ""
+    display_turn = min(state.turn_number + 1, turns_total)
+    turn_info = f"  ·  Turn {display_turn} of {turns_total}" if cfg.turns_per_player_per_round > 1 else ""
     plain = (
         f"  PACKET PRESSURE  ·  "
         f"Round {state.round_number} of {cfg.max_rounds}{turn_info}  ·  "

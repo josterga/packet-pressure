@@ -202,16 +202,19 @@ class HumanPolicy(PlayerPolicy):
             print(f"  Enter a number between 1 and {len(open_routes)}.")
 
     def _prompt_channel(self, state: GameState, channels: list[str]) -> str:
-        opts = "  ".join(f"{channel_symbol(ch, state.config)} {ch}" for ch in channels)
-        print(f"\n  Noise which channel?  {opts}")
+        print()
+        for i, ch in enumerate(channels):
+            print(f"  [{i + 1}]  {channel_symbol(ch, state.config)} {ch}")
         while True:
             try:
-                raw = input("  Channel: ").strip()
+                raw = input(f"  Noise which channel? [1-{len(channels)}]: ").strip()
             except (EOFError, KeyboardInterrupt):
                 raise SystemExit(0)
-            if raw in channels:
-                return raw
-            print(f"  Enter one of: {', '.join(channels)}")
+            if raw.isdigit():
+                idx = int(raw) - 1
+                if 0 <= idx < len(channels):
+                    return channels[idx]
+            print(f"  Enter a number between 1 and {len(channels)}.")
 
 
 # ---------------------------------------------------------------------------
