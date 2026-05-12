@@ -38,11 +38,11 @@ A route is a chain of nodes where each node's output channel matches the next no
 
 Any player can extend any open route. Whoever plays the **exit node** (the last node in the route when it terminates or scores at round end) earns the points — even if they didn't start the route. The game rewards being the finisher, not the builder.
 
-Routes must be at least **2 nodes long** to score. Routes are capped at **6 hops** by default (2 in the `fast` preset, matching its 2-channel network). In practice the channel-reuse rule hits the natural ceiling first: a 3-channel network can produce at most 3-node routes. One loop-prevention rule applies:
+Routes must be at least **2 nodes long** to score. Routes are capped at **6 hops** by default (3 in the `fast` preset). In practice the channel-reuse rule hits the natural ceiling first: a 3-channel network can produce at most 3-node routes. One loop-prevention rule applies:
 - A node cannot appear twice in the same route (`no_loops`)
 - A route cannot output to a channel it has already visited (prevents channel loops within the route)
 
-The tableau holds exactly as many routes as there are channels (equal to `seed_nodes_per_round`). If all route slots are filled and a card cannot extend any open route, the player **passes their turn** — they still draw their card and keep it in hand, but nothing is played to the tableau that turn.
+At most `seed_nodes_per_round` routes can be open simultaneously. Once a route closes — by hitting the hop limit or being terminated — its slot frees up and a new route can start. A player **passes their turn** only if the concurrent cap is full and no card in hand can extend any open route — they still draw and keep the card, but nothing is played to the tableau that turn.
 
 ### Scoring
 Score is awarded at **end of round** for eligible routes. Only the **exit node's packet value** scores — there is no cumulative sum. The player who owns the exit node collects those points.
