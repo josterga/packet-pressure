@@ -281,13 +281,14 @@ Key flags:
 
 | Flag | Default | Description |
 |---|---|---|
-| `--preset` | `default` | Config preset: `default`, `fast`, `competitive`, `no_special` |
+| `--preset` | `default` | Config preset: `default`, `fast`, `competitive`, `no_special`, `print` |
 | `--policies` | `random greedy denial builder` | Space-separated AI policy list |
 | `--n-games` | `200` | Number of games per batch |
 | `--seed` | random | Master RNG seed (omit for a different game each run) |
 | `--workers` | `1` | Parallel workers for batch runs |
 | `--output-dir` | `./results` | Where to write results and plots |
 | `--no-plots` | — | Skip chart generation |
+| `--dump-deck` | — | Print the full deck as JSON and exit (no simulation runs) |
 | `--interactive` | — | Play as a human against AI opponents |
 | `--solo` | — | Hot-seat mode: human controls every player's turn |
 | `--human-index` | `0` | Which player slot the human takes (interactive mode) |
@@ -300,7 +301,7 @@ Key flags:
 | `default` | 4 | 3 | 3 | 2000 | 15 | 80 | 4 |
 | `fast` | 3 | 2 | 2 | 1200 | 8 | 60 | 2 |
 | `competitive` | 5 | 4 | 4 | 3000 | 20 | 100 | 6 |
-| `no_special` | 4 | 3 | 3 | 2000 | 15 | 80 (relay only) | 6 |
+| `no_special` | 4 | 3 | 3 | 2000 | 15 | 80 (relay only) | 4 |
 | `print` | 4 | 3 | 3 | 2000 | 15 | 80 (fixed distribution) | 4 |
 
 Seed nodes per round equal the channel count — always one fewer than the player count. One player per round competes without an anchor route.

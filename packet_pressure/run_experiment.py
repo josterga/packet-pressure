@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -99,10 +100,18 @@ def main(argv: list[str] | None = None) -> int:
         metavar="SECS",
         help="Pause after each AI turn (default 0.5s)",
     )
+    parser.add_argument(
+        "--dump-deck",
+        action="store_true",
+        help="Print the full deck as JSON and exit (no simulation)",
+    )
 
     args = parser.parse_args(argv)
 
     config: GameConfig = _PRESET_MAP[args.preset]
+
+    if args.dump_deck:
+        return _dump_deck(config, args.seed)
 
     # Interactive / solo mode: launch a single human game
     if args.interactive or args.solo:
@@ -188,6 +197,50 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  dead_round_rate={batch.dead_round_rate:.1%}")
         print(f"\nResults written to {output}/")
 
+    return 0
+
+
+def _dump_deck(config: GameConfig, seed: int | None) -> int:
+    import numpy as np
+    from .deck import DeckBuilder
+
+    rng = np.random.default_rng(seed)
+    deck = DeckBuilder(config, rng).build()
+    deck_sorted = sorted(deck, key=lambda c: (c.card_type.value, c.card_id))
+
+    output = {
+        "config": {
+            "preset_summary": {
+                "player_count": config.player_count,
+                "channels": list(config.channels),
+                "channel_colors": list(config.channel_colors),
+                "channel_shapes": list(config.channel_shapes),
+                "card_colors": list(config.colors),
+                "starting_hand_size": config.starting_hand_size,
+                "route_max_hops": config.route_max_hops,
+                "amplifier_multiplier": config.amplifier_multiplier,
+                "packet_values": list(config.packet_values),
+                "terminal_packet_values": list(config.terminal_packet_values),
+            },
+            "deck_size": len(deck),
+            "card_type_counts": {
+                ct.value: sum(1 for c in deck if c.card_type == ct)
+                for ct in sorted({c.card_type for c in deck}, key=lambda x: x.value)
+            },
+        },
+        "cards": [
+            {
+                "card_id": c.card_id,
+                "card_type": c.card_type.value,
+                "input_channel": c.input_channel,
+                "output_channel": c.output_channel,
+                "packet_value": c.packet_value,
+                "special_properties": dict(c.special_properties),
+            }
+            for c in deck_sorted
+        ],
+    }
+    print(json.dumps(output, indent=2))
     return 0
 
 
