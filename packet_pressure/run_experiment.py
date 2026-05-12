@@ -191,7 +191,10 @@ def main(argv: list[str] | None = None) -> int:
 
 def _run_interactive(args: object, config: GameConfig) -> int:
     import dataclasses
+    from .display import print_splash
     from .interactive import InteractiveGame
+
+    print_splash()
 
     solo = getattr(args, "solo", False)
     delay = getattr(args, "opponent_delay", 0.5)

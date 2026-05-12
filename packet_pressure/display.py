@@ -47,6 +47,38 @@ def _dim(text: str) -> str:
     return _c(text, _DIM)
 
 
+def print_splash() -> None:
+    _TEAL   = _CHANNEL_ANSI["teal"]
+    _ORANGE = _CHANNEL_ANSI["orange"]
+    _PURPLE = _CHANNEL_ANSI["purple"]
+
+    # 4 repetitions of the 10-char unit; ⚠ is double-width in most terminals,
+    # giving ~43 display cols — wide enough to frame the 31-char name with margin.
+    _bg1 = "⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠"
+    _bg2 = "⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘"
+    _bg3 = "⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕"
+    _bg4 = "⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠"
+
+    name = (
+        _c("P A C K E T", f"{_BOLD}{_TEAL}")
+        + "   "
+        + _c("P R E S S", f"{_BOLD}{_ORANGE}")
+        + " "
+        + _c("U R E", f"{_BOLD}{_PURPLE}")
+    )
+    tagline = _dim("the exit node takes everything.")
+
+    print(_c(_bg1, f"{_DIM}{_TEAL}"))
+    print(_c(_bg2, f"{_DIM}{_ORANGE}"))
+    print()
+    print(f"       {name}")
+    print(f"       {tagline}")
+    print()
+    print(_c(_bg3, f"{_DIM}{_PURPLE}"))
+    print(_c(_bg4, f"{_DIM}{_TEAL}"))
+    print()
+
+
 def channel_symbol(ch: str, config: "GameConfig") -> str:
     """Return colored channel label — pure ASCII so terminal width is always predictable."""
     if ch == "ANY":

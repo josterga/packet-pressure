@@ -1,6 +1,13 @@
-# Packet Pressure
+```
+⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠
+⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘
 
-> Routes don't belong to their builders — they belong to whoever exits them.
+       P A C K E T   P R E S S U R E
+       the exit node takes everything.
+
+⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕
+⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠
+```
 
 **Packet Pressure** is a competitive card game for 3–5 players built on a packet-switching network.
 Each round, players chain relay nodes across shared channels to build routing paths, but the points go to the finisher, not the architect. Extend what others started, or build something worth stealing.
