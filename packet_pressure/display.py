@@ -66,7 +66,7 @@ def print_splash() -> None:
         + " "
         + _c("U R E", f"{_BOLD}{_PURPLE}")
     )
-    tagline = _dim("the exit node takes everything.")
+    tagline = _dim("Extend the route. Own the endpoint.")
 
     print(_c(_bg1, f"{_DIM}{_TEAL}"))
     print(_c(_bg2, f"{_DIM}{_ORANGE}"))
