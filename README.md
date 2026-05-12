@@ -35,6 +35,8 @@ Score is awarded at **end of round** for eligible routes. Only the **endpoint ca
 
 At round end, **all valid routes of at least 2 cards score**, whether they were explicitly terminated (by ACK, Broadcast, or hitting the hop limit) or still open. A route that was never terminated simply scores with whoever owns its current endpoint card. Routes shorter than 2 cards are lost without scoring. After scoring, the entire tableau is discarded — only player hands carry over. Hands are then topped back up to the starting hand size before the next round begins.
 
+The player who scored the most points in a round goes first in the next round. Going first is a disadvantage — you act before others can react to what you build. On a tied round (multiple players share the highest score), turn order is unchanged.
+
 ---
 
 ## Card Types

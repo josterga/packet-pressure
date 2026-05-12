@@ -142,7 +142,7 @@ class HumanPolicy(PlayerPolicy):
             elif card.card_type == CardType.ACK:
                 for route in open_routes:
                     if route.length >= cfg.route_min_length:
-                        card_hints.append(f"→ ACK {route.route_id} len {route.length}  ✓")
+                        card_hints.append(f"→ ACK {route.route_id} ✓")
                 if not card_hints:
                     card_hints = ["→ (no scoring routes)"]
 
@@ -151,11 +151,9 @@ class HumanPolicy(PlayerPolicy):
                     if not self._can_card_extend_route(card, route, state):
                         continue
                     if card.card_type == CardType.BROADCAST:
-                        card_hints.append(
-                            f"→ BCST {route.route_id} ×{cfg.broadcast_multiplier} len {route.length}"
-                        )
+                        card_hints.append(f"→ BCST {route.route_id} ×{cfg.broadcast_multiplier}")
                     else:
-                        card_hints.append(f"→ {route.route_id} (len {route.length})")
+                        card_hints.append(f"→ {route.route_id}")
                 if not card_hints:
                     cap_reached = sum(1 for r in state.tableau.routes if r.is_valid) >= cfg.seed_cards_per_round
                     if not cap_reached:
