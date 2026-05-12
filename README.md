@@ -16,7 +16,7 @@ Be the first player to reach the score target (default: 2000 pts). If no one rea
 Each round starts by dealing **seed nodes** face-up into the shared tableau — one seed per channel, drawn from the top of the shuffled deck. Seed nodes are ordinary relay nodes; the only thing special about them is when they enter play. Because seed nodes must each occupy a distinct output channel, the number of seeds equals the number of channels — which is always fewer than the number of players. One player per round gets no anchor route and must extend or terminate an existing one. Each player holds a starting hand of cards.
 
 ### On Your Turn
-1. **Draw** one card from the deck into your hand.
+1. **Draw** one card from the deck into your hand. If the deck is empty, the discard pile is reshuffled face-down and becomes the new deck — the game never stalls for cards.
 2. **Play** one card from your hand onto the tableau. Each card occupies a node in the route.
 
 ### Channels
@@ -34,6 +34,8 @@ Any player can extend any open route. Whoever plays the **exit node** (the last 
 Routes must be at least **2 nodes long** to score. Routes are capped at **6 hops** by default (2 in the `fast` preset, matching its 2-channel network). In practice the channel-reuse rule hits the natural ceiling first: a 3-channel network can produce at most 3-node routes. One loop-prevention rule applies:
 - A node cannot appear twice in the same route (`no_loops`)
 - A route cannot output to a channel it has already visited (prevents channel loops within the route)
+
+The tableau holds exactly as many routes as there are channels (equal to `seed_nodes_per_round`). If all route slots are filled and a card cannot extend any open route, the player **passes their turn** — they still draw their card and keep it in hand, but nothing is played to the tableau that turn.
 
 ### Scoring
 Score is awarded at **end of round** for eligible routes. Only the **exit node's packet value** scores — there is no cumulative sum. The player who owns the exit node collects those points.
@@ -57,14 +59,14 @@ Forwards a packet from one channel to another. Extends an existing route whose l
 Terminates a chosen route immediately. Input is `ANY` (matches any open route). Output is `TERM`.
 
 - Only playable on routes that are already ≥ 2 nodes — terminal node is a steal/close card, not a route-builder
-- When played, you choose which eligible open route to terminate
+- When played, you declare which eligible open route to terminate; a route is eligible if it is open and already ≥ 2 nodes long
 - The terminal node becomes the exit node, so **the terminal node's own packet value** is what scores — even if you played no other node in the route
 - The terminated route stays visible in the tableau but can no longer be extended; it scores at end of round
 
 ### Amplifier Node
 Extends a route like a relay node — input channel must match the route's current tail, output channel becomes the new tail. If the amplifier node is the exit node when scoring happens, the score is `packet_value × multiplier` (default ×2) instead of the raw value.
 
-- Higher reward than a plain relay node when you hold the exit node
+- The multiplier **only applies if the amplifier is the exit node at scoring time** — if another player extends the route past it, the bonus is lost and the new exit node scores at face value
 - Can be extended further by other nodes (it does not terminate the route)
 - Self-loop channel pairs (in = out) are not generated
 
@@ -90,7 +92,7 @@ In the terminal UI, each card's left border is colored by input channel and righ
 
 ```
 ┌──────────────────┐
-│ IN CH01   CH02 OUT│
+│ IN CH01 CH02 OUT │
 │──────────────────│
 │  PKT  200        │
 │──────────────────│
@@ -102,7 +104,7 @@ In the terminal UI, each card's left border is colored by input channel and righ
 
 ```
 ┌──────────────────┐
-│ IN ANY    END OUT│
+│ IN ANY   END OUT │
 │──────────────────│
 │  ─── TERM ──     │
 │  PKT  500        │
@@ -115,7 +117,7 @@ In the terminal UI, each card's left border is colored by input channel and righ
 
 ```
 ┌──────────────────┐
-│ IN CH02   CH03 OUT│
+│ IN CH02 CH03 OUT │
 │──────────────────│
 │  AMP   ×2        │
 │  PKT  300        │
@@ -128,7 +130,7 @@ In the terminal UI, each card's left border is colored by input channel and righ
 
 ```
 ┌──────────────────┐
-│ IN  --    --  OUT│
+│ IN  --   --  OUT │
 │──────────────────│
 │  NOISE ≋≋≋≋      │
 │  PKT  0          │
@@ -141,7 +143,7 @@ In the terminal UI, each card's left border is colored by input channel and righ
 
 ```
 ┌──────────────────┐
-│ IN CH01   CH02 OUT│
+│ IN CH01 CH02 OUT │
 │──────────────────│
 │  FLT-CH01        │
 │  PKT  200        │

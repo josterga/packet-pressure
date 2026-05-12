@@ -245,7 +245,6 @@ class GameEngine:
     def _apply_noise(self, channel: str) -> None:
         s = self.state
         cfg = self.config
-        s.tableau.noisy_channels.add(channel)
         s.log(EVT_NOISE_APPLIED, channel=channel)
 
         # Only disrupt cards belonging to scoring-eligible routes
@@ -303,6 +302,7 @@ class GameEngine:
             if self._can_extend(route, new_card):
                 self._extend_route(route, new_card)
                 extended_any = True
+                break
 
         if not extended_any:
             self._try_start_route(new_card)
@@ -330,11 +330,6 @@ class GameEngine:
         if route.length >= s.config.route_max_hops:
             route.termination_reason = TerminationReason.HOP_LIMIT
             route.is_scoring_candidate = route.length >= s.config.route_min_length
-
-        # Check if output channel is noisy
-        if card.output_channel and card.output_channel in s.tableau.noisy_channels:
-            route.is_valid = False
-            route.termination_reason = TerminationReason.NOISE
 
         s.tableau.routes.append(route)
         s.log(EVT_ROUTE_STARTED, route_id=route.route_id, card_id=card.card_id)
@@ -398,12 +393,6 @@ class GameEngine:
             route.is_scoring_candidate = route.length >= cfg.route_min_length
             s.log(EVT_ROUTE_TERMINATED, route_id=route.route_id, reason="hop_limit",
                   scoring=route.is_scoring_candidate)
-
-        # Check if new output channel is noisy
-        if card.output_channel and card.output_channel in s.tableau.noisy_channels:
-            route.is_valid = False
-            route.termination_reason = TerminationReason.NOISE
-            s.log(EVT_ROUTE_INVALIDATED, route_id=route.route_id, reason="noise_channel")
 
     # ------------------------------------------------------------------
     # End-of-round scoring

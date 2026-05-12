@@ -241,11 +241,12 @@ class TestAmplifierNode:
 # ---------------------------------------------------------------------------
 
 class TestNoiseNode:
-    def test_noise_marks_channel(self):
+    def test_noise_fires_and_clears(self):
+        # Noise invalidates routes immediately but does not persist in noisy_channels
         engine = make_engine(n_policies=3)
         s = engine.state
         engine._apply_noise("03")
-        assert "03" in s.tableau.noisy_channels
+        assert "03" not in s.tableau.noisy_channels
 
     def test_noise_removes_cards_on_channel(self):
         # Noise only affects scoring-eligible routes (length >= route_min_length)

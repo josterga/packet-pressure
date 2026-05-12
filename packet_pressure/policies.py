@@ -118,8 +118,6 @@ class PlayerPolicy(ABC):
             return False
         if route.length >= cfg.route_max_hops:
             return False
-        if card.output_channel in state.tableau.noisy_channels:
-            return False
         return True
 
     def _estimate_exit_node_value(
