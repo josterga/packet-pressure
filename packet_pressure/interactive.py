@@ -289,7 +289,7 @@ class InteractiveGame:
         engine._advance_round()
 
     def _print_between_turns(self, state: GameState) -> None:
-        print()
+        print(render_round_header(state))
         hi = -1 if self.solo else self.human_index
         print(render_scores(state, human_index=hi))
         print()

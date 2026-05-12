@@ -55,7 +55,7 @@ EVT_GAME_OVER = "GAME_OVER"
 class GameConfig:
     player_count: int = 4
     score_to_win: int = 2000
-    max_rounds: int = 15
+    max_rounds: int = 5
 
     channels: tuple[str, ...] = ("01", "02", "03")
     channel_shapes: tuple[str, ...] = ("circle", "square", "triangle")
@@ -65,7 +65,7 @@ class GameConfig:
 
     starting_hand_size: int = 5
     draw_per_turn: int = 1
-    turns_per_player_per_round: int = 1
+    turns_per_player_per_round: int = 3
     seed_nodes_per_round: int = 3
 
     route_min_length: int = 2
