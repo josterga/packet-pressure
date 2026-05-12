@@ -68,8 +68,9 @@ class PlayerPolicy(ABC):
                     plays.append((card, ExtendedPlacementContext(target_channel=ch)))
             elif card.card_type == CardType.ACK:
                 for route in open_routes:
-                    ctx = PlacementContext(target_route_id=route.route_id)
-                    plays.append((card, ctx))
+                    if route.length >= state.config.route_min_length:
+                        ctx = PlacementContext(target_route_id=route.route_id)
+                        plays.append((card, ctx))
             else:
                 extendable = [
                     r for r in open_routes

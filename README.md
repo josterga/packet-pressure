@@ -49,9 +49,9 @@ Forwards a packet from one channel to another. Extends an existing route whose l
 ### ACK
 Terminates a chosen route immediately. Input is `ANY` (matches any open route). Output is `TERM`.
 
-- When played, you choose which open route to ACK
-- The ACK card becomes the endpoint of that route, so **the ACK card's own packet value** is what scores — even if you played no other card in the route
-- Route must be ≥ 2 cards (including the ACK) to score
+- Only playable on routes that are already ≥ 2 cards — ACK is a steal/close card, not a route-builder
+- When played, you choose which eligible open route to ACK
+- The ACK card becomes the endpoint, so **the ACK card's own packet value** is what scores — even if you played no other card in the route
 - The terminated route stays visible in the tableau but can no longer be extended; it scores at end of round
 
 ### Broadcast
