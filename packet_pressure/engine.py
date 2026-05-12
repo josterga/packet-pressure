@@ -119,8 +119,10 @@ class GameEngine:
         s.turn_number = 0
         self._begin_round()
 
+        first = s.first_player_index
         for _ in range(self.config.turns_per_player_per_round):
-            for p_idx in range(self.config.player_count):
+            for offset in range(self.config.player_count):
+                p_idx = (first + offset) % self.config.player_count
                 if self._is_terminal():
                     return
                 s.current_player_index = p_idx
@@ -411,6 +413,8 @@ class GameEngine:
         s = self.state
         cfg = self.config
 
+        pre_scores = {p.player_id: p.score for p in s.players}
+
         # Mark all still-open valid routes as scoring candidates if long enough
         for route in s.tableau.routes:
             if route.is_open() and route.length >= cfg.route_min_length:
@@ -433,6 +437,15 @@ class GameEngine:
                       score=score, endpoint_card_id=route.endpoint_card_id,
                       route_length=route.length,
                       termination_reason=route.termination_reason.value)
+
+        if cfg.winner_goes_first:
+            deltas = {p.player_id: p.score - pre_scores[p.player_id] for p in s.players}
+            best = max(deltas.values())
+            winners = [pid for pid, d in deltas.items() if d == best]
+            if best > 0 and len(winners) == 1:
+                s.first_player_index = next(
+                    i for i, p in enumerate(s.players) if p.player_id == winners[0]
+                )
 
         # Check win condition
         for p in s.players:

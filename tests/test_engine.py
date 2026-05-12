@@ -344,3 +344,72 @@ class TestDeterminism:
         scores = [r.final_scores for r in results]
         # At least some games should differ
         assert len(set(str(s) for s in scores)) > 1
+
+
+# ---------------------------------------------------------------------------
+# Turn order rotation
+# ---------------------------------------------------------------------------
+
+class TestTurnOrderRotation:
+    def test_winner_goes_first_next_round(self):
+        # Force a round where P1 scores by seeding a 2-card route ending with
+        # P1's endpoint, then verify first_player_index becomes 1 after scoring.
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3,
+                                  winner_goes_first=True, max_rounds=2)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        # Manually build a scoring route owned by P1
+        c1 = make_card("PKT-R1", in_ch="01", out_ch="02", value=100, owner="P0")
+        c2 = make_card("PKT-R2", in_ch="02", out_ch="03", value=500, owner="P1")
+        for c in (c1, c2):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(c2)
+
+        assert s.first_player_index == 0
+        engine._end_of_round_scoring()
+        # P1 scored, so first_player_index should now be 1
+        assert s.first_player_index == 1
+
+    def test_no_rotation_when_disabled(self):
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3,
+                                  winner_goes_first=False, max_rounds=2)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("PKT-N1", in_ch="01", out_ch="02", value=100, owner="P0")
+        c2 = make_card("PKT-N2", in_ch="02", out_ch="03", value=500, owner="P2")
+        for c in (c1, c2):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(c2)
+
+        engine._end_of_round_scoring()
+        assert s.first_player_index == 0
+
+    def test_tie_leaves_first_player_unchanged(self):
+        # Two players score equally — no rotation, first_player_index stays 0
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3,
+                                  winner_goes_first=True, max_rounds=2)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        # Route 1: P1 endpoint, value 300
+        a1 = make_card("PKT-T1", in_ch="01", out_ch="02", value=100, owner="P0")
+        a2 = make_card("PKT-T2", in_ch="02", out_ch="03", value=300, owner="P1")
+        # Route 2: P2 endpoint, value 300 (tie)
+        b1 = make_card("PKT-T3", in_ch="03", out_ch="01", value=100, owner="P0")
+        b2 = make_card("PKT-T4", in_ch="01", out_ch="02", value=300, owner="P2")
+        for c in (a1, a2, b1, b2):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(a1)
+        engine._update_routes(a2)
+        engine._try_start_route(b1)
+        engine._update_routes(b2)
+
+        engine._end_of_round_scoring()
+        assert s.first_player_index == 0

@@ -88,9 +88,13 @@ class HumanPolicy(PlayerPolicy):
 
             # Use the best matching context from legal_plays
             plays = self.legal_plays(state, player)
+            has_any_valid = any(not ctx.pass_turn for _, ctx in plays)
             matching = [(c, ctx) for c, ctx in plays if c.card_id == card.card_id]
             if not matching or all(ctx.pass_turn for _, ctx in matching):
-                print("  Route cap reached — passing your turn.")
+                if has_any_valid:
+                    print("  That card can't be played right now — choose another.")
+                    continue
+                print("  No legal plays — passing your turn.")
                 return card, PlacementContext(pass_turn=True)
             if len(matching) == 1:
                 return card, matching[0][1]
@@ -153,7 +157,9 @@ class HumanPolicy(PlayerPolicy):
                     else:
                         card_hints.append(f"→ {route.route_id} (len {route.length})")
                 if not card_hints:
-                    card_hints = ["→ new route"]
+                    cap_reached = sum(1 for r in state.tableau.routes if r.is_valid) >= cfg.seed_cards_per_round
+                    if not cap_reached:
+                        card_hints = ["→ new route"]
 
             hints.append(card_hints)
 
@@ -258,8 +264,10 @@ class InteractiveGame:
         state.turn_number = 0
         engine._begin_round()
 
+        first = state.first_player_index
         for _ in range(cfg.turns_per_player_per_round):
-            for p_idx in range(cfg.player_count):
+            for offset in range(cfg.player_count):
+                p_idx = (first + offset) % cfg.player_count
                 if engine._is_terminal():
                     return
                 state.current_player_index = p_idx

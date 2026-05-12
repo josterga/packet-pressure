@@ -75,6 +75,7 @@ class GameConfig:
 
     no_loops: bool = True
     no_return_to_first_hop: bool = False
+    winner_goes_first: bool = True
 
     broadcast_multiplier: int = 2
     interference_scope: str = "single"
@@ -217,6 +218,7 @@ class GameState:
     round_number: int = 0
     turn_number: int = 0
     current_player_index: int = 0
+    first_player_index: int = 0
     event_log: list[dict] = field(default_factory=list)
     rng: Any = field(default=None, repr=False)
     _terminal: bool = field(default=False, repr=False)
