@@ -3,13 +3,13 @@
 ⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘
 
        P A C K E T   P R E S S U R E
-       Extend the route. Own the endpoint.
+       Extend the route. Hold the endpoint.
 
 ⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕
 ⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠
 ```
 
-A competitive routing game where routes are public infrastructure and endpoints are private wins. · 3–5 players · ~30–45 min
+A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You win by holding the endpoint when the round closes. · 3–5 players · ~30–45 min
 
 ## Overview
 
