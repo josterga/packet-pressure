@@ -140,6 +140,7 @@ class Card:
 @dataclass
 class PlacementContext:
     target_route_id: str | None = None
+    pass_turn: bool = False
 
 
 # ---------------------------------------------------------------------------

@@ -72,6 +72,8 @@ class PlayerPolicy(ABC):
                         ctx = PlacementContext(target_route_id=route.route_id)
                         plays.append((card, ctx))
             else:
+                valid_route_count = sum(1 for r in state.tableau.routes if r.is_valid)
+                cap_reached = valid_route_count >= state.config.seed_cards_per_round
                 extendable = [
                     r for r in open_routes
                     if self._can_card_extend_route(card, r, state)
@@ -79,7 +81,7 @@ class PlayerPolicy(ABC):
                 if extendable:
                     for route in extendable:
                         plays.append((card, PlacementContext(target_route_id=route.route_id)))
-                else:
+                elif not cap_reached:
                     plays.append((card, PlacementContext()))
 
         return plays if plays else self._fallback_play(state, player)
@@ -89,9 +91,8 @@ class PlayerPolicy(ABC):
         state: GameState,
         player: PlayerState,
     ) -> list[tuple[Card, PlacementContext]]:
-        # If somehow no legal plays (shouldn't normally happen), return first card with null ctx
         if player.hand:
-            return [(player.hand[0], PlacementContext())]
+            return [(player.hand[0], PlacementContext(pass_turn=True))]
         raise RuntimeError(f"Player {player.player_id} has no cards to play")
 
     # ------------------------------------------------------------------

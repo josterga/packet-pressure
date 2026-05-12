@@ -89,8 +89,9 @@ class HumanPolicy(PlayerPolicy):
             # Use the best matching context from legal_plays
             plays = self.legal_plays(state, player)
             matching = [(c, ctx) for c, ctx in plays if c.card_id == card.card_id]
-            if not matching:
-                return card, PlacementContext()
+            if not matching or all(ctx.pass_turn for _, ctx in matching):
+                print("  Route cap reached — passing your turn.")
+                return card, PlacementContext(pass_turn=True)
             if len(matching) == 1:
                 return card, matching[0][1]
             # Multiple routes available — ask the user which one to target

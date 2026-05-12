@@ -185,6 +185,11 @@ class GameEngine:
         legal_count = len(policy.legal_plays(s, player))
         card, context = policy.choose_play(s, player)
 
+        # Pass turn: route cap reached, player keeps card in hand
+        if getattr(context, "pass_turn", False):
+            s.log("PASS_TURN", player_id=player.player_id)
+            return
+
         # 3. Validate
         if card not in player.hand:
             raise RuntimeError(f"Policy {policy.name} chose a card not in hand: {card.card_id}")
@@ -307,6 +312,9 @@ class GameEngine:
             return
 
         s = self.state
+        valid_route_count = sum(1 for r in s.tableau.routes if r.is_valid)
+        if valid_route_count >= s.config.seed_cards_per_round:
+            return
         route = RouteState(
             route_id=s.tableau.next_route_id(),
             card_ids=[card.card_id],
