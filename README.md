@@ -168,10 +168,19 @@ Seed nodes are dealt with unique output channels to prevent immediate conflicts 
 ## Install
 
 ```bash
-pip install -r requirements.txt
+# Game only
+pip install .
+
+# Game + dev tools (pytest)
+pip install ".[dev]"
 ```
 
-Dependencies: `numpy`, `matplotlib`, `seaborn`, `pytest`.
+Or install dependencies directly:
+
+```bash
+pip install -r requirements.txt          # runtime only
+pip install -r requirements-dev.txt      # runtime + pytest
+```
 
 ## Usage
 
