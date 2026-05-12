@@ -79,7 +79,7 @@ def print_splash() -> None:
     print()
 
 
-def print_how_to_play() -> None:
+def print_how_to_play(config: "GameConfig") -> None:
     _TEAL   = _CHANNEL_ANSI["teal"]
     _ORANGE = _CHANNEL_ANSI["orange"]
     _PURPLE = _CHANNEL_ANSI["purple"]
@@ -107,10 +107,15 @@ def print_how_to_play() -> None:
     _section("ROUTES")
     print("    " + _dim("A route chains when each node's output channel matches"))
     print("    " + _dim("the next node's input channel. Routes need 2+ nodes to"))
-    print("    " + _dim("score. No channel can appear twice in the same route."))
+    print("    " + _dim(f"score. Max {config.route_max_hops} hops; max {len(config.channels)} routes open at once."))
+    print("    " + _dim("No channel can appear twice in the same route."))
+
+    _section("CARRY")
+    print("    " + _dim("Routes under 2 nodes at round end carry into the next"))
+    print("    " + _dim("round — they don't score and aren't discarded."))
 
     _section("CARD TYPES")
-    _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if can't extend any open route")
+    _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if cap allows and can't extend any")
     _row("⊣", _ORANGE, "Terminal",  "closes any open route (≥ 2 nodes); terminal's own value scores")
     _row("⊕", _PURPLE, "Amplifier", "extends like a relay; if exit node at scoring, value ×2")
     _row("⚠", _RED,    "Noise",     "destroys cards that output to a chosen channel; any scoring route hit is invalidated")

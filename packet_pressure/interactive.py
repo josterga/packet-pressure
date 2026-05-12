@@ -269,7 +269,7 @@ class InteractiveGame:
         else:
             print(f"  You are {state.players[self.human_index].player_id}")
         print(f"  First to {self.config.score_to_win} pts wins  ·  {self.config.max_rounds} rounds max")
-        print_how_to_play()
+        print_how_to_play(self.config)
         input("\n  Press Enter to start…")
 
         while not self._engine._is_terminal():
