@@ -35,5 +35,6 @@ NO_SPECIAL_CONFIG = GameConfig(
         ("terminal", 0.0),
         ("amplifier", 0.0),
         ("noise", 0.0),
+        ("filter", 0.0),
     ),
 )

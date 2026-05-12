@@ -15,7 +15,7 @@ class CardType(str, Enum):
     TERMINAL = "terminal"
     AMPLIFIER = "amplifier"
     NOISE = "noise"
-    SHIELD = "shield"
+    FILTER = "filter"
 
 
 class TerminationReason(str, Enum):
@@ -85,7 +85,7 @@ class GameConfig:
         ("terminal", 0.10),
         ("amplifier", 0.08),
         ("noise", 0.07),
-        ("shield", 0.06),
+        ("filter", 0.06),
     )
     relay_node_distribution: tuple[tuple[tuple[str, str], float], ...] = ()
     packet_values: tuple[int, ...] = (100, 100, 200, 200, 300, 400, 500, 600, 700)

@@ -260,7 +260,7 @@ class GameEngine:
             if route.is_valid and route.length >= cfg.route_min_length:
                 for cid in route.card_ids:
                     card = s.lookup_card(cid)
-                    if card and card.card_type == CardType.SHIELD and card.input_channel == channel:
+                    if card and card.card_type == CardType.FILTER and card.input_channel == channel:
                         shielded_card_ids.update(route.card_ids)
                         break
 

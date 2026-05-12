@@ -122,8 +122,8 @@ def render_card_lines(card: "Card", config: "GameConfig", dim: bool = False) -> 
         type_line = pad(f"  AMP   ×{mult}    ")
     elif card.card_type == CardType.NOISE:
         type_line = pad("  NOISE ≋≋≋≋   ")
-    elif card.card_type == CardType.SHIELD:
-        type_line = pad(f"  SHD-CH{card.input_channel}    ")
+    elif card.card_type == CardType.FILTER:
+        type_line = pad(f"  FLT-CH{card.input_channel}    ")
     else:
         type_line = None
 

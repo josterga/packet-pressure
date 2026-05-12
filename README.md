@@ -1,6 +1,11 @@
 # Packet Pressure
 
-A card-game simulation framework for studying routing and packet-forwarding strategies.
+> Routes don't belong to their builders — they belong to whoever exits them.
+
+**Packet Pressure** is a competitive card game for 3–5 players built on a packet-switching network.
+Each round, players chain relay nodes across shared channels to build routing paths, but the points go to the finisher, not the architect. Extend what others started, or build something worth stealing.
+
+*Every card you play either builds your lead or hands it to someone else.*
 
 ## How to Play
 
@@ -69,6 +74,81 @@ Disrupts a channel, destroying all nodes in **scoring-eligible routes** (≥ 2 n
 - Only playable when at least one scoring-eligible route exists; the target channel must be one used by a node in such a route
 - Routes shorter than 2 nodes are not affected — noise is precision disruption, not a blanket nuke
 - Also invalidates your own scoring routes if they output to the noised channel
+
+### Filter Node
+Extends a route like a relay node — input channel must match the route's current tail, output channel becomes the new tail. If a noise card targets the filter node's input channel, the entire route is immune: the noise is absorbed without invalidating any cards.
+
+- Protects the route it's part of from noise targeting its input channel
+- Works passively — no player action required to activate the filter
+- Can be extended further; it does not terminate the route
+
+### Visual reference
+
+In the terminal UI, each card's left border is colored by input channel and right border by output channel (teal = CH01, orange = CH02, purple = CH03).
+
+**Relay node** — forwards a packet from one channel to another.
+
+```
+┌──────────────────┐
+│ IN CH01   CH02 OUT│
+│──────────────────│
+│  PKT  200        │
+│──────────────────│
+│        PKT-0001  │
+└──────────────────┘
+```
+
+**Terminal node** — closes any open route immediately; earns points on its own packet value.
+
+```
+┌──────────────────┐
+│ IN ANY    END OUT│
+│──────────────────│
+│  ─── TERM ──     │
+│  PKT  500        │
+│──────────────────│
+│        TERM-0001 │
+└──────────────────┘
+```
+
+**Amplifier node** — extends a route; multiplies packet value (×2 default) if it's the exit node at scoring.
+
+```
+┌──────────────────┐
+│ IN CH02   CH03 OUT│
+│──────────────────│
+│  AMP   ×2        │
+│  PKT  300        │
+│──────────────────│
+│        AMP-0001  │
+└──────────────────┘
+```
+
+**Noise** — disrupts a channel, invalidating all scoring-eligible routes that output to it.
+
+```
+┌──────────────────┐
+│ IN  --    --  OUT│
+│──────────────────│
+│  NOISE ≋≋≋≋      │
+│  PKT  0          │
+│──────────────────│
+│       NOISE-0001 │
+└──────────────────┘
+```
+
+**Filter node** — extends a route and absorbs noise targeting its input channel, protecting the route.
+
+```
+┌──────────────────┐
+│ IN CH01   CH02 OUT│
+│──────────────────│
+│  FLT-CH01        │
+│  PKT  200        │
+│──────────────────│
+│        FLT-0001  │
+└──────────────────┘
+```
 
 ---
 

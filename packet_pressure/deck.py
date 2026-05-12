@@ -19,8 +19,8 @@ class DeckBuilder:
         n_terminal = int(self.config.deck_size * special_dist.get("terminal", 0.0))
         n_amplifier = int(self.config.deck_size * special_dist.get("amplifier", 0.0))
         n_noise = int(self.config.deck_size * special_dist.get("noise", 0.0))
-        n_shield = int(self.config.deck_size * special_dist.get("shield", 0.0))
-        n_special = n_terminal + n_amplifier + n_noise + n_shield
+        n_filter = int(self.config.deck_size * special_dist.get("filter", 0.0))
+        n_special = n_terminal + n_amplifier + n_noise + n_filter
         # Seed nodes are drawn from regular relay nodes at round start — no separate pool
         n_relay = max(0, self.config.deck_size - n_special)
 
@@ -43,8 +43,8 @@ class DeckBuilder:
         cards.extend(noise_nodes)
         idx += len(noise_nodes)
 
-        shield_cards = self._build_shield_cards(n_shield, idx)
-        cards.extend(shield_cards)
+        filter_nodes = self._build_filter_nodes(n_filter, idx)
+        cards.extend(filter_nodes)
 
         self.rng.shuffle(cards)  # type: ignore[arg-type]
         return list(cards)
@@ -155,13 +155,13 @@ class DeckBuilder:
             ))
         return cards
 
-    def _build_shield_cards(self, count: int, start_id: int) -> list[Card]:
+    def _build_filter_nodes(self, count: int, start_id: int) -> list[Card]:
         channels = self.config.channels
         colors = self.config.colors
         packet_values = self.config.packet_values
         cards = []
         for i in range(count):
-            cid = f"SHD-{start_id + i:04d}"
+            cid = f"FLT-{start_id + i:04d}"
             in_ch = str(self.rng.choice(channels))
             out_options = [c for c in channels if c != in_ch]
             out_ch = str(self.rng.choice(out_options)) if out_options else in_ch
@@ -169,7 +169,7 @@ class DeckBuilder:
             color = str(self.rng.choice(colors))
             cards.append(Card(
                 card_id=cid,
-                card_type=CardType.SHIELD,
+                card_type=CardType.FILTER,
                 input_channel=in_ch,
                 output_channel=out_ch,
                 packet_value=pv,
