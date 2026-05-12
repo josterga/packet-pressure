@@ -55,9 +55,17 @@ class PlayerPolicy(ABC):
             if card.card_id in tableau_ids:
                 continue
             if card.card_type == CardType.INTERFERENCE:
-                for ch in state.config.channels:
-                    ctx = ExtendedPlacementContext(target_channel=ch)
-                    plays.append((card, ctx))
+                scoring_card_ids: set[str] = set()
+                for r in state.tableau.routes:
+                    if r.is_valid and r.length >= state.config.route_min_length:
+                        scoring_card_ids.update(r.card_ids)
+                target_channels: set[str] = set()
+                for cid in scoring_card_ids:
+                    c = state.lookup_card(cid)
+                    if c and c.output_channel and c.output_channel not in ("TERM",):
+                        target_channels.add(c.output_channel)
+                for ch in target_channels:
+                    plays.append((card, ExtendedPlacementContext(target_channel=ch)))
             elif card.card_type == CardType.ACK:
                 for route in open_routes:
                     ctx = PlacementContext(target_route_id=route.route_id)

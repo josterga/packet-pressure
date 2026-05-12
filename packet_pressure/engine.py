@@ -237,22 +237,27 @@ class GameEngine:
 
     def _apply_interference(self, channel: str) -> None:
         s = self.state
+        cfg = self.config
         s.tableau.interfered_channels.add(channel)
         s.log(EVT_INTERFERENCE_APPLIED, channel=channel)
 
-        # Remove any active cards currently outputting to this channel
+        # Only disrupt cards belonging to scoring-eligible routes
+        scoring_route_card_ids: set[str] = set()
+        for route in s.tableau.routes:
+            if route.is_valid and route.length >= cfg.route_min_length:
+                scoring_route_card_ids.update(route.card_ids)
+
         to_remove = [
             cid for cid, c in s.tableau.active_cards.items()
-            if c.output_channel == channel
+            if c.output_channel == channel and cid in scoring_route_card_ids
         ]
         for cid in to_remove:
             del s.tableau.active_cards[cid]
             s.tableau.collided_card_ids.add(cid)
             s.log(EVT_COLLISION, reason="interference", channel=channel, card_id=cid)
 
-        # Invalidate routes that have been broken
         for route in s.tableau.routes:
-            if route.is_valid and any(
+            if route.is_valid and route.length >= cfg.route_min_length and any(
                 cid in s.tableau.collided_card_ids for cid in route.card_ids
             ):
                 route.is_valid = False
@@ -364,12 +369,6 @@ class GameEngine:
             route.termination_reason = TerminationReason.ACK
             route.is_scoring_candidate = route.length >= cfg.route_min_length
             s.log(EVT_ROUTE_TERMINATED, route_id=route.route_id, reason="ack",
-                  scoring=route.is_scoring_candidate)
-
-        elif card.card_type == CardType.BROADCAST:
-            route.termination_reason = TerminationReason.BROADCAST
-            route.is_scoring_candidate = route.length >= cfg.route_min_length
-            s.log(EVT_ROUTE_TERMINATED, route_id=route.route_id, reason="broadcast",
                   scoring=route.is_scoring_candidate)
 
         elif route.length >= cfg.route_max_hops:

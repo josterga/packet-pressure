@@ -55,16 +55,18 @@ Terminates a chosen route immediately. Input is `ANY` (matches any open route). 
 - The terminated route stays visible in the tableau but can no longer be extended; it scores at end of round
 
 ### Broadcast
-Terminates a route and applies a **score multiplier** (default ×2). Input channel must match the route's current tail.
+Extends a route like a Route card — input channel must match the route's current tail, output channel becomes the new tail. If the Broadcast card is the endpoint when scoring happens, the score is `packet_value × multiplier` (default ×2) instead of the raw value.
 
-- The Broadcast card's own packet value × multiplier is the score
-- Higher risk than ACK (must channel-match) but higher reward
+- Higher reward than a plain Route card when you hold the endpoint
+- Can be extended further by other cards (it does not terminate the route)
+- Self-loop channel pairs (in = out) are not generated
 
 ### Interference (JAM)
-Jams a channel you choose. All cards currently outputting to that channel are immediately removed from the tableau and their routes are invalidated.
+Jams a channel, destroying all cards in **scoring-eligible routes** (≥ 2 cards) that output to that channel. Those routes are immediately invalidated.
 
-- Strong disruption — can wreck an opponent's long route at any time
-- Also destroys your own cards if they output to the jammed channel
+- Only playable when at least one scoring-eligible route exists; the target channel must be one used by a card in such a route
+- Routes shorter than 2 cards are not affected — JAM is precision disruption, not a blanket nuke
+- Also invalidates your own scoring routes if they output to the jammed channel
 
 ---
 

@@ -119,7 +119,8 @@ class DeckBuilder:
         for i in range(count):
             cid = f"BCST-{start_id + i:04d}"
             in_ch = str(self.rng.choice(channels))
-            out_ch = str(self.rng.choice(channels))
+            out_options = [c for c in channels if c != in_ch]
+            out_ch = str(self.rng.choice(out_options)) if out_options else in_ch
             pv = int(self.rng.choice(packet_values))
             color = str(self.rng.choice(colors))
             cards.append(Card(

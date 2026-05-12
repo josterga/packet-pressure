@@ -228,7 +228,9 @@ class TestBroadcast:
         engine._update_routes(bcst)
 
         route = s.tableau.routes[0]
-        assert route.termination_reason == TerminationReason.BROADCAST
+        # Broadcast no longer terminates — route stays active, multiplier applies at scoring
+        assert route.termination_reason == TerminationReason.ACTIVE
+        assert route.endpoint_card_id == "BCST-0001"
         owner, score = engine._score_route(route)
         assert owner == "P1"
         assert score == 600  # 200 * 3
@@ -246,17 +248,43 @@ class TestInterference:
         assert "03" in s.tableau.interfered_channels
 
     def test_interference_removes_cards_on_channel(self):
-        engine = make_engine(n_policies=3)
+        # JAM only affects scoring-eligible routes (length >= route_min_length)
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
 
-        c1 = make_card("PKT-JAM1", in_ch="01", out_ch="03", owner="P0")
-        s.register_card(c1)
-        s.tableau.active_cards[c1.card_id] = c1
+        c1 = make_card("PKT-JAM1", in_ch="01", out_ch="02", owner="P0")
+        c2 = make_card("PKT-JAM2", in_ch="02", out_ch="03", owner="P0")
+        for c in (c1, c2):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(c2)
+
+        assert s.tableau.routes[0].length == 2
 
         engine._apply_interference("03")
 
-        assert "PKT-JAM1" not in s.tableau.active_cards
-        assert "PKT-JAM1" in s.tableau.collided_card_ids
+        assert "PKT-JAM2" not in s.tableau.active_cards
+        assert "PKT-JAM2" in s.tableau.collided_card_ids
+
+    def test_interference_spares_short_routes(self):
+        # Routes shorter than route_min_length are not affected by JAM
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("PKT-SHORT", in_ch="01", out_ch="03", owner="P0")
+        s.register_card(c1)
+        s.tableau.active_cards[c1.card_id] = c1
+        engine._try_start_route(c1)
+
+        assert s.tableau.routes[0].length == 1
+
+        engine._apply_interference("03")
+
+        # Card survives — route is length 1, below min_length
+        assert "PKT-SHORT" in s.tableau.active_cards
 
 
 # ---------------------------------------------------------------------------

@@ -49,12 +49,12 @@ class TestLegalPlays:
         for card, _ in plays:
             assert card.card_id not in tableau_ids
 
-    def test_interference_generates_one_play_per_channel(self):
+    def test_interference_requires_scoring_route(self):
+        # JAM is dead in hand when no scoring routes exist
         state, engine = make_state()
         policy = RandomLegal()
         player = state.players[0]
 
-        # Force a JAM card into hand
         jam = Card(
             card_id="JAM-TEST",
             card_type=CardType.INTERFERENCE,
@@ -66,9 +66,45 @@ class TestLegalPlays:
         state.register_card(jam)
         player.hand.append(jam)
 
+        # No routes in tableau — JAM generates no plays
         plays = policy.legal_plays(state, player)
         jam_plays = [(c, ctx) for c, ctx in plays if c.card_id == "JAM-TEST"]
-        assert len(jam_plays) == len(state.config.channels)
+        assert len(jam_plays) == 0
+
+    def test_interference_targets_scoring_route_channels(self):
+        # With a scoring route present, JAM targets its output channels
+        from packet_pressure.engine import GameEngine
+        from packet_pressure.models import RouteState
+        state, engine = make_state()
+        policy = RandomLegal()
+        player = state.players[0]
+
+        jam = Card(
+            card_id="JAM-TEST",
+            card_type=CardType.INTERFERENCE,
+            input_channel=None,
+            output_channel=None,
+            packet_value=0,
+            color="red",
+        )
+        state.register_card(jam)
+        player.hand.append(jam)
+
+        # Build a 2-card scoring route manually
+        c1 = Card("R1", CardType.ROUTE, "01", "02", 100, "red", owner_id="P1")
+        c2 = Card("R2", CardType.ROUTE, "02", "03", 100, "red", owner_id="P1")
+        for c in (c1, c2):
+            state.register_card(c)
+            state.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(c2)
+        assert state.tableau.routes[0].length == 2
+
+        plays = policy.legal_plays(state, player)
+        jam_plays = [(c, ctx) for c, ctx in plays if c.card_id == "JAM-TEST"]
+        target_channels = {ctx.target_channel for _, ctx in jam_plays}
+        # Output channels of c1 and c2 are in scoring route
+        assert "02" in target_channels or "03" in target_channels
 
 
 class TestGreedyEndpoint:
