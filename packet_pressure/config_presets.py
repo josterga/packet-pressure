@@ -14,7 +14,7 @@ FAST_CONFIG = GameConfig(
     channel_colors=("teal", "orange"),
     seed_cards_per_round=2,
     route_min_length=2,
-    route_max_hops=2,
+    route_max_hops=3,
     deck_size=60,
 )
 
