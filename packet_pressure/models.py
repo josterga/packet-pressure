@@ -63,13 +63,13 @@ class GameConfig:
 
     colors: tuple[str, ...] = ("red", "blue", "green", "yellow")
 
-    starting_hand_size: int = 5
+    starting_hand_size: int = 4
     draw_per_turn: int = 1
     turns_per_player_per_round: int = 3
     seed_nodes_per_round: int = 3
 
     route_min_length: int = 2
-    route_max_hops: int = 6
+    route_max_hops: int = 4
 
     deck_size: int = 80
 
@@ -88,6 +88,7 @@ class GameConfig:
         ("filter", 0.06),
     )
     relay_node_distribution: tuple[tuple[tuple[str, str], float], ...] = ()
+    relay_node_exact_distribution: bool = False
     packet_values: tuple[int, ...] = (100, 100, 200, 200, 300, 400, 500, 600, 700)
 
     def channel_index(self, ch: str) -> int | None:

@@ -27,8 +27,27 @@ COMPETITIVE_CONFIG = GameConfig(
     channel_shapes=("circle", "square", "triangle", "diamond"),
     channel_colors=("teal", "orange", "purple", "red"),
     seed_nodes_per_round=4,
+    route_max_hops=6,
     amplifier_multiplier=3,
     deck_size=100,
+)
+
+PRINT_CONFIG = GameConfig(
+    relay_node_exact_distribution=True,
+    relay_node_distribution=(
+        (("01", "02"), 1.0),
+        (("01", "03"), 1.0),
+        (("02", "01"), 1.0),
+        (("02", "03"), 1.0),
+        (("03", "01"), 1.0),
+        (("03", "02"), 1.0),
+    ),
+    special_distribution=(
+        ("terminal", 0.10),
+        ("amplifier", 0.05),
+        ("noise", 0.05),
+        ("filter", 0.05),
+    ),
 )
 
 NO_SPECIAL_CONFIG = GameConfig(

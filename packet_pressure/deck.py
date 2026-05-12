@@ -63,6 +63,24 @@ class DeckBuilder:
         return hand_cards + draw_cards + seed_nodes + slack
 
     # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _exact_sequence(self, items: list, weights: np.ndarray, count: int) -> list:
+        """Return a shuffled list of exactly `count` items drawn proportionally from weights."""
+        w = weights / weights.sum()
+        counts = np.round(w * count).astype(int)
+        diff = count - counts.sum()
+        counts[int(np.argmax(w))] += diff
+        seq = [items[i] for i, n in enumerate(counts) for _ in range(n)]
+        self.rng.shuffle(seq)
+        return seq
+
+    def _all_channel_pairs(self) -> list[tuple[str, str]]:
+        ch = self.config.channels
+        return [(i, o) for i in ch for o in ch if i != o]
+
+    # ------------------------------------------------------------------
     # Private builders
     # ------------------------------------------------------------------
 
@@ -71,6 +89,27 @@ class DeckBuilder:
         colors = self.config.colors
         packet_values = self.config.packet_values
         dist = self.config.relay_node_distribution
+        exact = self.config.relay_node_exact_distribution
+
+        if exact and dist:
+            pairs = [d[0] for d in dist]
+            weights = np.array([d[1] for d in dist], dtype=float)
+            pair_seq = self._exact_sequence(pairs, weights, count)
+            val_items = sorted(set(packet_values))
+            val_weights = np.array([packet_values.count(v) for v in val_items], dtype=float)
+            val_seq = self._exact_sequence(val_items, val_weights, count)
+            cards = []
+            for i, ((in_ch, out_ch), pv) in enumerate(zip(pair_seq, val_seq)):
+                color = str(self.rng.choice(colors))
+                cards.append(Card(
+                    card_id=f"PKT-{start_id + i:04d}",
+                    card_type=CardType.RELAY,
+                    input_channel=in_ch,
+                    output_channel=out_ch,
+                    packet_value=pv,
+                    color=color,
+                ))
+            return cards
 
         if dist:
             pairs = [d[0] for d in dist]
@@ -100,17 +139,24 @@ class DeckBuilder:
     def _build_terminal_nodes(self, count: int, start_id: int) -> list[Card]:
         colors = self.config.colors
         packet_values = self.config.terminal_packet_values
+        exact = self.config.relay_node_exact_distribution
+
+        if exact:
+            val_items = sorted(set(packet_values))
+            val_weights = np.array([packet_values.count(v) for v in val_items], dtype=float)
+            val_seq = self._exact_sequence(val_items, val_weights, count)
+        else:
+            val_seq = [int(self.rng.choice(packet_values)) for _ in range(count)]
+
         cards = []
-        for i in range(count):
-            cid = f"TERM-{start_id + i:04d}"
-            pv = int(self.rng.choice(packet_values))
+        for i, pv in enumerate(val_seq):
             color = str(self.rng.choice(colors))
             cards.append(Card(
-                card_id=cid,
+                card_id=f"TERM-{start_id + i:04d}",
                 card_type=CardType.TERMINAL,
                 input_channel="ANY",
                 output_channel="TERM",
-                packet_value=pv,
+                packet_value=int(pv),
                 color=color,
             ))
         return cards
@@ -120,6 +166,29 @@ class DeckBuilder:
         colors = self.config.colors
         packet_values = self.config.packet_values
         multiplier = self.config.amplifier_multiplier
+        exact = self.config.relay_node_exact_distribution
+
+        if exact:
+            all_pairs = self._all_channel_pairs()
+            pair_weights = np.ones(len(all_pairs), dtype=float)
+            pair_seq = self._exact_sequence(all_pairs, pair_weights, count)
+            val_items = sorted(set(packet_values))
+            val_weights = np.array([packet_values.count(v) for v in val_items], dtype=float)
+            val_seq = self._exact_sequence(val_items, val_weights, count)
+            cards = []
+            for i, ((in_ch, out_ch), pv) in enumerate(zip(pair_seq, val_seq)):
+                color = str(self.rng.choice(colors))
+                cards.append(Card(
+                    card_id=f"AMP-{start_id + i:04d}",
+                    card_type=CardType.AMPLIFIER,
+                    input_channel=in_ch,
+                    output_channel=out_ch,
+                    packet_value=int(pv),
+                    color=color,
+                    special_properties=(("multiplier", multiplier),),
+                ))
+            return cards
+
         cards = []
         for i in range(count):
             cid = f"AMP-{start_id + i:04d}"
@@ -159,6 +228,28 @@ class DeckBuilder:
         channels = self.config.channels
         colors = self.config.colors
         packet_values = self.config.packet_values
+        exact = self.config.relay_node_exact_distribution
+
+        if exact:
+            all_pairs = self._all_channel_pairs()
+            pair_weights = np.ones(len(all_pairs), dtype=float)
+            pair_seq = self._exact_sequence(all_pairs, pair_weights, count)
+            val_items = sorted(set(packet_values))
+            val_weights = np.array([packet_values.count(v) for v in val_items], dtype=float)
+            val_seq = self._exact_sequence(val_items, val_weights, count)
+            cards = []
+            for i, ((in_ch, out_ch), pv) in enumerate(zip(pair_seq, val_seq)):
+                color = str(self.rng.choice(colors))
+                cards.append(Card(
+                    card_id=f"FLT-{start_id + i:04d}",
+                    card_type=CardType.FILTER,
+                    input_channel=in_ch,
+                    output_channel=out_ch,
+                    packet_value=int(pv),
+                    color=color,
+                ))
+            return cards
+
         cards = []
         for i in range(count):
             cid = f"FLT-{start_id + i:04d}"

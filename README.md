@@ -20,7 +20,7 @@ Each round, players chain relay nodes across shared channels to build routing pa
 Be the first player to reach the score target (default: 2000 pts). If no one reaches it, whoever has the most points after the final round wins.
 
 ### Setup
-Each round starts by dealing **seed nodes** face-up into the shared tableau — one seed per channel, drawn from the top of the shuffled deck. Seed nodes are ordinary relay nodes; the only thing special about them is when they enter play. Because seed nodes must each occupy a distinct output channel, the number of seeds equals the number of channels — which is always fewer than the number of players. One player per round gets no anchor route and must extend or terminate an existing one. Each player holds a starting hand of cards.
+Each round starts by dealing **seed nodes** face-up into the shared tableau — one seed per channel, drawn from the top of the shuffled deck. Seed nodes are ordinary relay nodes; the only thing special about them is when they enter play. Because seed nodes must each occupy a distinct output channel, the number of seeds equals the number of channels — which is always fewer than the number of players. One player per round gets no anchor route and must extend or terminate an existing one. Each player holds a starting hand of **4 cards**.
 
 ### On Your Turn
 1. **Draw** one card from the deck into your hand. If the deck is empty, the discard pile is reshuffled face-down and becomes the new deck — the game never stalls for cards.
@@ -297,14 +297,27 @@ Key flags:
 
 | Preset | Players | Channels | Seed nodes/round | Score to win | Rounds | Deck | Max hops |
 |---|---|---|---|---|---|---|---|
-| `default` | 4 | 3 | 3 | 2000 | 15 | 80 | 6 |
+| `default` | 4 | 3 | 3 | 2000 | 15 | 80 | 4 |
 | `fast` | 3 | 2 | 2 | 1200 | 8 | 60 | 2 |
 | `competitive` | 5 | 4 | 4 | 3000 | 20 | 100 | 6 |
 | `no_special` | 4 | 3 | 3 | 2000 | 15 | 80 (relay only) | 6 |
+| `print` | 4 | 3 | 3 | 2000 | 15 | 80 (fixed distribution) | 4 |
 
 Seed nodes per round equal the channel count — always one fewer than the player count. One player per round competes without an anchor route.
 
 `competitive` uses amplifier multiplier ×3 (all other presets use the default ×2).
+
+The `print` preset produces a deterministic deck suited for physical printing. Channel pairs and packet values are allocated proportionally rather than sampled randomly — every run yields the same card counts regardless of seed:
+
+| Card type | Count | Detail |
+|---|---|---|
+| Relay | 60 | 10 per channel pair (6 pairs: CH01↔CH02, CH01↔CH03, CH02↔CH03) |
+| Terminal | 8 | ANY → TERM; 2 each at 400 / 500 / 600 / 700 pts |
+| Amplifier | 4 | 1 per pair from CH01→02, CH01→03, CH02→01, CH02→03 |
+| Filter | 4 | 1 per pair from CH03→01, CH03→02, CH01→02, CH01→03 |
+| Noise | 4 | No channel assignment |
+
+Packet values across the 60 relay nodes: 12×100, 13×200, 7×300, 7×400, 7×500, 7×600, 7×700. Use `--seed N` to also fix the order cards appear in the shuffled deck.
 
 ## Policies
 

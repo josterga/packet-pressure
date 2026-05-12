@@ -10,6 +10,7 @@ from .config_presets import (
     DEFAULT_CONFIG,
     FAST_CONFIG,
     NO_SPECIAL_CONFIG,
+    PRINT_CONFIG,
 )
 from .models import GameConfig
 from .policies import (
@@ -25,6 +26,7 @@ _PRESET_MAP = {
     "fast": FAST_CONFIG,
     "competitive": COMPETITIVE_CONFIG,
     "no_special": NO_SPECIAL_CONFIG,
+    "print": PRINT_CONFIG,
 }
 
 _POLICY_MAP = {
