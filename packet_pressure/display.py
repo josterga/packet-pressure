@@ -304,9 +304,17 @@ def render_tableau(state: "GameState") -> str:
     cfg = state.config
     lines: list[str] = []
 
-    active_routes = [r for r in state.tableau.routes if r.is_valid and r.termination_reason == TerminationReason.ACTIVE]
-    done_routes   = [r for r in state.tableau.routes if r.is_valid and r.termination_reason != TerminationReason.ACTIVE]
+    all_active    = [r for r in state.tableau.routes if r.is_valid and r.termination_reason == TerminationReason.ACTIVE]
+    carried_routes = [r for r in all_active if r.carried]
+    active_routes  = [r for r in all_active if not r.carried]
+    done_routes    = [r for r in state.tableau.routes if r.is_valid and r.termination_reason != TerminationReason.ACTIVE]
     invalid_routes = [r for r in state.tableau.routes if not r.is_valid]
+
+    if carried_routes:
+        lines.append(_dim("  ── CARRIED ──"))
+        for route in carried_routes:
+            lines.append(render_route_block(route, state))
+            lines.append("")
 
     for route in active_routes:
         lines.append(render_route_block(route, state))

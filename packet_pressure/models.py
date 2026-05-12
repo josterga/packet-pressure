@@ -173,6 +173,7 @@ class RouteState:
     exit_node_id: str | None = None
     length: int = 0
     termination_reason: TerminationReason = TerminationReason.ACTIVE
+    carried: bool = False
 
     @property
     def last_output_channel(self) -> str | None:

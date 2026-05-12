@@ -44,10 +44,12 @@ Routes must be at least **2 nodes long** to score. Routes are capped at **6 hops
 
 At most `seed_nodes_per_round` routes can be open simultaneously. Once a route closes — by hitting the hop limit or being terminated — its slot frees up and a new route can start. A player **passes their turn** only if the concurrent cap is full and no card in hand can extend any open route — they still draw and keep the card, but nothing is played to the tableau that turn.
 
+Open routes shorter than `route_min_length` (typically single-node stubs) are not discarded at round end — they carry over into the next round. Each carried route reduces the seed count for that round by one, keeping the concurrent cap intact. Carried routes appear under **CARRIED** in the tableau and can be extended normally.
+
 ### Scoring
 Score is awarded at **end of round** for eligible routes. Only the **exit node's packet value** scores — there is no cumulative sum. The player who owns the exit node collects those points.
 
-At round end, **all valid routes of at least 2 nodes score**, whether they were explicitly terminated (by a terminal node, amplifier node, or hitting the hop limit) or still open. A route that was never terminated simply scores with whoever owns its current exit node. Routes shorter than 2 nodes are lost without scoring. After scoring, the entire tableau is discarded — only player hands carry over. Hands are then topped back up to the starting hand size before the next round begins.
+At round end, **all valid routes of at least 2 nodes score**, whether they were explicitly terminated (by a terminal node, amplifier node, or hitting the hop limit) or still open. A route that was never terminated simply scores with whoever owns its current exit node. Routes shorter than `route_min_length` never score — they carry over into the next round instead (see Building Routes). After scoring, the tableau is discarded except for any carried routes — only player hands otherwise carry over. Hands are then topped back up to the starting hand size before the next round begins.
 
 The player who scored the most points in a round goes first in the next round. Going first is a disadvantage — you act before others can react to what you build. On a tied round (multiple players share the highest score), turn order is unchanged.
 

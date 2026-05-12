@@ -139,7 +139,8 @@ class GameEngine:
         # Seed nodes can be any card with channels (relay, amplifier, shield) — skip terminal and noise.
         seed_nodes: list[Card] = []
         skipped: list[Card] = []
-        needed = self.config.seed_nodes_per_round
+        already_open = sum(1 for r in s.tableau.routes if r.is_open())
+        needed = max(0, self.config.seed_nodes_per_round - already_open)
         while len(seed_nodes) < needed and s.deck:
             card = s.deck.pop(0)
             if card.card_type in (CardType.TERMINAL, CardType.NOISE):
@@ -464,11 +465,28 @@ class GameEngine:
 
     def _discard_tableau(self) -> None:
         s = self.state
+        cfg = self.config
+
+        # Carry over open routes that never reached scoring length
+        persisted = [
+            r for r in s.tableau.routes
+            if r.is_open() and r.length < cfg.route_min_length
+        ]
+        persisted_card_ids = {cid for r in persisted for cid in r.card_ids}
+
+        for r in persisted:
+            r.carried = True
+
         for card in s.tableau.active_cards.values():
-            s.discard.append(card)
-        s.tableau.active_cards.clear()
+            if card.card_id not in persisted_card_ids:
+                s.discard.append(card)
+
+        s.tableau.active_cards = {
+            cid: c for cid, c in s.tableau.active_cards.items()
+            if cid in persisted_card_ids
+        }
         s.tableau.seed_nodes.clear()
-        s.tableau.routes.clear()
+        s.tableau.routes = persisted
         s.tableau.noisy_channels.clear()
         s.tableau.collided_card_ids.clear()
 
