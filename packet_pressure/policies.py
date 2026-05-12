@@ -188,6 +188,8 @@ class GreedyExitNode(PlayerPolicy):
                 pass  # noise never scores directly
             elif card.card_type in (CardType.TERMINAL, CardType.AMPLIFIER):
                 for route in open_routes:
+                    if card.card_type == CardType.TERMINAL and route.length < state.config.route_min_length:
+                        continue
                     if self._can_card_extend_route(card, route, state):
                         v = self._estimate_exit_node_value(card, route, state)
                         if v > score:
@@ -274,6 +276,14 @@ class DenialCollision(PlayerPolicy):
             for card, ctx in plays:
                 if card.card_type == CardType.TERMINAL:
                     return card, PlacementContext(target_route_id=target_route.route_id)
+
+        # Steal exit node by extending target route ourselves
+        last_out = target_route.last_output_channel
+        if last_out:
+            for card, ctx in plays:
+                if card.card_type not in (CardType.NOISE, CardType.TERMINAL):
+                    if card.input_channel in ("ANY", last_out):
+                        return card, PlacementContext(target_route_id=target_route.route_id)
 
         return None
 

@@ -110,11 +110,11 @@ def print_how_to_play() -> None:
     print("    " + _dim("score. No channel can appear twice in the same route."))
 
     _section("CARD TYPES")
-    _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if no match")
+    _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if can't extend any open route")
     _row("⊣", _ORANGE, "Terminal",  "closes any open route (≥ 2 nodes); terminal's own value scores")
     _row("⊕", _PURPLE, "Amplifier", "extends like a relay; if exit node at scoring, value ×2")
-    _row("⚠", _RED,    "Noise",     "invalidates all scoring-eligible routes on a chosen channel")
-    _row("⊘", _GREEN,  "Filter",    "extends like a relay; absorbs noise targeting its input channel")
+    _row("⚠", _RED,    "Noise",     "destroys cards that output to a chosen channel; any scoring route hit is invalidated")
+    _row("⊘", _GREEN,  "Filter",    "extends like a relay; if noise targets its input channel, the whole route is immune")
 
     _section("SCORING")
     print("    " + _dim("At round end, all valid routes (≥ 2 nodes) score."))
