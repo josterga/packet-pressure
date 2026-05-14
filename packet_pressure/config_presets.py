@@ -14,7 +14,6 @@ FAST_CONFIG = GameConfig(
     channel_colors=("teal", "orange", "purple"),
     seed_nodes_per_round=2,
     route_min_length=2,
-    route_max_hops=3,
     deck_size=60,
 )
 
@@ -27,7 +26,6 @@ COMPETITIVE_CONFIG = GameConfig(
     channel_shapes=("circle", "square", "triangle", "diamond"),
     channel_colors=("teal", "orange", "purple", "red"),
     seed_nodes_per_round=4,
-    route_max_hops=6,
     amplifier_multiplier=3,
     deck_size=100,
 )

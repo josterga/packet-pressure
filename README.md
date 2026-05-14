@@ -29,11 +29,11 @@ Be the first player to reach 2,000 points. If no one reaches the target, whoever
 ## Setting Up
 
 1. Shuffle the full deck.
-2. Deal seed nodes face-up into the shared play area (the tableau) — one per channel. With the default 3-channel network, 3 seed nodes enter play. Seed nodes are always relay, amplifier, or filter cards — terminal and noise cards are never dealt as seeds.
+2. Deal seed nodes face-up into the shared play area (the tableau) — one fewer than the player count. With the default 4-player game, 3 seed nodes enter play. Seed nodes are always relay, amplifier, or filter cards — terminal and noise cards are never dealt as seeds.
 3. Deal each player a starting hand of 4 cards.
 4. The player to the left of the dealer goes first.
 
-Why fewer seeds than players? Because channels < players, at least one player each round has no anchor route — they must extend or steal an existing one.
+Why fewer seeds than players? Seeds per round = player count − 1, so one player each round has no anchor route — they must extend or contest an existing one.
 
 ## The Tableau
 
@@ -74,9 +74,9 @@ A route is a chain of nodes where each node's output channel matches the next no
 Key rules:
 
 - Routes must be at least 2 nodes long to score.
-- Routes are capped at 4 hops (3 hops in the fast preset).
+- Routes are capped at one hop per channel (3 hops in default/fast, 4 in competitive).
 - A route cannot visit the same channel twice — no channel loops within a route.
-- No more than 3 routes can be open at the same time (one per channel). Once a route closes, its slot frees up.
+- No more than [player count] routes can be open at the same time. Once a route closes, its slot frees up.
 
 **Passing your turn:** You may only pass if the concurrent cap is full and none of your cards can extend any open route. You still draw a card; you just don't play one.
 
@@ -254,7 +254,7 @@ To extend a route, your card must:
 - Have an input channel matching the route's current tail (or be ANY)
 - Not repeat a card already in that route
 - Output to a channel the route hasn't yet visited
-- Not push the route over the hop limit (4 by default)
+- Not push the route over the hop limit (= channel count; 3 by default)
 
 ---
 
@@ -292,7 +292,7 @@ Aura's route closes immediately. The terminal's 500 pts score at round end, not 
 | Setting              | Default   | fast      |
 |----------------------|-----------|-----------|
 | Score target         | 2,000 pts | 1,200 pts |
-| Max hops per route   | 4         | 3         |
+| Max hops per route   | 3         | 3         |
 | Channels             | 3         | 3         |
 | Amplifier multiplier | ×2        | ×2        |
 | Starting hand size   | 4         | 4         |
@@ -351,15 +351,15 @@ Key flags:
 
 ## Config Presets
 
-| Preset | Players | Channels | Seed nodes/round | Score to win | Rounds | Deck | Max hops |
-|---|---|---|---|---|---|---|---|
-| `default` | 4 | 3 | 3 | 2000 | 5 | 80 | 4 |
-| `fast` | 3 | 3 | 2 | 1200 | 4 | 60 | 3 |
-| `competitive` | 5 | 4 | 4 | 3000 | 6 | 100 | 6 |
-| `no_special` | 4 | 3 | 3 | 2000 | 5 | 80 (relay only) | 4 |
-| `print` | 4 | 3 | 3 | 2000 | 5 | 80 (fixed distribution) | 4 |
+| Preset | Players | Channels | Seed nodes/round | Max routes | Score to win | Rounds | Deck | Max hops |
+|---|---|---|---|---|---|---|---|---|
+| `default` | 4 | 3 | 3 | 4 | 2000 | 5 | 80 | 3 |
+| `fast` | 3 | 3 | 2 | 3 | 1200 | 4 | 60 | 3 |
+| `competitive` | 5 | 4 | 4 | 5 | 3000 | 6 | 100 | 4 |
+| `no_special` | 4 | 3 | 3 | 4 | 2000 | 5 | 80 (relay only) | 3 |
+| `print` | 4 | 3 | 3 | 4 | 2000 | 5 | 80 (fixed distribution) | 3 |
 
-Seed nodes per round equal the channel count for default/competitive — always one fewer than the player count. One player per round competes without an anchor route. The `fast` preset uses 2 seeds across 3 channels.
+Three rules govern routing across all presets: seeds per round = player count − 1 (one player always starts without an anchor); max concurrent open routes = player count; hop limit = channel count (routes cannot revisit a channel, so these two constraints are equivalent).
 
 `competitive` uses amplifier multiplier ×3 (all other presets use the default ×2).
 
@@ -447,9 +447,9 @@ After a batch run, the CSV output and printed summary include these fields:
 Use `--sweep-param` to vary a single `GameConfig` field across values and compare results:
 
 ```bash
-# Does the hop limit actually constrain routes?
+# How does seed count affect win rates? (hop limit = channel count, not sweepable directly)
 python -m packet_pressure.run_experiment \
-  --sweep-param route_max_hops --sweep-values 2 3 4 6 \
+  --sweep-param seed_nodes_per_round --sweep-values 1 2 3 \
   --n-games 500 --seed 0
 
 # How much does the amplifier multiplier shift win rates?

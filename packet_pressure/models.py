@@ -69,7 +69,6 @@ class GameConfig:
     seed_nodes_per_round: int = 3
 
     route_min_length: int = 2
-    route_max_hops: int = 4
 
     deck_size: int = 80
 
@@ -90,6 +89,14 @@ class GameConfig:
     relay_node_distribution: tuple[tuple[tuple[str, str], float], ...] = ()
     relay_node_exact_distribution: bool = False
     packet_values: tuple[int, ...] = (100, 100, 200, 200, 300, 400, 500, 600, 700)
+
+    @property
+    def route_max_hops(self) -> int:
+        return len(self.channels)
+
+    @property
+    def max_open_routes(self) -> int:
+        return self.player_count
 
     def channel_index(self, ch: str) -> int | None:
         try:

@@ -107,7 +107,7 @@ def print_how_to_play(config: "GameConfig") -> None:
     _section("ROUTES")
     print("    " + _dim("A route chains when each node's output channel matches"))
     print("    " + _dim("the next node's input channel. Routes need 2+ nodes to"))
-    print("    " + _dim(f"score. Max {config.route_max_hops} hops; max {len(config.channels)} routes open at once."))
+    print("    " + _dim(f"score. Max {config.route_max_hops} hops; max {config.max_open_routes} routes open at once."))
     print("    " + _dim("No channel can appear twice in the same route."))
 
     _section("CARRY")

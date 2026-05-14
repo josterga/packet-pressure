@@ -27,7 +27,7 @@ def test_game_config_defaults():
     cfg = GameConfig()
     assert cfg.channels == ("01", "02", "03")
     assert cfg.route_min_length == 2
-    assert cfg.route_max_hops == 4
+    assert cfg.route_max_hops == 3
 
 
 def test_game_config_channel_helpers():

@@ -316,7 +316,7 @@ class GameEngine:
 
         s = self.state
         valid_route_count = sum(1 for r in s.tableau.routes if r.is_open())
-        if valid_route_count >= s.config.seed_nodes_per_round:
+        if valid_route_count >= s.config.max_open_routes:
             return
         route = RouteState(
             route_id=s.tableau.next_route_id(),

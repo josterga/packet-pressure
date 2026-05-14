@@ -177,7 +177,7 @@ class HumanPolicy(PlayerPolicy):
                     else:
                         card_hints.append(f"→ {route.route_id}")
                 if not card_hints:
-                    cap_reached = sum(1 for r in state.tableau.routes if r.is_open()) >= cfg.seed_nodes_per_round
+                    cap_reached = sum(1 for r in state.tableau.routes if r.is_open()) >= cfg.max_open_routes
                     if not cap_reached:
                         card_hints = ["→ new route"]
 

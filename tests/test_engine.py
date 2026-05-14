@@ -95,7 +95,7 @@ class TestRouteExtension:
         assert s.tableau.routes[0].length == 1
 
     def test_hop_limit_terminates(self):
-        cfg = dataclasses.replace(GameConfig(), route_max_hops=3, player_count=3)
+        cfg = dataclasses.replace(GameConfig(), player_count=3)
         engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
 

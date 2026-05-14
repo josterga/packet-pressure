@@ -62,10 +62,10 @@ class TestSweepParameter:
 
     def test_sweep_uses_correct_config(self):
         results = sweep_parameter(
-            FAST_CONFIG, "route_max_hops", [3, 5], [RandomLegal()] * 3, n_games=5, seed=0
+            FAST_CONFIG, "seed_nodes_per_round", [1, 2], [RandomLegal()] * 3, n_games=5, seed=0
         )
-        assert results[0].config.route_max_hops == 3
-        assert results[1].config.route_max_hops == 5
+        assert results[0].config.seed_nodes_per_round == 1
+        assert results[1].config.seed_nodes_per_round == 2
 
     def test_sweep_invalid_param_raises(self):
         with pytest.raises(ValueError, match="not a valid GameConfig field"):
