@@ -288,24 +288,36 @@ class InteractiveGame:
         engine._begin_round()
 
         first = state.first_player_index
-        for _ in range(cfg.turns_per_player_per_round):
-            for offset in range(cfg.player_count):
-                p_idx = (first + offset) % cfg.player_count
-                if engine._is_terminal():
-                    return
-                state.current_player_index = p_idx
-                log_before = len(state.event_log)
+        all_turns = [
+            (first + offset) % cfg.player_count
+            for _ in range(cfg.turns_per_player_per_round)
+            for offset in range(cfg.player_count)
+        ]
 
-                engine._run_turn(p_idx)
-                state.turn_number += 1
+        for i, p_idx in enumerate(all_turns):
+            if engine._is_terminal():
+                return
+            state.current_player_index = p_idx
+            log_before = len(state.event_log)
 
-                new_events = state.event_log[log_before:]
-                if self.solo or p_idx == self.human_index:
-                    self._print_human_turn_result(new_events, state)
-                else:
-                    self._print_opponent_turn(new_events, state, p_idx)
-                    if self.opponent_delay > 0:
-                        time.sleep(self.opponent_delay)
+            engine._run_turn(p_idx)
+            state.turn_number += 1
+
+            new_events = state.event_log[log_before:]
+            if self.solo or p_idx == self.human_index:
+                self._print_human_turn_result(new_events, state)
+            else:
+                self._print_opponent_turn(new_events, state, p_idx)
+                if self.opponent_delay > 0:
+                    time.sleep(self.opponent_delay)
+
+            is_last = i + 1 >= len(all_turns)
+            next_is_human = (
+                not self.solo
+                and not is_last
+                and all_turns[i + 1] == self.human_index
+            )
+            if not is_last and not next_is_human:
                 self._print_between_turns(state)
 
         engine._end_of_round_scoring()
@@ -342,7 +354,7 @@ class InteractiveGame:
             rendered = render_event(evt, state)
             if rendered and any(
                 kw in rendered
-                for kw in ("played", "noised", "SCORE", "invalidated", "terminated", "collision")
+                for kw in ("played", "noised", "SCORE", "invalidated", "terminated", "collision", "passed")
             ):
                 key_lines.append(rendered.strip())
 
