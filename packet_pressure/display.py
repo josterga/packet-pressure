@@ -499,4 +499,8 @@ def render_event(event: dict, state: "GameState") -> str | None:
         route = event.get("route_id", "?")
         return f"  {_bold('SCORE')}  {pid} +{score}  ({route} len {event.get('route_length', '?')})"
 
+    if etype == "PASS_TURN":
+        pid = event.get("player_id", player)
+        return _dim(f"  {pid}  passed (no legal plays)")
+
     return None
