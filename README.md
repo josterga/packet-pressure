@@ -101,9 +101,9 @@ Open routes that are too short to score (under 2 nodes) at round end carry over 
 
 Points are awarded at the end of every round.
 
-Only the exit node's packet value scores — there is no cumulative sum across the whole route. The player who owns the exit node collects those points.
+Only the exit node's packet value scores — there is no cumulative sum across the whole route. The player who holds the exit node collects those points.
 
-- **Exit node** = the last node in a route when it scores (whoever played it owns it)
+- **Exit node** = the last node in a route when it scores (whoever played it holds it)
 - Any route of ≥ 2 nodes scores at round end, whether it was explicitly terminated or left open
 - Routes under 2 nodes never score that round — they carry over instead
 
