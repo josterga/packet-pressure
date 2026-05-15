@@ -67,6 +67,14 @@ Each turn has two steps — in order:
 2. **Play** one card from your hand onto the tableau.
    Extend an existing open route, or start a new one (if the concurrent cap allows).
 
+## Rounds
+
+Each round lasts **3 turns per player**, cycling through all players in order. The round ends after every player completes their third turn — then scoring happens, cards are discarded, and hands are refilled before the next round begins.
+
+Three turns per player matches the hop limit: with 3 channels and a max of one hop per channel, there are exactly 3 possible hops in any route. Each player gets one turn per hop.
+
+A standard game lasts **5 rounds**. The first player to reach 2,000 points wins immediately; if no one hits that target, whoever has the most points after round 5 wins.
+
 ## Building Routes
 
 A route is a chain of nodes where each node's output channel matches the next node's input channel. Routes grow one card per turn — anyone can extend any open route. Each card added to a route counts as one hop.
