@@ -130,7 +130,7 @@ Forwards a packet from one channel to another. The backbone of every route.
 │  ⇒               │
 │  PKT  200        │
 │──────────────────│
-│        PKT-0001  │
+│        REL-0001  │
 └──────────────────┘
 ```
 

@@ -48,13 +48,9 @@ class PlayerPolicy(ABC):
                 if ch:
                     for r in state.tableau.routes:
                         if r.is_valid and r.length >= state.config.route_min_length:
-                            for cid in r.card_ids:
-                                c = state.lookup_card(cid)
-                                if c and c.output_channel == ch:
-                                    plays.append((card, PlacementContext()))
-                                    break
-                        if plays and plays[-1][0] is card:
-                            break
+                            if ch in r.channels_in_route[:-1]:
+                                plays.append((card, PlacementContext()))
+                                break
             elif card.card_type == CardType.TERMINAL:
                 for route in open_routes:
                     if route.length >= state.config.route_min_length:

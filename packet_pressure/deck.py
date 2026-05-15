@@ -102,7 +102,7 @@ class DeckBuilder:
             for i, ((in_ch, out_ch), pv) in enumerate(zip(pair_seq, val_seq)):
                 color = str(self.rng.choice(colors))
                 cards.append(Card(
-                    card_id=f"PKT-{start_id + i:04d}",
+                    card_id=f"REL-{start_id + i:04d}",
                     card_type=CardType.RELAY,
                     input_channel=in_ch,
                     output_channel=out_ch,
@@ -121,7 +121,7 @@ class DeckBuilder:
 
         cards = []
         for i in range(count):
-            cid = f"PKT-{start_id + i:04d}"
+            cid = f"REL-{start_id + i:04d}"
             pair_idx = int(self.rng.choice(len(pairs), p=weights))
             in_ch, out_ch = pairs[pair_idx]
             pv = int(self.rng.choice(packet_values))

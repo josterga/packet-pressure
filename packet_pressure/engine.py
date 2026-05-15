@@ -244,26 +244,29 @@ class GameEngine:
         cfg = self.config
         s.log(EVT_NOISE_APPLIED, channel=channel)
 
-        # Only disrupt cards belonging to scoring-eligible routes
-        scoring_route_card_ids: set[str] = set()
+        # Only disrupt cards belonging to routes where channel is inter-route
+        # (i.e. not the final exit channel — channels_in_route[:-1] only)
+        inter_route_card_ids: set[str] = set()
         for route in s.tableau.routes:
             if route.is_valid and route.length >= cfg.route_min_length:
-                scoring_route_card_ids.update(route.card_ids)
+                if channel in route.channels_in_route[:-1]:
+                    inter_route_card_ids.update(route.card_ids)
 
         # Routes containing a Shield card whose input matches the targeted channel are immune
         shielded_card_ids: set[str] = set()
         for route in s.tableau.routes:
             if route.is_valid and route.length >= cfg.route_min_length:
-                for cid in route.card_ids:
-                    card = s.lookup_card(cid)
-                    if card and card.card_type == CardType.FILTER and card.input_channel == channel:
-                        shielded_card_ids.update(route.card_ids)
-                        break
+                if channel in route.channels_in_route[:-1]:
+                    for cid in route.card_ids:
+                        card = s.lookup_card(cid)
+                        if card and card.card_type == CardType.FILTER and card.input_channel == channel:
+                            shielded_card_ids.update(route.card_ids)
+                            break
 
         to_remove = [
             cid for cid, c in s.tableau.active_cards.items()
             if c.output_channel == channel
-            and cid in scoring_route_card_ids
+            and cid in inter_route_card_ids
             and cid not in shielded_card_ids
         ]
         for cid in to_remove:
