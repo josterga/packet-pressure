@@ -9,11 +9,11 @@
 ⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠
 ```
 
-A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You win by holding the endpoint when the round closes. · 3–5 players · ~30–45 min
+A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint when the round closes. · 3–5 players · ~30–45 min
 
 ## Overview
 
-Packet Pressure is a competitive card game built on a packet-switching network. Each round, players chain relay nodes across shared channels to build routing paths — but points go to the finisher, not the architect. Extend what others started, or build something worth stealing.
+Packet Pressure is a tactical card game of shared routes and stolen endpoints on a live packet-switching network. Each round, players chain relay nodes across shared channels to build routing paths — but points go to the finisher, not the architect. Extend what others started, or build something worth stealing.
 
 Every card you play either builds your lead or hands it to someone else.
 
@@ -33,7 +33,7 @@ Be the first player to reach 2,000 points. If no one reaches the target, whoever
 3. Deal each player a starting hand of 4 cards.
 4. The player to the left of the dealer goes first.
 
-Why fewer seeds than players? Seeds per round = player count − 1, so one player each round has no anchor route — they must extend or contest an existing one.
+Why fewer seeds than players? Seeds per round = player count − 1, so one player each round has no seed to extend from — they must contest an existing route from the start.
 
 ## The Tableau
 
@@ -71,7 +71,7 @@ Each turn has two steps — in order:
 
 Each round lasts **3 turns per player**, cycling through all players in order. The round ends after every player completes their third turn — then scoring happens, cards are discarded, and each player draws back up to 4 cards before the next round begins.
 
-Three turns per player matches the hop limit: with 3 channels and a max of one hop per channel, there are exactly 3 possible hops in any route. Each player gets one turn per hop.
+Three turns per player matches the hop limit: with 3 channels and a max of one hop per channel, there are exactly 3 possible hops in any route. 
 
 A standard game lasts **5 rounds**. The first player to reach 2,000 points wins immediately; if no one hits that target, whoever has the most points after round 5 wins.
 
@@ -85,7 +85,7 @@ Key rules:
 
 - Routes must be at least 2 nodes long to score.
 - A route may visit each channel at most once — this caps route length at the number of channels (3 by default).
-- No more than [player count] routes can be open at the same time. Once a route closes (either by reaching max hops, or terminated, or broken), its slot frees up and a new route can begin.
+- No more than [player count] routes can be open at the same time. Routes close when terminated by a terminal card or broken by noise — their slot frees up immediately and a new route can begin. A route that reaches the hop limit is **full**: it cannot be extended further, but it stays in the tableau until round end and can still be noised. The total number of open routes in the tableau can never exceed the player count.
 
 ## Route Ownership
 
@@ -113,7 +113,7 @@ After scoring:
 - Carried routes stay in the tableau
 - Hands are topped back up to 4 cards before the next round begins
 
-Going first is a disadvantage — you act before others can react to your builds. The player who scored the most points in a round goes first next round. On a tie, turn order is unchanged.
+The player who scored the most points in a round goes first next round. On a tie, turn order is unchanged.
 
 ---
 
@@ -156,6 +156,7 @@ Closes any open route immediately and claims its points.
 
 - Matches any open route (no channel check required)
 - Only playable on routes already ≥ 2 nodes long — you can't close a stub
+- Not playable on full routes (those that have reached the hop limit) — those can only score at round end or be noised
 - You declare which eligible route to terminate
 - The terminal node's own packet value is what scores — even if you never played another card in that route
 - Cannot start a new route
@@ -235,11 +236,11 @@ A noise card is only as strong as the channel it targets. If no scoring route ou
 
 ## Collisions
 
-Collisions are route-scoped only — nodes in different routes never interfere with each other. If a card cannot extend any open route (because all existing routes have already visited its output channel), it must start a new one instead (if the cap allows). A route cannot contain 2 inter-route nodes with the same input channels. This is implicit with max hops rule.
+Collisions are route-scoped only — nodes in different routes never interfere with each other. If a card cannot extend any open route (because all existing routes have already visited its output channel), it must start a new one instead (if the cap allows). 
 
 ## Passing
 
-You may only pass if you have no legal play — meaning none of your cards can extend an open route, start a new route (cap is full), terminate a scoring-eligible route, or target a noise channel.
+You may only pass if you have no legal play. See **Quick Reference: Legal Plays** for what qualifies.
 
 You still draw a card on a pass. You simply don't place anything in the tableau that turn.
 
@@ -247,13 +248,22 @@ You still draw a card on a pass. You simply don't place anything in the tableau 
 
 ## Quick Reference: Legal Plays
 
+A **legal play** is any card in your hand that has at least one valid target in the current tableau. A card is legal if:
+
+- It can extend a compatible open route (input channel matches the route's tail, output channel unvisited in that route, route not full)
+- It can start a new route (route cap not reached, card type is relay/amplifier/filter)
+- It is a terminal and at least one open, non-full route has ≥ 2 nodes
+- It is a noise card and at least one scoring-eligible route has its channel as an inter-route channel
+
+If none of your cards qualify, you must pass.
+
 | Your card       | What it can do |
 |-----------------|----------------|
-| ⇒ Relay         | Extend a matching open route; or start a new route if cap allows |
+| ⇒ Relay         | Extend a matching open route; or start a new route if route cap allows |
 | ⊕ Amplifier     | Same as relay; ×2 score if exit node at round end |
 | ⊘ Filter        | Same as relay; absorbs noise targeting its input channel |
-| ⊣ Terminal      | Terminate any open route ≥ 2 nodes; earns terminal's own packet value |
-| ⚠ Noise         | Invalidate all scoring-eligible routes outputting to the card's fixed channel |
+| ⊣ Terminal      | Terminate any open, non-full route ≥ 2 nodes; earns terminal's own packet value |
+| ⚠ Noise         | Destroy all scoring-eligible routes where the card's channel is inter-route |
 
 To extend a route, your card must:
 
@@ -266,28 +276,27 @@ To extend a route, your card must:
 
 3 players: Aura, Bo, Cleo. 3 channels, default settings.
 
-**Setup:** Three seed nodes are dealt face-up:
+**Setup:** Two seed nodes are dealt face-up into the tableau — they belong to no one:
 
-- `[CH01→CH02]` — Aura's anchor
-- `[CH02→CH03]` — Bo's anchor
-- `[CH03→CH01]` — unanchored (Cleo must extend an existing route)
+- `[CH01→CH02]`
+- `[CH02→CH03]`
 
-**Turn 1 – Aura** draws, plays ⊕ `[CH02→CH03] ×2` extending her route:
+**Turn 1 – Aura** draws, plays ⊕ `[CH02→CH03] ×2` — extending the first seed:
 ```
 [CH01→CH02] → [CH02→CH03]⊕
 ```
-The amplifier sits at the tail. If this is the exit node at round end, it scores double.
+The amplifier sits at the tail. Aura holds the endpoint — if this scores now, she collects double the amplifier's packet value.
 
-**Turn 2 – Bo** draws, plays ⇒ `[CH03→CH01]` extending their route:
+**Turn 2 – Bo** draws, plays ⇒ `[CH03→CH01]` — extending the second seed:
 ```
 [CH02→CH03] → [CH03→CH01]
 ```
-Bo's route is now 2 nodes — scoring-eligible.
+This route is now 2 nodes and scoring-eligible. Bo holds the endpoint.
 
-**Turn 3 – Cleo** draws, plays ⊣ TERM (PKT 500) — targeting Aura's route.
-Aura's route closes immediately. The terminal's 500 pts score at round end, not the amplifier's doubled value. Cleo just stole Aura's route for 500 points.
+**Turn 3 – Cleo** draws, plays ⊣ TERM (PKT 500) — targeting the first route.
+The route closes immediately. Cleo now holds the endpoint. The terminal's 500 pts score at round end — not the amplifier's doubled value. Aura built the route; Cleo collects it.
 
-**Round end:** Both closed routes score. Cleo collects 500 pts. Bo collects their exit node's packet value. Aura scores nothing. Cleo goes first next round — a dubious honor.
+**Round end:** Both routes score. Cleo collects 500 pts. Bo collects their exit node's packet value. Aura scores nothing — she never held an endpoint when it mattered. Cleo goes first next round — a dubious honor.
 
 ---
 
@@ -363,7 +372,7 @@ Key flags:
 | `no_special` | 4 | 3 | 3 | 4 | 2000 | 5 | 80 (relay only) | 3 |
 | `print` | 4 | 3 | 3 | 4 | 2000 | 5 | 80 (fixed distribution) | 3 |
 
-Three rules govern routing across all presets: seeds per round = player count − 1 (one player always starts without an anchor); max concurrent open routes = player count; hop limit = channel count (routes cannot revisit a channel, so these two constraints are equivalent).
+Three rules govern routing across all presets: seeds per round = player count − 1 (one player each round has no seed to extend from the start); max concurrent open routes = player count; hop limit = channel count (routes cannot revisit a channel, so these two constraints are equivalent).
 
 `competitive` uses amplifier multiplier ×3 (all other presets use the default ×2).
 
