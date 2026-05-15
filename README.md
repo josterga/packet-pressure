@@ -71,7 +71,7 @@ Each turn has two steps — in order:
 
 Each round lasts **3 turns per player**, cycling through all players in order. The round ends after every player completes their third turn — then scoring happens, cards are discarded, and each player draws back up to 4 cards before the next round begins.
 
-Three turns per player matches the hop limit: with 3 channels and a max of one hop per channel, there are exactly 3 possible hops in any route. 
+Three turns per player matches the hop limit: with 3 channels and a max of one hop per channel, any route can grow to at most 3 nodes.
 
 A standard game lasts **5 rounds**. The first player to reach 2,000 points wins immediately; if no one hits that target, whoever has the most points after round 5 wins.
 
@@ -85,7 +85,7 @@ Key rules:
 
 - Routes must be at least 2 nodes long to score.
 - A route may visit each channel at most once — this caps route length at the number of channels (3 by default).
-- No more than [player count] routes can be open at the same time. Routes close when terminated by a terminal card or broken by noise — their slot frees up immediately and a new route can begin. A route that reaches the hop limit is **full**: it cannot be extended further, but it stays in the tableau until round end and can still be noised. The total number of open routes in the tableau can never exceed the player count.
+- No more than [player count] routes can be open at the same time. Routes close when terminated by a terminal card or broken by noise — their slot frees up immediately and a new route can begin. A route that reaches the hop limit is **full**: it cannot be extended further, but it stays in the tableau until round end, still counts toward the route cap, and can still be noised. The total number of open routes in the tableau can never exceed the player count.
 
 ## Route Ownership
 
@@ -253,7 +253,7 @@ A **legal play** is any card in your hand that has at least one valid target in 
 - It can extend a compatible open route (input channel matches the route's tail, output channel unvisited in that route, route not full)
 - It can start a new route (route cap not reached, card type is relay/amplifier/filter)
 - It is a terminal and at least one open, non-full route has ≥ 2 nodes
-- It is a noise card and at least one scoring-eligible route has its channel as an inter-route channel
+- It is a noise card and at least one scoring-eligible route outputs to the card's fixed channel
 
 If none of your cards qualify, you must pass.
 
@@ -263,7 +263,7 @@ If none of your cards qualify, you must pass.
 | ⊕ Amplifier     | Same as relay; ×2 score if exit node at round end |
 | ⊘ Filter        | Same as relay; absorbs noise targeting its input channel |
 | ⊣ Terminal      | Terminate any open, non-full route ≥ 2 nodes; earns terminal's own packet value |
-| ⚠ Noise         | Destroy all scoring-eligible routes where the card's channel is inter-route |
+| ⚠ Noise         | Destroy all scoring-eligible routes whose output channel matches the card's fixed channel |
 
 To extend a route, your card must:
 
