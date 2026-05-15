@@ -7,6 +7,7 @@ import dataclasses
 import numpy as np
 import pytest
 
+from packet_pressure.config_presets import FAST_CONFIG
 from packet_pressure.deck import DeckBuilder
 from packet_pressure.engine import GameEngine
 from packet_pressure.models import (
@@ -21,6 +22,7 @@ from packet_pressure.models import (
     TerminationReason,
 )
 from packet_pressure.policies import RandomLegal
+from packet_pressure.simulation import run_simulation
 
 
 # ---------------------------------------------------------------------------
@@ -249,7 +251,7 @@ class TestNoiseNode:
         assert "03" not in s.tableau.noisy_channels
 
     def test_noise_removes_cards_on_channel(self):
-        # Noise only affects scoring-eligible routes (length >= route_min_length)
+        # Noise targets interior channels only (channels_in_route[:-1], not the exit hop)
         cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
         engine = make_engine(config=cfg, n_policies=3)
         s = engine.state
@@ -264,10 +266,11 @@ class TestNoiseNode:
 
         assert s.tableau.routes[0].length == 2
 
-        engine._apply_noise("03")
+        # "02" is the interior hop; "03" is exit and cannot be targeted
+        engine._apply_noise("02")
 
-        assert "PKT-N2" not in s.tableau.active_cards
-        assert "PKT-N2" in s.tableau.collided_card_ids
+        assert "PKT-N1" not in s.tableau.active_cards
+        assert "PKT-N1" in s.tableau.collided_card_ids
 
     def test_noise_spares_short_routes(self):
         # Routes shorter than route_min_length are not affected by noise
@@ -414,3 +417,321 @@ class TestTurnOrderRotation:
 
         engine._end_of_round_scoring()
         assert s.first_player_index == 0
+
+
+# ---------------------------------------------------------------------------
+# Filter node
+# ---------------------------------------------------------------------------
+
+class TestFilterNode:
+    def test_filter_can_start_route(self):
+        engine = make_engine(n_policies=3)
+        s = engine.state
+        flt = make_card("FLT-X1", CardType.FILTER, in_ch="01", out_ch="02", owner="P0")
+        s.register_card(flt)
+        s.tableau.active_cards[flt.card_id] = flt
+        engine._try_start_route(flt)
+        assert len(s.tableau.routes) == 1
+        assert s.tableau.routes[0].length == 1
+
+    def test_filter_absorbs_noise_on_input_channel(self):
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("REL-X1", in_ch="01", out_ch="02", owner="P0")
+        flt = make_card("FLT-X2", CardType.FILTER, in_ch="02", out_ch="03", owner="P0")
+        for c in (c1, flt):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(flt)
+        assert s.tableau.routes[0].length == 2
+
+        engine._apply_noise("02")  # filter's input channel — absorbed
+
+        assert s.tableau.routes[0].is_valid
+
+    def test_filter_does_not_protect_other_channels(self):
+        # Filter (input="02") absorbs noise on "02" but not "03".
+        # Needs a 3-hop route so "03" is an interior channel that can be targeted.
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("REL-X2", in_ch="01", out_ch="02", owner="P0")
+        flt = make_card("FLT-X3", CardType.FILTER, in_ch="02", out_ch="03", owner="P0")
+        c3 = make_card("REL-X3", in_ch="03", out_ch="01", owner="P0")
+        for c in (c1, flt, c3):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(flt)
+        engine._update_routes(c3)
+        # channels_in_route=["02","03","01"]; interior=["02","03"]
+        assert s.tableau.routes[0].length == 3
+
+        engine._apply_noise("03")  # interior channel; filter input is "02", not "03"
+
+        assert not s.tableau.routes[0].is_valid
+
+
+# ---------------------------------------------------------------------------
+# Terminal node (additional)
+# ---------------------------------------------------------------------------
+
+class TestTerminalNodeExtra:
+    def test_terminal_cannot_start_route(self):
+        engine = make_engine(n_policies=3)
+        s = engine.state
+        term = Card("TERM-X1", CardType.TERMINAL, "ANY", "TERM", 400, "red")
+        s.register_card(term)
+        engine._try_start_route(term)
+        assert len(s.tableau.routes) == 0
+
+    def test_terminal_value_scores_not_predecessor(self):
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("REL-T1", in_ch="01", out_ch="02", value=300, owner="P0")
+        term = Card("TERM-T1", CardType.TERMINAL, "ANY", "TERM", 500, "red", owner_id="P1")
+        for c in (c1, term):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(term)
+
+        route = s.tableau.routes[0]
+        assert route.exit_node_id == "TERM-T1"
+        owner, score = engine._score_route(route)
+        assert score == 500  # terminal's value, not the relay's 300
+        assert owner == "P1"
+
+
+# ---------------------------------------------------------------------------
+# Amplifier node (additional)
+# ---------------------------------------------------------------------------
+
+class TestAmplifierNodeExtra:
+    def test_amplifier_multiplier_lost_when_extended(self):
+        cfg = dataclasses.replace(GameConfig(), amplifier_multiplier=2, route_min_length=2,
+                                  player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("REL-A1", in_ch="01", out_ch="02", value=100, owner="P0")
+        amp = Card("AMP-A1", CardType.AMPLIFIER, "02", "03", 200, "red",
+                   owner_id="P1", special_properties=(("multiplier", 2),))
+        c3 = make_card("REL-A2", in_ch="03", out_ch="01", value=150, owner="P2")
+        for c in (c1, amp, c3):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(amp)
+        engine._update_routes(c3)
+
+        route = s.tableau.routes[0]
+        assert route.exit_node_id == "REL-A2"
+        owner, score = engine._score_route(route)
+        assert score == 150  # relay's face value — amplifier bonus is gone
+
+
+# ---------------------------------------------------------------------------
+# Noise node (additional)
+# ---------------------------------------------------------------------------
+
+class TestNoiseNodeExtra:
+    def test_noise_does_not_carry_route(self):
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("REL-NC1", in_ch="01", out_ch="02", owner="P0")
+        c2 = make_card("REL-NC2", in_ch="02", out_ch="03", owner="P0")
+        for c in (c1, c2):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(c2)
+        assert s.tableau.routes[0].length == 2
+
+        engine._apply_noise("02")  # target interior channel "02", not exit "03"
+        assert not s.tableau.routes[0].is_valid
+
+        engine._discard_tableau()
+        assert len(s.tableau.routes) == 0
+
+
+# ---------------------------------------------------------------------------
+# Carried routes
+# ---------------------------------------------------------------------------
+
+class TestCarriedRoutes:
+    def test_stub_carries_to_next_round(self):
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("REL-CR1", in_ch="01", out_ch="02", owner="P0")
+        s.register_card(c1)
+        s.tableau.active_cards[c1.card_id] = c1
+        engine._try_start_route(c1)
+        assert s.tableau.routes[0].length == 1
+
+        engine._discard_tableau()
+        assert len(s.tableau.routes) == 1
+        assert s.tableau.routes[0].carried is True
+
+    def test_carried_route_can_be_extended(self):
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        c1 = make_card("REL-CR2", in_ch="01", out_ch="02", owner="P0")
+        s.register_card(c1)
+        s.tableau.active_cards[c1.card_id] = c1
+        engine._try_start_route(c1)
+        engine._discard_tableau()
+
+        c2 = make_card("REL-CR3", in_ch="02", out_ch="03", owner="P1")
+        s.register_card(c2)
+        s.tableau.active_cards[c2.card_id] = c2
+        engine._update_routes(c2)
+        assert s.tableau.routes[0].length == 2
+
+    def test_carried_route_reduces_seed_count(self):
+        cfg = dataclasses.replace(GameConfig(), route_min_length=2, player_count=3,
+                                  seed_nodes_per_round=2, max_rounds=2)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+        s.round_number = 0
+
+        c1 = make_card("REL-CR4", in_ch="01", out_ch="02", owner="P0")
+        s.register_card(c1)
+        s.tableau.active_cards[c1.card_id] = c1
+        engine._try_start_route(c1)
+        engine._discard_tableau()
+        assert len(s.tableau.routes) == 1
+
+        s.round_number += 1
+        engine._begin_round()
+        # 1 carried stub already open, so only 1 new seed dealt (2 - 1 = 1)
+        assert len(s.tableau.routes) == 2
+
+
+# ---------------------------------------------------------------------------
+# Route cap
+# ---------------------------------------------------------------------------
+
+class TestRouteCap:
+    def test_new_route_blocked_when_cap_full(self):
+        cfg = dataclasses.replace(GameConfig(), player_count=2)
+        engine = make_engine(config=cfg, n_policies=2)
+        s = engine.state
+
+        c1 = make_card("REL-CAP1", in_ch="01", out_ch="02", owner="P0")
+        c2 = make_card("REL-CAP2", in_ch="03", out_ch="01", owner="P0")
+        for c in (c1, c2):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._try_start_route(c2)
+        assert len(s.tableau.routes) == 2  # cap = player_count = 2
+
+        c3 = make_card("REL-CAP3", in_ch="03", out_ch="02", owner="P1")
+        s.register_card(c3)
+        s.tableau.active_cards[c3.card_id] = c3
+        engine._try_start_route(c3)
+        assert len(s.tableau.routes) == 2  # still capped
+
+    def test_cap_slot_freed_after_route_closes(self):
+        cfg = dataclasses.replace(GameConfig(), player_count=2, route_min_length=2)
+        engine = make_engine(config=cfg, n_policies=2)
+        s = engine.state
+
+        # Fill cap: 2 routes
+        c1 = make_card("REL-SL1", in_ch="01", out_ch="02", owner="P0")
+        c2 = make_card("REL-SL2", in_ch="03", out_ch="01", owner="P0")
+        for c in (c1, c2):
+            s.register_card(c)
+            s.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._try_start_route(c2)
+
+        # Extend route 0 to length 2
+        c_ext = make_card("REL-SL3", in_ch="02", out_ch="03", owner="P0")
+        s.register_card(c_ext)
+        s.tableau.active_cards[c_ext.card_id] = c_ext
+        engine._update_routes(c_ext)
+        route0_id = s.tableau.routes[0].route_id
+
+        # Close route 0 with a terminal
+        term = Card("TERM-SL1", CardType.TERMINAL, "ANY", "TERM", 400, "red",
+                    owner_id="P1",
+                    special_properties=(("target_route_id", route0_id),))
+        s.register_card(term)
+        s.tableau.active_cards[term.card_id] = term
+        engine._update_routes(term)
+        assert not s.tableau.routes[0].is_open()
+
+        # A new route can now be started (cap freed)
+        c_new = make_card("REL-SL4", in_ch="02", out_ch="03", owner="P1")
+        s.register_card(c_new)
+        s.tableau.active_cards[c_new.card_id] = c_new
+        engine._try_start_route(c_new)
+        open_routes = [r for r in s.tableau.routes if r.is_open()]
+        assert len(open_routes) == 2
+
+
+# ---------------------------------------------------------------------------
+# Round / turn structure
+# ---------------------------------------------------------------------------
+
+class TestRoundStructure:
+    def test_hands_refilled_at_round_end(self):
+        cfg = dataclasses.replace(GameConfig(), starting_hand_size=4, player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        s.players[0].hand.clear()
+        assert len(s.players[0].hand) == 0
+
+        engine._advance_round()
+        assert len(s.players[0].hand) == 4
+
+    def test_deck_reshuffles_from_discard_when_empty(self):
+        cfg = dataclasses.replace(GameConfig(), player_count=3)
+        engine = make_engine(config=cfg, n_policies=3)
+        s = engine.state
+
+        s.discard.extend(s.deck)
+        s.deck.clear()
+        assert len(s.deck) == 0
+
+        drawn = engine._draw_n(s, 1)
+        assert len(drawn) == 1
+
+
+# ---------------------------------------------------------------------------
+# Win condition
+# ---------------------------------------------------------------------------
+
+class TestWinCondition:
+    def test_game_ends_when_score_target_reached(self):
+        cfg = dataclasses.replace(FAST_CONFIG, score_to_win=1, player_count=3)
+        policies = [RandomLegal(), RandomLegal(), RandomLegal()]
+        rng = np.random.default_rng(0)
+        deck = DeckBuilder(cfg, rng).build()
+        engine = GameEngine(cfg, policies, deck, np.random.default_rng(0))
+        engine.run()
+        assert engine.state._terminal is True
+        assert any(p.score >= 1 for p in engine.state.players)
+
+    def test_game_ends_at_max_rounds(self):
+        metrics = run_simulation(
+            dataclasses.replace(FAST_CONFIG, max_rounds=1, score_to_win=999_999),
+            [RandomLegal(), RandomLegal(), RandomLegal()],
+            seed=7,
+        )
+        assert metrics.total_rounds_played == 1

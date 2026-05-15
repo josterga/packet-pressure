@@ -49,7 +49,7 @@ The network runs on three channels:
 | CH02    | Orange |
 | CH03    | Purple |
 
-Channels define how cards connect. Every node has an input channel (where it receives a packet) and an output channel (where it forwards one). A route is a chain where each node's output matches the next node's input.
+Channels define how cards connect. Every relay node has an input channel (where it receives a packet) and an output channel (where it forwards one). A route is a chain where each node's output matches the next node's input.
 
 Example route:
 
@@ -85,13 +85,13 @@ Key rules:
 
 - Routes must be at least 2 nodes long to score.
 - A route may visit each channel at most once — this caps route length at the number of channels (3 by default).
-- No more than [player count] routes can be open at the same time. Once a route closes, its slot frees up.
+- No more than [player count] routes can be open at the same time. Once a route closes (either by reaching max hops, or terminated, or broken), its slot frees up and a new route can begin.
 
 ## Route Ownership
 
-There is no locked ownership. Whoever played the current tail card is in position to score — that's it. The moment another player extends the route, scoring position passes to them. There are no other ownership effects: no player can block others from extending a route they "built," and no scoring bonuses are tied to who started it.
+There is no locked ownership. Whoever played the current endpoint node is in position to score — that's it. The moment another player extends the route, scoring position passes to them. There are no other ownership effects: no player can block others from extending a route they "built," and no scoring bonuses are tied to who started it.
 
-Whoever holds the tail holds the points.
+Whoever holds the endpoint holds the points.
 
 ## Carried Routes
 
@@ -199,7 +199,7 @@ Extends a route like a relay — but passively shields the entire route from noi
 ```
 
 - Input/output rules identical to a relay node
-- If a noise card targets the filter's input channel, the route is immune — noise is absorbed, no cards are destroyed
+- If a noise card is played targeting the filter's input channel, the route is immune — noise is absorbed, no cards are destroyed
 - Noise targeting any other channel provides no protection
 - No action required; protection is automatic
 - Does not terminate the route; can be extended further
@@ -235,7 +235,7 @@ A noise card is only as strong as the channel it targets. If no scoring route ou
 
 ## Collisions
 
-Collisions are route-scoped only — nodes in different routes never interfere with each other. If a card cannot extend any open route (because all existing routes have already visited its output channel), it must start a new one instead (if the cap allows).
+Collisions are route-scoped only — nodes in different routes never interfere with each other. If a card cannot extend any open route (because all existing routes have already visited its output channel), it must start a new one instead (if the cap allows). A route cannot contain 2 inter-route nodes with the same input channels. This is implicit with max hops rule.
 
 ## Passing
 

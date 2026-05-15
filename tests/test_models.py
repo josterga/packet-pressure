@@ -1,5 +1,7 @@
 import dataclasses
 import pytest
+import numpy as np
+from packet_pressure.deck import DeckBuilder
 from packet_pressure.models import (
     Card,
     CardType,
@@ -117,3 +119,11 @@ def test_tableau_next_route_id():
     id2 = t.next_route_id()
     assert id1 == "R-0001"
     assert id2 == "R-0002"
+
+
+def test_relay_card_id_prefix():
+    cfg = GameConfig()
+    deck = DeckBuilder(cfg, np.random.default_rng(0)).build()
+    relay_ids = [c.card_id for c in deck if c.card_type == CardType.RELAY]
+    assert len(relay_ids) > 0
+    assert all(cid.startswith("REL-") for cid in relay_ids)
