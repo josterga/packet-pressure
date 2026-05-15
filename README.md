@@ -24,7 +24,7 @@ Every card you play either builds your lead or hands it to someone else.
 
 ## Goal
 
-Be the first player to reach 2,000 points. If no one reaches the target, whoever has the most points after the final round wins.
+Be the first player to reach 2,000 points. If no one reaches the target, whoever has the most points after the final round wins. On a tie, the player earliest in seat order wins.
 
 ## Setting Up
 
@@ -69,7 +69,7 @@ Each turn has two steps — in order:
 
 ## Rounds
 
-Each round lasts **3 turns per player**, cycling through all players in order. The round ends after every player completes their third turn — then scoring happens, cards are discarded, and hands are refilled before the next round begins.
+Each round lasts **3 turns per player**, cycling through all players in order. The round ends after every player completes their third turn — then scoring happens, cards are discarded, and each player draws back up to 4 cards before the next round begins.
 
 Three turns per player matches the hop limit: with 3 channels and a max of one hop per channel, there are exactly 3 possible hops in any route. Each player gets one turn per hop.
 
@@ -79,14 +79,19 @@ A standard game lasts **5 rounds**. The first player to reach 2,000 points wins 
 
 A route is a chain of nodes where each node's output channel matches the next node's input channel. Routes grow one card per turn — anyone can extend any open route. Each card added to a route counts as one hop.
 
+Only relay, amplifier, and filter cards can start a new route. Terminal and noise cards cannot — they only interact with existing routes.
+
 Key rules:
 
 - Routes must be at least 2 nodes long to score.
-- Routes are capped at one hop per channel (3 hops in default/fast, 4 in competitive).
-- A route cannot visit the same channel twice — no channel loops within a route.
+- A route may visit each channel at most once — this caps route length at the number of channels (3 by default).
 - No more than [player count] routes can be open at the same time. Once a route closes, its slot frees up.
 
-**Passing your turn:** You may only pass if the concurrent cap is full and none of your cards can extend any open route. You still draw a card; you just don't play one.
+## Route Ownership
+
+There is no locked ownership. Whoever played the current tail card is in position to score — that's it. The moment another player extends the route, scoring position passes to them. There are no other ownership effects: no player can block others from extending a route they "built," and no scoring bonuses are tied to who started it.
+
+Whoever holds the tail holds the points.
 
 ## Carried Routes
 
@@ -203,45 +208,38 @@ Use filters to insure your investment. A long route is a tempting noise target �
 
 ### ⚠ Noise
 
-Disrupts a channel, destroying all scoring-eligible routes (≥ 2 nodes) that output to that channel.
+Disrupts a specific channel, destroying all scoring-eligible routes (≥ 2 nodes) that output to it. Each noise card targets a fixed channel determined when the card is created — you don't choose the channel at play time.
 
 ```
 ┌──────────────────┐
-│ IN  --   --  OUT │
+│ IN  --  CH01 OUT │
 │──────────────────│
-│  ⚠  NOISE ≋≋     │
+│  ⚠  ≋≋ CH01      │
 │  PKT  0          │
 │──────────────────│
 │       NOISE-0001 │
 └──────────────────┘
 ```
 
-- Playable only when at least one scoring-eligible route exists
-- Choose a target channel — all eligible routes outputting to it are immediately invalidated
-- Routes shorter than 2 nodes are not affected (noise is precision disruption, not a blanket wipe)
-- Watch out: noise can destroy your own routes too if they output to the targeted channel
+- The target channel is fixed and shown on the card — it cannot be changed when played
+- Playable only when at least one scoring-eligible route outputs to the card's fixed channel
+- All eligible routes outputting to that channel are immediately destroyed; their cards go to the discard pile
+- Destroyed routes do not carry over to the next round — they are gone
+- Routes shorter than 2 nodes are not affected
+- Watch out: noise destroys any route outputting to that channel, including your own
 - Filter nodes absorb noise aimed at their input channel, making those routes immune
 
-Noise is a scalpel, not a bomb. It hits the output channel — so check which routes you're also killing before you play it.
+A noise card is only as strong as the channel it targets. If no scoring route outputs to your card's channel, you can't play it.
 
 ---
 
-## Collisions & Channel Loops
+## Collisions
 
-Collisions are route-scoped only — nodes in different routes never interfere with each other.
-
-Within a single route, no card can output to a channel the route has already visited. If playing a card would create a channel loop, that card cannot extend that route — it must start a new one instead (if the cap allows).
-
-Example: A route that already passed through CH02 cannot have a new node output back to CH02.
+Collisions are route-scoped only — nodes in different routes never interfere with each other. If a card cannot extend any open route (because all existing routes have already visited its output channel), it must start a new one instead (if the cap allows).
 
 ## Passing
 
-You may only pass your turn if all of the following are true simultaneously:
-
-- No scoring-eligible routes are open (no terminal plays available)
-- No valid noise target exists
-- None of your cards can extend any open route
-- The concurrent cap is full (no room to start a new route)
+You may only pass if you have no legal play — meaning none of your cards can extend an open route, start a new route (cap is full), terminate a scoring-eligible route, or target a noise channel.
 
 You still draw a card on a pass. You simply don't place anything in the tableau that turn.
 
@@ -255,14 +253,12 @@ You still draw a card on a pass. You simply don't place anything in the tableau 
 | ⊕ Amplifier     | Same as relay; ×2 score if exit node at round end |
 | ⊘ Filter        | Same as relay; absorbs noise targeting its input channel |
 | ⊣ Terminal      | Terminate any open route ≥ 2 nodes; earns terminal's own packet value |
-| ⚠ Noise         | Invalidate all scoring-eligible routes outputting to a chosen channel |
+| ⚠ Noise         | Invalidate all scoring-eligible routes outputting to the card's fixed channel |
 
 To extend a route, your card must:
 
 - Have an input channel matching the route's current tail (or be ANY)
-- Not repeat a card already in that route
-- Output to a channel the route hasn't yet visited
-- Not push the route over the hop limit (= channel count; 3 by default)
+- Output to a channel the route hasn't yet visited (routes visit each channel at most once)
 
 ---
 

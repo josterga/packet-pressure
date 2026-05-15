@@ -201,9 +201,8 @@ class GameEngine:
         player.hand.remove(card)
         player.play_history.append(card.card_id)
 
-        target_channel = getattr(context, "target_channel", None)
         target_route_id = getattr(context, "target_route_id", None)
-        owned_card = self._apply_play(player_index, card, target_channel, legal_count, target_route_id)
+        owned_card = self._apply_play(player_index, card, legal_count, target_route_id)
 
         # 5. Resolve card effects
         self._resolve_card_effects(owned_card)
@@ -211,7 +210,7 @@ class GameEngine:
         # 6. Update routes
         self._update_routes(owned_card)
 
-    def _apply_play(self, player_index: int, card: Card, target_channel: str | None,
+    def _apply_play(self, player_index: int, card: Card,
                     legal_count: int = 0, target_route_id: str | None = None) -> Card:
         s = self.state
         player_id = s.players[player_index].player_id
@@ -219,8 +218,6 @@ class GameEngine:
         s.register_card(owned)
 
         extra: list[tuple[str, object]] = []
-        if card.card_type == CardType.NOISE and target_channel:
-            extra.append(("target_channel", target_channel))
         if target_route_id:
             extra.append(("target_route_id", target_route_id))
         if extra:
@@ -239,9 +236,8 @@ class GameEngine:
 
     def _resolve_card_effects(self, card: Card) -> None:
         if card.card_type == CardType.NOISE:
-            target = card.special("target_channel")
-            if target:
-                self._apply_noise(target)
+            if card.output_channel:
+                self._apply_noise(card.output_channel)
 
     def _apply_noise(self, channel: str) -> None:
         s = self.state

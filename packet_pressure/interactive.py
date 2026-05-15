@@ -23,7 +23,7 @@ from .models import (
     PlacementContext,
     PlayerState,
 )
-from .policies import ExtendedPlacementContext, PlayerPolicy
+from .policies import PlayerPolicy
 
 
 class HumanPolicy(PlayerPolicy):
@@ -73,20 +73,18 @@ class HumanPolicy(PlayerPolicy):
             card = player.hand[idx]
 
             if card.card_type == CardType.NOISE:
-                scoring_card_ids: set[str] = set()
+                ch = card.output_channel
+                scoring_channels: set[str] = set()
                 for r in state.tableau.routes:
                     if r.is_valid and r.length >= state.config.route_min_length:
-                        scoring_card_ids.update(r.card_ids)
-                target_channels = sorted({
-                    state.lookup_card(cid).output_channel
-                    for cid in scoring_card_ids
-                    if state.lookup_card(cid) and state.lookup_card(cid).output_channel not in (None, "TERM")
-                })
-                if not target_channels:
-                    print("  No scoring routes to disrupt — choose another card.")
+                        for cid in r.card_ids:
+                            c = state.lookup_card(cid)
+                            if c and c.output_channel and c.output_channel != "TERM":
+                                scoring_channels.add(c.output_channel)
+                if ch not in scoring_channels:
+                    print(f"  No scoring routes on CH{ch} to disrupt — choose another card.")
                     continue
-                channel = self._prompt_channel(state, target_channels)
-                return card, ExtendedPlacementContext(target_channel=channel)
+                return card, PlacementContext()
 
             if card.card_type == CardType.TERMINAL:
                 terminable = [
@@ -149,17 +147,18 @@ class HumanPolicy(PlayerPolicy):
             card_hints: list[str] = []
 
             if card.card_type == CardType.NOISE:
-                scoring_card_ids: set[str] = set()
+                ch = card.output_channel
+                scoring_channels_hint: set[str] = set()
                 for r in state.tableau.routes:
                     if r.is_valid and r.length >= cfg.route_min_length:
-                        scoring_card_ids.update(r.card_ids)
-                target_channels: set[str] = set()
-                for cid in scoring_card_ids:
-                    c = state.lookup_card(cid)
-                    if c and c.output_channel and c.output_channel not in ("TERM",):
-                        target_channels.add(c.output_channel)
-                for ch in sorted(target_channels):
-                    card_hints.append(f"→ noise CH{ch}")
+                        for cid in r.card_ids:
+                            c = state.lookup_card(cid)
+                            if c and c.output_channel and c.output_channel != "TERM":
+                                scoring_channels_hint.add(c.output_channel)
+                if ch in scoring_channels_hint:
+                    card_hints.append(f"→ noise CH{ch} ✓")
+                else:
+                    card_hints.append(f"→ noise CH{ch} (no target)")
 
             elif card.card_type == CardType.TERMINAL:
                 for route in open_routes:

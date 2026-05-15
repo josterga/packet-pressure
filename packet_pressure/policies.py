@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-
 from .models import (
     Card,
     CardType,
@@ -11,15 +9,6 @@ from .models import (
     PlayerState,
     RouteState,
 )
-
-
-# ---------------------------------------------------------------------------
-# Extended placement context (noise node needs a target channel)
-# ---------------------------------------------------------------------------
-
-@dataclass
-class ExtendedPlacementContext(PlacementContext):
-    target_channel: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -55,17 +44,17 @@ class PlayerPolicy(ABC):
             if card.card_id in tableau_ids:
                 continue
             if card.card_type == CardType.NOISE:
-                scoring_card_ids: set[str] = set()
-                for r in state.tableau.routes:
-                    if r.is_valid and r.length >= state.config.route_min_length:
-                        scoring_card_ids.update(r.card_ids)
-                target_channels: set[str] = set()
-                for cid in scoring_card_ids:
-                    c = state.lookup_card(cid)
-                    if c and c.output_channel and c.output_channel not in ("TERM",):
-                        target_channels.add(c.output_channel)
-                for ch in target_channels:
-                    plays.append((card, ExtendedPlacementContext(target_channel=ch)))
+                ch = card.output_channel
+                if ch:
+                    for r in state.tableau.routes:
+                        if r.is_valid and r.length >= state.config.route_min_length:
+                            for cid in r.card_ids:
+                                c = state.lookup_card(cid)
+                                if c and c.output_channel == ch:
+                                    plays.append((card, PlacementContext()))
+                                    break
+                        if plays and plays[-1][0] is card:
+                            break
             elif card.card_type == CardType.TERMINAL:
                 for route in open_routes:
                     if route.length >= state.config.route_min_length:
@@ -263,13 +252,12 @@ class DenialCollision(PlayerPolicy):
         target_route: RouteState,
         plays: list[tuple[Card, PlacementContext]],
     ) -> tuple[Card, PlacementContext] | None:
-        # Prefer noise on the target route's output channel
+        # Prefer noise that targets the target route's output channel
         last_out = target_route.last_output_channel
         if last_out:
             for card, ctx in plays:
-                if card.card_type == CardType.NOISE:
-                    noise_ctx = ExtendedPlacementContext(target_channel=last_out)
-                    return card, noise_ctx
+                if card.card_type == CardType.NOISE and card.output_channel == last_out:
+                    return card, ctx
 
         # Fallback: terminate the route to steal its score before the opponent can claim it
         if target_route.length >= state.config.route_min_length:

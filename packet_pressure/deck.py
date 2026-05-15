@@ -209,16 +209,18 @@ class DeckBuilder:
         return cards
 
     def _build_noise_nodes(self, count: int, start_id: int) -> list[Card]:
+        channels = self.config.channels
         colors = self.config.colors
         cards = []
         for i in range(count):
             cid = f"NOISE-{start_id + i:04d}"
+            target_ch = str(self.rng.choice(channels))
             color = str(self.rng.choice(colors))
             cards.append(Card(
                 card_id=cid,
                 card_type=CardType.NOISE,
                 input_channel=None,
-                output_channel=None,
+                output_channel=target_ch,
                 packet_value=0,
                 color=color,
             ))

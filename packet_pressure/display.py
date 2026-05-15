@@ -118,7 +118,7 @@ def print_how_to_play(config: "GameConfig") -> None:
     _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if cap allows and can't extend any")
     _row("⊣", _ORANGE, "Terminal",  "closes any open route (≥ 2 nodes); terminal's own value scores")
     _row("⊕", _PURPLE, "Amplifier", "extends like a relay; if exit node at scoring, value ×2")
-    _row("⚠", _RED,    "Noise",     "destroys cards that output to a chosen channel; any scoring route hit is invalidated")
+    _row("⚠", _RED,    "Noise",     "targets a fixed channel (shown on card); destroys all scoring routes that output to it")
     _row("⊘", _GREEN,  "Filter",    "extends like a relay; if noise targets its input channel, the whole route is immune")
 
     _section("SCORING")
@@ -206,11 +206,8 @@ def render_card_lines(card: "Card", config: "GameConfig", dim: bool = False) -> 
         mult = card.special("multiplier", 2)
         type_line = pad(f"  ⊕  AMP  ×{mult}  ")
     elif card.card_type == CardType.NOISE:
-        target_ch = card.special("target_channel")
-        if target_ch:
-            type_line = pad(f"  ⚠  ≋≋ {channel_symbol(target_ch, config)} ")
-        else:
-            type_line = pad("  ⚠  NOISE ≋≋   ")
+        ch_sym = channel_symbol(card.output_channel, config) if card.output_channel else "??"
+        type_line = pad(f"  ⚠  ≋≋ {ch_sym}    ")
     elif card.card_type == CardType.FILTER:
         type_line = pad(f"  ⊘  FLT-CH{card.input_channel} ")
     else:
@@ -470,7 +467,8 @@ def render_event(event: dict, state: "GameState") -> str | None:
             return None
         ct = event.get("card_type", "")
         if ct == "noise":
-            return f"  {player}  played {card.card_id}  NOISE"
+            ch_sym = channel_symbol(card.output_channel, cfg) if card.output_channel else "?"
+            return f"  {player}  played {card.card_id}  NOISE {ch_sym}"
         in_ch = channel_tag(card.input_channel, cfg)
         out_ch = channel_tag(card.output_channel, cfg)
         return f"  {player}  played {card.card_id}  {in_ch}→{out_ch}  PKT {card.packet_value}"
