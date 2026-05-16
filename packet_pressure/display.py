@@ -60,7 +60,10 @@ def print_splash() -> None:
     _syms = ["⇒", "⊘", "⚠", "⊕", "⊣"]
     _bg_colors = [_TEAL, _ORANGE, _PURPLE]
 
-    n_cols, n_rows = 14, 5
+    import shutil
+    term_width = shutil.get_terminal_size().columns
+    n_cols = term_width // 3  # each cell is " X " = 3 chars (⚠ is double-width but close enough)
+    n_rows = 5
     for r in range(n_rows):
         parts = []
         for c in range(n_cols):
