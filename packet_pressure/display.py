@@ -142,6 +142,7 @@ def print_how_to_play(config: "GameConfig") -> None:
 
     _section("SCORING")
     print("    " + _dim("At the end of each round, all valid routes (≥ 2 nodes) score."))
+    print("    " + _dim("PKT on each card is its packet value — the points you score if it's your exit node."))
     print("    " + _dim("Only the exit node's packet value counts — no sum."))
     print("    " + _dim("The exit node's owner collects the points."))
 
