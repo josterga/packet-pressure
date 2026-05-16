@@ -31,9 +31,7 @@ Full install and CLI reference: [Install](#install) · [Usage](#usage)
 
 ## Overview
 
-Packet Pressure is a tactical card game of shared routes and stolen endpoints on a live packet-switching network. Each round, players chain relay nodes across shared channels to build routing paths — but points go to the finisher, not the architect. Extend what others started, or build something worth stealing.
-
-Every card you play either builds your lead or hands it to someone else.
+Packet Pressure is a competitive card game of contested route-building. Routes are shared infrastructure — any player can extend any open route at any time. Points go to the finisher, not the architect: whoever holds the endpoint node when a route closes scores it. Chain relay cards across shared channels to build routes worth stealing, or use terminal and noise cards to close routes on your terms. Every card you play either builds your lead or hands it to someone else.
 
 ## Goal
 
