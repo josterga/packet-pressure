@@ -489,8 +489,8 @@ Each sweep value runs as a separate batch under `--output-dir`, producing per-va
 | Solo / hot-seat | `--solo` | You control every player's turn — no AI |
 | Deterministic | add `--seed 42` | Any mode becomes fully reproducible |
 
+In both interactive modes, player count is set by `--policies` (default: `greedy denial` → 3 players total). Add more policy names for more players. The preset's player count is ignored.
+
 ---
 
 © 2026 Packet Pressure
-
-In both interactive modes, player count is set by `--policies` (default: `greedy denial` → 3 players total). Add more policy names for more players. The preset's player count is ignored.
