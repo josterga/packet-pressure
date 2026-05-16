@@ -1,0 +1,242 @@
+:root {
+  --bg:       #0a0f1e;
+  --surface:  #111827;
+  --border:   #1e293b;
+  --text:     #e2e8f0;
+  --dim:      #64748b;
+  --teal:     #2dd4bf;
+  --orange:   #fb923c;
+  --purple:   #a78bfa;
+  --green:    #4ade80;
+  --red:      #f87171;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "JetBrains Mono", "Fira Mono", "Cascadia Mono", ui-monospace, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ── Layout ── */
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+section {
+  padding: 72px 0;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Hero ── */
+.hero {
+  padding-bottom: 72px;
+}
+
+.pp-banner {
+  width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: nowrap;
+  margin-bottom: 36px;
+}
+
+.hero-content {
+  text-align: center;
+}
+
+.pp-hero-icons {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: clamp(22px, 5vw, 32px);
+  letter-spacing: 0.25em;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.tagline {
+  font-size: 15px;
+  color: var(--teal);
+  margin-bottom: 14px;
+  font-style: italic;
+}
+
+.hero-desc {
+  color: var(--dim);
+  margin-bottom: 32px;
+}
+
+.ctas {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-block;
+  padding: 9px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 13px;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.8; }
+
+.btn-primary {
+  background: var(--teal);
+  color: #0a0f1e;
+  font-weight: 700;
+}
+
+.btn-secondary {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* ── Color spans — mirror terminal ANSI palette ── */
+.c-teal   { color: var(--teal); }
+.c-orange { color: var(--orange); }
+.c-purple { color: var(--purple); }
+.c-dim    { color: var(--dim); }
+
+/* ── What it is ── */
+.what p {
+  color: var(--dim);
+  max-width: 600px;
+}
+
+.what p + p { margin-top: 12px; }
+
+/* ── Section headings ── */
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 28px;
+}
+
+/* ── Cards ── */
+.cards-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.card-block {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.card-block pre {
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--text);
+}
+
+.card-block .card-caption {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--dim);
+  max-width: 20ch;
+  white-space: normal;
+}
+
+/* ── Install ── */
+.code-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px 24px;
+  overflow-x: auto;
+}
+
+.code-block pre {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.code-block .comment { color: var(--dim); }
+
+.install-note {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+/* ── Roadmap ── */
+.roadmap-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.roadmap-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--dim);
+}
+
+.roadmap-list .badge {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.badge-ch1 {
+  background: color-mix(in srgb, var(--teal) 15%, transparent);
+  color: var(--teal);
+  border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent);
+}
+
+.badge-ch2 {
+  background: color-mix(in srgb, var(--orange) 15%, transparent);
+  color: var(--orange);
+  border: 1px solid color-mix(in srgb, var(--orange) 30%, transparent);
+}
+
+.badge-ch3 {
+  background: color-mix(in srgb, var(--purple) 15%, transparent);
+  color: var(--purple);
+  border: 1px solid color-mix(in srgb, var(--purple) 30%, transparent);
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+footer a {
+  color: var(--dim);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+footer a:hover { color: var(--text); }

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A competitive routing card game. Routes are shared infrastructure — anyone can extend them, anyone can steal them.">
+  <title>Packet Pressure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── Hero ── -->
+  <header class="hero">
+    <div id="pp-banner" class="pp-banner" aria-hidden="true"></div>
+    <div class="container hero-content">
+      <div id="pp-hero-icons" class="pp-hero-icons" aria-hidden="true"></div>
+      <h1>PACKET PRESSURE</h1>
+      <p class="tagline">Extend the route. Hold the endpoint.</p>
+      <p class="hero-desc">A competitive routing card game · 3–5 players · ~30–45 min</p>
+      <div class="ctas">
+        <a href="https://github.com/parcl0/packet-pressure" class="btn btn-primary">View on GitHub</a>
+        <a href="https://github.com/parcl0/packet-pressure#overview" class="btn btn-secondary">Read the Rules</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── What it is ── -->
+  <section class="what">
+    <div class="container">
+      <h2>What it is</h2>
+      <p>Routes are shared infrastructure. Anyone can extend them; anyone can steal them. Points go to whoever holds the endpoint when the round closes — not whoever built the route.</p>
+      <p>Every card you play either builds your lead or hands it to someone else.</p>
+      <p>The terminal simulator runs today. A browser version is coming.</p>
+    </div>
+  </section>
+
+  <!-- ── Card showcase ── -->
+  <section class="cards">
+    <div class="container">
+      <h2>The Cards</h2>
+      <div class="cards-grid">
+
+        <!-- Relay: CH01(teal) → CH02(orange) -->
+        <div class="card-block">
+          <pre><span class="c-teal">┌</span>──────────────────<span class="c-orange">┐</span>
+<span class="c-teal">│</span> IN <span class="c-teal">CH01</span> <span class="c-orange">CH02</span> OUT <span class="c-orange">│</span>
+<span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
+<span class="c-teal">│</span>  ⇒               <span class="c-orange">│</span>
+<span class="c-teal">│</span>  PKT  200        <span class="c-orange">│</span>
+<span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
+<span class="c-teal">│</span>        REL-0001  <span class="c-orange">│</span>
+<span class="c-teal">└</span>──────────────────<span class="c-orange">┘</span></pre>
+          <p class="card-caption">⇒ Relay — extends the route</p>
+        </div>
+
+        <!-- Amplifier: CH02(orange) → CH03(purple) -->
+        <div class="card-block">
+          <pre><span class="c-orange">┌</span>──────────────────<span class="c-purple">┐</span>
+<span class="c-orange">│</span> IN <span class="c-orange">CH02</span> <span class="c-purple">CH03</span> OUT <span class="c-purple">│</span>
+<span class="c-orange">│</span>──────────────────<span class="c-purple">│</span>
+<span class="c-orange">│</span>  ⊕  AMP  ×2      <span class="c-purple">│</span>
+<span class="c-orange">│</span>  PKT  300        <span class="c-purple">│</span>
+<span class="c-orange">│</span>──────────────────<span class="c-purple">│</span>
+<span class="c-orange">│</span>        AMP-0001  <span class="c-purple">│</span>
+<span class="c-orange">└</span>──────────────────<span class="c-purple">┘</span></pre>
+          <p class="card-caption">⊕ Amplifier — doubles value if held at scoring</p>
+        </div>
+
+        <!-- Filter: CH01(teal) → CH02(orange), shields CH01 noise -->
+        <div class="card-block">
+          <pre><span class="c-teal">┌</span>──────────────────<span class="c-orange">┐</span>
+<span class="c-teal">│</span> IN <span class="c-teal">CH01</span> <span class="c-orange">CH02</span> OUT <span class="c-orange">│</span>
+<span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
+<span class="c-teal">│</span>  ⊘  FLT-CH01     <span class="c-orange">│</span>
+<span class="c-teal">│</span>  PKT  200        <span class="c-orange">│</span>
+<span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
+<span class="c-teal">│</span>        FLT-0001  <span class="c-orange">│</span>
+<span class="c-teal">└</span>──────────────────<span class="c-orange">┘</span></pre>
+          <p class="card-caption">⊘ Filter — shields the route from noise</p>
+        </div>
+
+        <!-- Terminal: ANY → END (dim borders, no channel) -->
+        <div class="card-block">
+          <pre><span class="c-dim">┌</span>──────────────────<span class="c-dim">┐</span>
+<span class="c-dim">│</span> IN <span class="c-dim">ANY</span>   <span class="c-dim">END</span> OUT <span class="c-dim">│</span>
+<span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
+<span class="c-dim">│</span>  ⊣  ─ TERM ─     <span class="c-dim">│</span>
+<span class="c-dim">│</span>  PKT  500        <span class="c-dim">│</span>
+<span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
+<span class="c-dim">│</span>        TERM-0001 <span class="c-dim">│</span>
+<span class="c-dim">└</span>──────────────────<span class="c-dim">┘</span></pre>
+          <p class="card-caption">⊣ Terminal — closes and claims any route</p>
+        </div>
+
+        <!-- Noise: no input → targets CH01(teal) -->
+        <div class="card-block">
+          <pre>┌──────────────────<span class="c-teal">┐</span>
+│ IN  --  <span class="c-teal">CH01</span> OUT <span class="c-teal">│</span>
+│──────────────────<span class="c-teal">│</span>
+│  ⚠  ≋≋ <span class="c-teal">CH01</span>      <span class="c-teal">│</span>
+│  PKT  0          <span class="c-teal">│</span>
+│──────────────────<span class="c-teal">│</span>
+│       NOISE-0001 <span class="c-teal">│</span>
+└──────────────────<span class="c-teal">┘</span></pre>
+          <p class="card-caption">⚠ Noise — destroys routes on a channel</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Install ── -->
+  <section class="install">
+    <div class="container">
+      <h2>Play it now</h2>
+      <div class="code-block">
+        <pre><span class="comment"># requires Python 3.10+</span>
+pip install git+https://github.com/parcl0/packet-pressure
+packet-pressure --interactive    <span class="comment"># you vs AI opponents</span>
+packet-pressure --solo           <span class="comment"># hot-seat with a friend</span></pre>
+      </div>
+      <p class="install-note">Or clone the repo and run <code>pip install .</code> for offline play.</p>
+    </div>
+  </section>
+
+  <!-- ── Roadmap ── -->
+  <section class="roadmap">
+    <div class="container">
+      <h2>Coming up</h2>
+      <ul class="roadmap-list">
+        <li><span class="badge badge-ch1">ch01</span> Browser simulation — no install required</li>
+        <li><span class="badge badge-ch2">ch02</span> Printable card sheets</li>
+        <li><span class="badge badge-ch3">ch03</span> Multiplayer</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="container">
+      © 2026 Packet Pressure &mdash;
+      <a href="https://github.com/parcl0/packet-pressure/blob/main/LICENSE">CC BY-NC 4.0</a>
+      &middot;
+      <a href="https://github.com/parcl0/packet-pressure">GitHub</a>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    // Replicate print_splash() from display.py:
+    // icon = syms[(c - r) % 5]  — diagonal shift each row
+    // color = bg_colors[(r + c) % 3]  — 3-color cycle independent of icons
+    var syms   = ["⇒", "⊘", "⚠", "⊕", "⊣"]; // ⇒ ⊘ ⚠ ⊕ ⊣
+    var colors = ["var(--teal)", "var(--orange)", "var(--purple)"];
+
+    var banner = document.getElementById("pp-banner");
+    var nCols  = Math.ceil(window.innerWidth / 14) + 4;
+    var nRows  = 5;
+
+    var lines = [];
+    for (var r = 0; r < nRows; r++) {
+      var parts = [];
+      for (var c = 0; c < nCols; c++) {
+        var sym   = syms[((c - r) % 5 + 5) % 5];
+        var color = colors[(r + c) % 3];
+        parts.push(
+          '<span style="color:' + color + ';opacity:0.35"> ' + sym + ' </span>'
+        );
+      }
+      lines.push(parts.join(""));
+    }
+    banner.innerHTML = lines.join("<br>");
+
+    // Hero icon row — each card type in its own color, matching display.py
+    var heroIcons = [
+      { sym: "⇒", color: "var(--teal)"   },
+      { sym: "⊕", color: "var(--orange)" },
+      { sym: "⊘", color: "var(--purple)" },
+      { sym: "⊣", color: "var(--text)"   },
+      { sym: "⚠", color: "var(--text)"   },
+    ];
+    var sep    = '<span style="color:var(--dim)"> \xB7 </span>';
+    var heroEl = document.getElementById("pp-hero-icons");
+    heroEl.innerHTML = heroIcons.map(function (h) {
+      return (
+        '<span style="color:' + h.color + ';font-weight:700">' + h.sym + "</span>"
+      );
+    }).join(sep);
+  })();
+  </script>
+
+</body>
+</html>
