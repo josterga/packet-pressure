@@ -1,4 +1,0 @@
-game_seed,winner,total_rounds_played,avg_score_per_round,scoring_routes_count,avg_route_length,pct_routes_stopped_by_hop_limit,collision_count_per_round,noise_plays,terminal_plays,amplifier_plays,amplifier_score_rate,terminal_steal_rate,seed_node_utilization_rate,dead_rounds_count,turn_pct_extending_vs_starting,avg_legal_moves_per_turn,score_p0,score_p1,score_p2,score_p3
-1016164991,P3,4,575.0,5,2.0,0.0,0.75,2,2,2,0.0,0.0,0.0,1,0.556,3.58,1000,0,0,1300
-1099128569,P2,2,850.0,4,2.25,0.0,0.0,0,1,0,0.0,0.0,0.0,0,0.556,3.0,200,0,1300,200
-1621709875,P2,5,560.0,6,2.5,0.0,0.8,2,3,1,0.0,0.0,0.0,2,0.542,3.12,100,400,1700,600
