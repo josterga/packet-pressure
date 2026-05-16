@@ -173,11 +173,13 @@
       <h2>Play it now</h2>
       <div class="code-block">
         <pre><span class="comment"># requires Python 3.10+</span>
-pip install git+https://github.com/josterga/packet-pressure
-packet-pressure --interactive    <span class="comment"># you vs AI opponents</span>
-packet-pressure --solo           <span class="comment"># hot-seat with a friend</span></pre>
+git clone https://github.com/josterga/packet-pressure
+cd packet-pressure
+pip install -r requirements.txt
+python -m packet_pressure.run_experiment --interactive    <span class="comment"># you vs AI opponents</span>
+python -m packet_pressure.run_experiment --solo           <span class="comment"># you control all players</span></pre>
       </div>
-      <p class="install-note">Or clone the repo and run <code>pip install .</code> for offline play.</p>
+      <p class="install-note">Or install as a package: <code>pip install git+https://github.com/josterga/packet-pressure</code> then run <code>packet-pressure --interactive</code>.</p>
     </div>
   </section>
 
