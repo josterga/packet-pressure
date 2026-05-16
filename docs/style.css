@@ -11,6 +11,32 @@
   --red:      #f87171;
 }
 
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:      #f8fafc;
+    --surface: #f1f5f9;
+    --border:  #cbd5e1;
+    --text:    #0f172a;
+    --dim:     #475569;
+  }
+}
+
+[data-theme="light"] {
+  --bg:      #f8fafc;
+  --surface: #f1f5f9;
+  --border:  #cbd5e1;
+  --text:    #0f172a;
+  --dim:     #475569;
+}
+
+[data-theme="dark"] {
+  --bg:       #0a0f1e;
+  --surface:  #111827;
+  --border:   #1e293b;
+  --text:     #e2e8f0;
+  --dim:      #64748b;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
@@ -162,7 +188,20 @@ h2 {
   color: var(--text);
 }
 
-.card-block .card-caption {
+.card-block .card-icon {
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.card-block .card-name {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.card-block .card-desc {
   margin-top: 10px;
   font-size: 12px;
   color: var(--dim);
@@ -308,3 +347,18 @@ footer a {
   text-underline-offset: 3px;
 }
 footer a:hover { color: var(--text); }
+
+/* ── Theme toggle ── */
+.theme-toggle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+.theme-toggle:hover { color: var(--text); border-color: var(--dim); }

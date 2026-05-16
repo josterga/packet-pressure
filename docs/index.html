@@ -9,6 +9,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      var saved = localStorage.getItem('theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = saved || (prefersDark ? 'dark' : 'light');
+      if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      else document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5MP6TMCJDY"></script>
@@ -32,6 +41,7 @@
       <p class="hero-desc">A competitive routing card game · 3–5 players · ~20 min</p>
       <div class="ctas">
         <a href="https://github.com/josterga/packet-pressure" class="btn btn-primary">View on GitHub</a>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode"></button>
       </div>
     </div>
   </header>
@@ -42,11 +52,8 @@
       <h2>What it is</h2>
       <p>Packet Pressure is a competitive card game of contested route-building.<br>
       Routes are shared infrastructure — any player can extend any open route at any time.<br>
-      Points go to the finisher, not the architect: whoever holds the endpoint node when a route closes scores it.<br>
-      Each card carries a packet value (PKT) — that's the score you collect.<br>
-      Chain relay cards across shared channels to build routes worth stealing, or use terminal and noise cards to close routes on your terms.<br>
-      Every card you play either builds your lead or hands it to someone else.</p>
-      <p>The terminal simulator runs today. A browser version is coming.</p>
+      Whoever holds the endpoint node when a route closes scores its packet (PKT) amount.<br>
+      Every card you play is a bid for the endpoint — or a chance for someone else to steal it.</p>
     </div>
   </section>
 
@@ -58,6 +65,8 @@
 
         <!-- Relay: CH01(teal) → CH02(orange) -->
         <div class="card-block">
+          <p class="card-icon">⇒</p>
+          <p class="card-name">Relay</p>
           <pre><span class="c-teal">┌</span>──────────────────<span class="c-orange">┐</span>
 <span class="c-teal">│</span> IN <span class="c-teal">CH01</span> <span class="c-orange">CH02</span> OUT <span class="c-orange">│</span>
 <span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
@@ -66,11 +75,13 @@
 <span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
 <span class="c-teal">│</span>        REL-0001  <span class="c-orange">│</span>
 <span class="c-teal">└</span>──────────────────<span class="c-orange">┘</span></pre>
-          <p class="card-caption">⇒ Relay · extends the route</p>
+          <p class="card-desc">extends the route</p>
         </div>
 
         <!-- Amplifier: CH02(orange) → CH03(purple) -->
         <div class="card-block">
+          <p class="card-icon">⊕</p>
+          <p class="card-name">Amplifier</p>
           <pre><span class="c-orange">┌</span>──────────────────<span class="c-purple">┐</span>
 <span class="c-orange">│</span> IN <span class="c-orange">CH02</span> <span class="c-purple">CH03</span> OUT <span class="c-purple">│</span>
 <span class="c-orange">│</span>──────────────────<span class="c-purple">│</span>
@@ -79,11 +90,13 @@
 <span class="c-orange">│</span>──────────────────<span class="c-purple">│</span>
 <span class="c-orange">│</span>        AMP-0001  <span class="c-purple">│</span>
 <span class="c-orange">└</span>──────────────────<span class="c-purple">┘</span></pre>
-          <p class="card-caption">⊕ Amplifier · doubles value if held at scoring</p>
+          <p class="card-desc">multiplies packet score</p>
         </div>
 
         <!-- Filter: CH01(teal) → CH02(orange), shields CH01 noise -->
         <div class="card-block">
+          <p class="card-icon">⊘</p>
+          <p class="card-name">Filter</p>
           <pre><span class="c-teal">┌</span>──────────────────<span class="c-orange">┐</span>
 <span class="c-teal">│</span> IN <span class="c-teal">CH01</span> <span class="c-orange">CH02</span> OUT <span class="c-orange">│</span>
 <span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
@@ -92,11 +105,13 @@
 <span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
 <span class="c-teal">│</span>        FLT-0001  <span class="c-orange">│</span>
 <span class="c-teal">└</span>──────────────────<span class="c-orange">┘</span></pre>
-          <p class="card-caption">⊘ Filter · shields the route from noise</p>
+          <p class="card-desc">shields the route from noise</p>
         </div>
 
         <!-- Terminal: ANY → END (dim borders, no channel) -->
         <div class="card-block">
+          <p class="card-icon">⊣</p>
+          <p class="card-name">Terminal</p>
           <pre><span class="c-dim">┌</span>──────────────────<span class="c-dim">┐</span>
 <span class="c-dim">│</span> IN <span class="c-dim">ANY</span>   <span class="c-dim">END</span> OUT <span class="c-dim">│</span>
 <span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
@@ -105,11 +120,13 @@
 <span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
 <span class="c-dim">│</span>        TERM-0001 <span class="c-dim">│</span>
 <span class="c-dim">└</span>──────────────────<span class="c-dim">┘</span></pre>
-          <p class="card-caption">⊣ Terminal · closes and claims any route</p>
+          <p class="card-desc">closes any route</p>
         </div>
 
         <!-- Noise: no input → targets CH01(teal) -->
         <div class="card-block">
+          <p class="card-icon">⚠</p>
+          <p class="card-name">Noise</p>
           <pre>┌──────────────────<span class="c-teal">┐</span>
 │ IN  --  <span class="c-teal">CH01</span> OUT <span class="c-teal">│</span>
 │──────────────────<span class="c-teal">│</span>
@@ -118,7 +135,7 @@
 │──────────────────<span class="c-teal">│</span>
 │       NOISE-0001 <span class="c-teal">│</span>
 └──────────────────<span class="c-teal">┘</span></pre>
-          <p class="card-caption">⚠ Noise · destroys routes on a channel</p>
+          <p class="card-desc">destroys routes</p>
         </div>
 
       </div>
@@ -129,7 +146,7 @@
   <section class="routes">
     <div class="container">
       <h2>Routes</h2>
-      <p class="routes-desc">A route is a chain of cards where each card's output channel matches the next card's input. Any player can extend any open route — the player who places the last card (the endpoint) scores it. A route closes when it hits the hop limit or a terminal node is played on it; closed routes score at round end.</p>
+      <p class="routes-desc">A route is a chain of cards where each card's output channel matches the next card's input. Each node placed becomes the new endpoint, displacing the previous holder. A route closes when it hits the hop limit or a terminal is played on it; closed routes score at round end.</p>
       <div class="route-label">ROUTE-01 &nbsp;·&nbsp; <span class="c-teal">CH01</span> → <span class="c-orange">CH02</span> → <span class="c-purple">CH03</span> → <span class="c-dim">END</span></div>
       <div class="route-row">
 
@@ -207,6 +224,20 @@ python -m packet_pressure.run_experiment --solo           <span class="comment">
   </footer>
 
   <script>
+  (function () {
+    var btn = document.getElementById('theme-toggle');
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      btn.textContent = theme === 'light' ? '☾ Dark' : '☀ Light';
+      localStorage.setItem('theme', theme);
+    }
+    var current = document.documentElement.getAttribute('data-theme') || 'dark';
+    btn.textContent = current === 'light' ? '☾ Dark' : '☀ Light';
+    btn.addEventListener('click', function () {
+      applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+  })();
+
   (function () {
     // Replicate print_splash() from display.py:
     // icon = syms[(c - r) % 5]  — diagonal shift each row
