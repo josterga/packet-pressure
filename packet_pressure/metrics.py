@@ -156,22 +156,23 @@ class MetricsCollector:
         amplifier_plays = sum(1 for e in play_events if e.get("card_type") == CardType.AMPLIFIER.value)
         noise_plays = sum(1 for e in play_events if e.get("card_type") == CardType.NOISE.value)
 
-        # Amplifier score rate
+        # Amplifier score rate: fraction of amplifier plays where the amplifier
+        # was the exit node at scoring time (i.e. multiplier was applied).
         term_events = events.get(EVT_ROUTE_TERMINATED, [])
-        amplifier_terms = [e for e in term_events if e.get("reason") == "amplifier"]
-        amplifier_score_rate = (
-            sum(1 for e in amplifier_terms if e.get("scoring")) / amplifier_plays
-            if amplifier_plays else 0.0
+        amplifier_score_count = sum(
+            1 for e in score_events
+            if (card := s.lookup_card(e.get("exit_node_id", ""))) is not None
+            and card.card_type == CardType.AMPLIFIER
         )
+        amplifier_score_rate = amplifier_score_count / amplifier_plays if amplifier_plays else 0.0
 
-        # Terminal steal rate (terminal node terminated a route it didn't start)
+        # Terminal steal rate: fraction of terminal plays that closed a route
+        # started or extended by another player (owner_sequence has >1 distinct owner).
         terminal_terms = [e for e in term_events if e.get("reason") == "terminal"]
-        terminal_steals = 0
-        for e in terminal_terms:
-            route_id = e.get("route_id")
-            route = next((r for r in s.tableau.routes if r.route_id == route_id), None)
-            if route and route.owner_sequence and len(set(route.owner_sequence)) > 1:
-                terminal_steals += 1
+        terminal_steals = sum(
+            1 for e in terminal_terms
+            if len(set(e.get("owner_sequence", []))) > 1
+        )
         terminal_steal_rate = terminal_steals / terminal_plays if terminal_plays else 0.0
 
         # Seed node utilization

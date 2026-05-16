@@ -107,34 +107,99 @@ class TestLegalPlays:
 
 class TestGreedyExitNode:
     def test_greedy_prefers_higher_value_exit_node(self):
-        """GreedyExitNode should choose a higher packet_value card when both can terminate."""
+        # Two terminal cards are legal (targeting a 2-hop route); GreedyExitNode
+        # must choose the one with higher packet_value.
         state, engine = make_state(seed=7)
         policy = GreedyExitNode()
         player = state.players[0]
-        # Just check it doesn't crash and returns a card in hand
-        card, ctx = policy.choose_play(state, player)
-        hand_ids = {c.card_id for c in player.hand}
-        assert card.card_id in hand_ids
+        player.hand.clear()
+
+        # Build a 2-card route (length=2 == route_min_length=2 from FAST_CONFIG)
+        c1 = Card("G-R1", CardType.RELAY, "01", "02", 100, "red", owner_id="P1")
+        c2 = Card("G-R2", CardType.RELAY, "02", "03", 100, "red", owner_id="P1")
+        for c in (c1, c2):
+            state.register_card(c)
+            state.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(c2)
+        assert state.tableau.routes[0].length == 2
+
+        low_term = Card("TERM-LOW", CardType.TERMINAL, "ANY", "TERM", 100, "red")
+        high_term = Card("TERM-HIGH", CardType.TERMINAL, "ANY", "TERM", 999, "red")
+        for c in (low_term, high_term):
+            state.register_card(c)
+            player.hand.append(c)
+
+        chosen, _ = policy.choose_play(state, player)
+        assert chosen.card_id == "TERM-HIGH"
 
 
 class TestRouteBuilder:
-    def test_route_builder_returns_legal_play(self):
+    def test_route_builder_extends_open_route_over_starting_new(self):
+        # RouteBuilder should extend an existing open route rather than start a new one
+        # when a matching card is available, even if a non-matching card is also in hand.
         state, engine = make_state(seed=5)
         policy = RouteBuilder()
         player = state.players[0]
-        card, ctx = policy.choose_play(state, player)
-        hand_ids = {c.card_id for c in player.hand}
-        assert card.card_id in hand_ids
+        player.hand.clear()
+
+        # Open route ending on channel "07"
+        seed = Card("RB-SEED", CardType.RELAY, "05", "07", 100, "red", owner_id="P0")
+        state.register_card(seed)
+        state.tableau.active_cards[seed.card_id] = seed
+        engine._try_start_route(seed)
+        assert state.tableau.routes[-1].last_output_channel == "07"
+
+        # matching card (input "07") and non-matching card (input "99")
+        match = Card("RB-MATCH", CardType.RELAY, "07", "08", 100, "red")
+        no_match = Card("RB-NOMATCH", CardType.RELAY, "99", "08", 100, "red")
+        for c in (match, no_match):
+            state.register_card(c)
+            player.hand.append(c)
+
+        chosen, ctx = policy.choose_play(state, player)
+        assert chosen.card_id == "RB-MATCH"
+        assert ctx.target_route_id is not None
 
 
 class TestDenialCollision:
-    def test_denial_returns_legal_play(self):
+    def test_denial_uses_terminal_to_steal_high_value_opponent_route(self):
+        # DenialCollision should choose a terminal to steal a high-value opponent
+        # route (exit node value >= threshold=50) even when a higher-scoring relay
+        # play is available on a separate route.
         state, engine = make_state(seed=3)
         policy = DenialCollision()
         player = state.players[0]
-        card, ctx = policy.choose_play(state, player)
-        hand_ids = {c.card_id for c in player.hand}
-        assert card.card_id in hand_ids
+        player.hand.clear()
+
+        # Opponent route (P1): 2 hops, exit value=200 — triggers denial (200 >= 50)
+        c1 = Card("DC-R1", CardType.RELAY, "01", "02", 100, "red", owner_id="P1")
+        c2 = Card("DC-R2", CardType.RELAY, "02", "03", 200, "red", owner_id="P1")
+        for c in (c1, c2):
+            state.register_card(c)
+            state.tableau.active_cards[c.card_id] = c
+        engine._try_start_route(c1)
+        engine._update_routes(c2)
+        opponent_route = state.tableau.routes[0]
+        assert opponent_route.length == 2
+
+        # Unrelated open stub on a separate channel so the relay is legal
+        seed = Card("DC-SEED", CardType.RELAY, "88", "89", 50, "red", owner_id="P0")
+        state.register_card(seed)
+        state.tableau.active_cards[seed.card_id] = seed
+        engine._try_start_route(seed)
+
+        # Low-value terminal (can steal opponent route) and high-value relay (extends seed route)
+        # GreedyExitNode would pick the relay (999 > 100). DenialCollision should pick
+        # the terminal because the denial value (200) meets the threshold.
+        term = Card("DC-TERM", CardType.TERMINAL, "ANY", "TERM", 100, "red")
+        relay = Card("DC-RELAY", CardType.RELAY, "89", "90", 999, "red")
+        for c in (term, relay):
+            state.register_card(c)
+            player.hand.append(c)
+
+        chosen, _ = policy.choose_play(state, player)
+        assert chosen.card_id == "DC-TERM"
 
 
 class TestFullGames:

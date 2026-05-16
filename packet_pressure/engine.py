@@ -386,7 +386,8 @@ class GameEngine:
             route.termination_reason = TerminationReason.TERMINAL
             route.is_scoring_candidate = route.length >= cfg.route_min_length
             s.log(EVT_ROUTE_TERMINATED, route_id=route.route_id, reason="terminal",
-                  scoring=route.is_scoring_candidate)
+                  scoring=route.is_scoring_candidate,
+                  owner_sequence=list(route.owner_sequence))
 
         elif route.length >= cfg.route_max_hops:
             route.termination_reason = TerminationReason.HOP_LIMIT
