@@ -105,6 +105,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Print the full deck as JSON and exit (no simulation)",
     )
+    parser.add_argument(
+        "--print-cards",
+        action="store_true",
+        help="Render one example of each card type as ANSI blocks and exit",
+    )
+    parser.add_argument(
+        "--print-deck",
+        action="store_true",
+        help="Render the full deck as ANSI card blocks and exit",
+    )
 
     args = parser.parse_args(argv)
 
@@ -112,6 +122,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.dump_deck:
         return _dump_deck(config, args.seed)
+    if args.print_cards:
+        return _print_cards(config, args.seed)
+    if args.print_deck:
+        return _print_deck(config, args.seed)
 
     # Interactive / solo mode: launch a single human game
     if args.interactive or args.solo:
@@ -241,6 +255,40 @@ def _dump_deck(config: GameConfig, seed: int | None) -> int:
         ],
     }
     print(json.dumps(output, indent=2))
+    return 0
+
+
+def _print_cards(config: GameConfig, seed: int | None) -> int:
+    import numpy as np
+    from .deck import DeckBuilder
+    from .display import render_cards_row
+
+    rng = np.random.default_rng(seed)
+    deck = DeckBuilder(config, rng).build()
+    seen: set[str] = set()
+    examples = []
+    for card in deck:
+        ct = card.card_type.value
+        if ct not in seen:
+            seen.add(ct)
+            examples.append(card)
+        if len(seen) == 5:
+            break
+    print(render_cards_row(examples, config))
+    return 0
+
+
+def _print_deck(config: GameConfig, seed: int | None) -> int:
+    import numpy as np
+    from .deck import DeckBuilder
+    from .display import render_cards_row
+
+    rng = np.random.default_rng(seed)
+    deck = DeckBuilder(config, rng).build()
+    deck.sort(key=lambda c: (c.card_type.value, c.card_id))
+    for i in range(0, len(deck), 4):
+        print(render_cards_row(deck[i:i + 4], config))
+        print()
     return 0
 
 
