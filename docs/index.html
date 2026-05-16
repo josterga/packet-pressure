@@ -22,7 +22,6 @@
       <p class="hero-desc">A competitive routing card game · 3–5 players · ~30–45 min</p>
       <div class="ctas">
         <a href="https://github.com/parcl0/packet-pressure" class="btn btn-primary">View on GitHub</a>
-        <a href="https://github.com/parcl0/packet-pressure#overview" class="btn btn-secondary">Read the Rules</a>
       </div>
     </div>
   </header>
@@ -53,7 +52,7 @@
 <span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
 <span class="c-teal">│</span>        REL-0001  <span class="c-orange">│</span>
 <span class="c-teal">└</span>──────────────────<span class="c-orange">┘</span></pre>
-          <p class="card-caption">⇒ Relay — extends the route</p>
+          <p class="card-caption">⇒ Relay · extends the route</p>
         </div>
 
         <!-- Amplifier: CH02(orange) → CH03(purple) -->
@@ -66,7 +65,7 @@
 <span class="c-orange">│</span>──────────────────<span class="c-purple">│</span>
 <span class="c-orange">│</span>        AMP-0001  <span class="c-purple">│</span>
 <span class="c-orange">└</span>──────────────────<span class="c-purple">┘</span></pre>
-          <p class="card-caption">⊕ Amplifier — doubles value if held at scoring</p>
+          <p class="card-caption">⊕ Amplifier · doubles value if held at scoring</p>
         </div>
 
         <!-- Filter: CH01(teal) → CH02(orange), shields CH01 noise -->
@@ -79,7 +78,7 @@
 <span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
 <span class="c-teal">│</span>        FLT-0001  <span class="c-orange">│</span>
 <span class="c-teal">└</span>──────────────────<span class="c-orange">┘</span></pre>
-          <p class="card-caption">⊘ Filter — shields the route from noise</p>
+          <p class="card-caption">⊘ Filter · shields the route from noise</p>
         </div>
 
         <!-- Terminal: ANY → END (dim borders, no channel) -->
@@ -92,7 +91,7 @@
 <span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
 <span class="c-dim">│</span>        TERM-0001 <span class="c-dim">│</span>
 <span class="c-dim">└</span>──────────────────<span class="c-dim">┘</span></pre>
-          <p class="card-caption">⊣ Terminal — closes and claims any route</p>
+          <p class="card-caption">⊣ Terminal · closes and claims any route</p>
         </div>
 
         <!-- Noise: no input → targets CH01(teal) -->
@@ -105,8 +104,51 @@
 │──────────────────<span class="c-teal">│</span>
 │       NOISE-0001 <span class="c-teal">│</span>
 └──────────────────<span class="c-teal">┘</span></pre>
-          <p class="card-caption">⚠ Noise — destroys routes on a channel</p>
+          <p class="card-caption">⚠ Noise · destroys routes on a channel</p>
         </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Routes ── -->
+  <section class="routes">
+    <div class="container">
+      <h2>Routes</h2>
+      <p class="routes-desc">A route is a chain of cards where each card's output channel matches the next card's input. Points go to whoever holds the exit node when the round ends — not whoever started the route.</p>
+      <div class="route-label">ROUTE-01 &nbsp;·&nbsp; <span class="c-teal">CH01</span> → <span class="c-orange">CH02</span> → <span class="c-purple">CH03</span> → <span class="c-dim">END</span></div>
+      <div class="route-row">
+
+        <pre class="route-card"><span class="c-teal">┌</span>──────────────────<span class="c-orange">┐</span>
+<span class="c-teal">│</span> IN <span class="c-teal">CH01</span> <span class="c-orange">CH02</span> OUT <span class="c-orange">│</span>
+<span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
+<span class="c-teal">│</span>  ⇒               <span class="c-orange">│</span>
+<span class="c-teal">│</span>  PKT  200        <span class="c-orange">│</span>
+<span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
+<span class="c-teal">│</span>        REL-0001  <span class="c-orange">│</span>
+<span class="c-teal">└</span>──────────────────<span class="c-orange">┘</span></pre>
+
+        <span class="route-arrow c-orange">→</span>
+
+        <pre class="route-card"><span class="c-orange">┌</span>──────────────────<span class="c-purple">┐</span>
+<span class="c-orange">│</span> IN <span class="c-orange">CH02</span> <span class="c-purple">CH03</span> OUT <span class="c-purple">│</span>
+<span class="c-orange">│</span>──────────────────<span class="c-purple">│</span>
+<span class="c-orange">│</span>  ⊕  AMP  ×2      <span class="c-purple">│</span>
+<span class="c-orange">│</span>  PKT  300        <span class="c-purple">│</span>
+<span class="c-orange">│</span>──────────────────<span class="c-purple">│</span>
+<span class="c-orange">│</span>        AMP-0001  <span class="c-purple">│</span>
+<span class="c-orange">└</span>──────────────────<span class="c-purple">┘</span></pre>
+
+        <span class="route-arrow c-dim">→</span>
+
+        <pre class="route-card"><span class="c-dim">┌</span>──────────────────<span class="c-dim">┐</span>
+<span class="c-dim">│</span> IN <span class="c-dim">ANY</span>   <span class="c-dim">END</span> OUT <span class="c-dim">│</span>
+<span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
+<span class="c-dim">│</span>  ⊣  ─ TERM ─     <span class="c-dim">│</span>
+<span class="c-dim">│</span>  PKT  500        <span class="c-dim">│</span>
+<span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
+<span class="c-dim">│</span>        TERM-0001 <span class="c-dim">│</span>
+<span class="c-dim">└</span>──────────────────<span class="c-dim">┘</span></pre>
 
       </div>
     </div>
@@ -131,7 +173,7 @@ packet-pressure --solo           <span class="comment"># hot-seat with a friend<
     <div class="container">
       <h2>Coming up</h2>
       <ul class="roadmap-list">
-        <li><span class="badge badge-ch1">ch01</span> Browser simulation — no install required</li>
+        <li><span class="badge badge-ch1">ch01</span> Browser simulation · no install required</li>
         <li><span class="badge badge-ch2">ch02</span> Printable card sheets</li>
         <li><span class="badge badge-ch3">ch03</span> Multiplayer</li>
       </ul>
@@ -141,7 +183,7 @@ packet-pressure --solo           <span class="comment"># hot-seat with a friend<
   <!-- ── Footer ── -->
   <footer>
     <div class="container">
-      © 2026 Packet Pressure &mdash;
+      © 2026 Packet Pressure &middot;
       <a href="https://github.com/parcl0/packet-pressure/blob/main/LICENSE">CC BY-NC 4.0</a>
       &middot;
       <a href="https://github.com/parcl0/packet-pressure">GitHub</a>

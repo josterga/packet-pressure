@@ -112,6 +112,13 @@ section {
 .c-purple { color: var(--purple); }
 .c-dim    { color: var(--dim); }
 
+/* ── Center paragraph body text in all sections except roadmap ── */
+section:not(.roadmap) p {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* ── What it is ── */
 .what p {
   color: var(--dim);
@@ -158,6 +165,64 @@ h2 {
   color: var(--dim);
   max-width: 20ch;
   white-space: normal;
+}
+
+/* ── Routes ── */
+.routes-desc {
+  color: var(--dim);
+  margin-bottom: 24px;
+  max-width: 600px;
+}
+
+.route-label {
+  font-size: 12px;
+  color: var(--dim);
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.route-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.route-card {
+  flex: 0 0 auto;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--text);
+}
+
+.route-arrow {
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+
+.route-notes {
+  margin-top: 20px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.route-notes li {
+  font-size: 12px;
+  color: var(--dim);
+  padding-left: 1em;
+  position: relative;
+}
+
+.route-notes li::before {
+  content: "·";
+  position: absolute;
+  left: 0;
 }
 
 /* ── Install ── */
