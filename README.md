@@ -357,6 +357,8 @@ Key flags:
 | `--output-dir` | `./results` | Where to write results and plots |
 | `--no-plots` | — | Skip chart generation |
 | `--dump-deck` | — | Print the full deck as JSON and exit (no simulation runs) |
+| `--print-cards` | — | Render one example of each card type as ANSI blocks and exit |
+| `--print-deck` | — | Render the full deck as ANSI card blocks and exit |
 | `--interactive` | — | Play as a human against AI opponents |
 | `--solo` | — | Hot-seat mode: human controls every player's turn |
 | `--human-index` | `0` | Which player slot the human takes (interactive mode) |
@@ -486,5 +488,9 @@ Each sweep value runs as a separate batch under `--output-dir`, producing per-va
 | Human vs AI | `--interactive` | You play one slot; AI fills the rest |
 | Solo / hot-seat | `--solo` | You control every player's turn — no AI |
 | Deterministic | add `--seed 42` | Any mode becomes fully reproducible |
+
+---
+
+© 2026 Packet Pressure
 
 In both interactive modes, player count is set by `--policies` (default: `greedy denial` → 3 players total). Add more policy names for more players. The preset's player count is ignored.
