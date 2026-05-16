@@ -35,11 +35,6 @@ Packet Pressure is a tactical card game of shared routes and stolen endpoints on
 
 Every card you play either builds your lead or hands it to someone else.
 
-## What's in the Box
-
-- Card deck — relay nodes, amplifiers, filters, terminals, and noise cards
-- This guidebook
-
 ## Goal
 
 Be the first player to reach 2,000 points. If no one reaches the target, whoever has the most points after the final round wins. On a tie, the player earliest in seat order wins.
