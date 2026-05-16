@@ -11,6 +11,24 @@
 
 A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint when the round closes. · 3–5 players · ~30–45 min
 
+## Quickstart
+
+```bash
+pip install .
+packet-pressure --interactive          # play against AI opponents
+packet-pressure --solo                 # hot-seat with a friend
+```
+
+Or run an AI simulation and see win-rate analytics:
+
+```bash
+packet-pressure --preset fast --n-games 200
+```
+
+Full install and CLI reference: [Install](#install) · [Usage](#usage)
+
+---
+
 ## Overview
 
 Packet Pressure is a tactical card game of shared routes and stolen endpoints on a live packet-switching network. Each round, players chain relay nodes across shared channels to build routing paths — but points go to the finisher, not the architect. Extend what others started, or build something worth stealing.
@@ -493,4 +511,4 @@ In both interactive modes, player count is set by `--policies` (default: `greedy
 
 ---
 
-© 2026 Packet Pressure
+© 2026 Packet Pressure — licensed under [CC BY-NC 4.0](LICENSE). Commercial use requires permission.
