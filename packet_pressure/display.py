@@ -51,31 +51,37 @@ def print_splash() -> None:
     _TEAL   = _CHANNEL_ANSI["teal"]
     _ORANGE = _CHANNEL_ANSI["orange"]
     _PURPLE = _CHANNEL_ANSI["purple"]
+    _RED    = _CHANNEL_ANSI["red"]
+    _GREEN  = _CHANNEL_ANSI["green"]
 
-    # 4 repetitions of the 10-char unit; ⚠ is double-width in most terminals,
-    # giving ~43 display cols — wide enough to frame the 31-char name with margin.
-    _bg1 = "⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠"
-    _bg2 = "⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘"
-    _bg3 = "⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕"
-    _bg4 = "⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠"
+    # Icons and colors are independent cycles.
+    # icon = syms[(c - r) % 5]  → diagonal shift each row
+    # color = bg_colors[(r + c) % 3]  → 3-color cycle independent of icon type
+    _syms = ["⇒", "⊘", "⚠", "⊕", "⊣"]
+    _bg_colors = [_TEAL, _ORANGE, _PURPLE]
 
-    name = (
-        _c("P A C K E T", f"{_BOLD}{_TEAL}")
-        + "   "
-        + _c("P R E S S", f"{_BOLD}{_ORANGE}")
-        + " "
-        + _c("U R E", f"{_BOLD}{_PURPLE}")
-    )
-    tagline = _dim("Extend the route. Hold the endpoint.")
+    n_cols, n_rows = 14, 5
+    for r in range(n_rows):
+        parts = []
+        for c in range(n_cols):
+            sym   = _syms[(c - r) % 5]
+            color = _bg_colors[(r + c) % 3]
+            parts.append(" " + _c(sym, f"{_DIM}{color}") + " ")
+        print("".join(parts))
 
-    print(_c(_bg1, f"{_DIM}{_TEAL}"))
-    print(_c(_bg2, f"{_DIM}{_ORANGE}"))
+    # Hero icon row — each card type in its own full color, not dimmed
     print()
-    print(f"       {name}")
-    print(f"      {tagline}")
+    hero = "  ·  ".join([
+        _c("⇒", f"{_BOLD}{_TEAL}"),
+        _c("⊕", f"{_BOLD}{_PURPLE}"),
+        _c("⊘", f"{_BOLD}{_GREEN}"),
+        _c("⊣", f"{_BOLD}{_ORANGE}"),
+        _c("⚠", f"{_BOLD}{_RED}"),
+    ])
+    print(f"  {hero}")
     print()
-    print(_c(_bg3, f"{_DIM}{_PURPLE}"))
-    print(_c(_bg4, f"{_DIM}{_TEAL}"))
+    print(f"  {_bold('PACKET PRESSURE')}")
+    print(f"  {_dim('Extend the route. Hold the endpoint.')}")
     print()
 
 
@@ -114,12 +120,19 @@ def print_how_to_play(config: "GameConfig") -> None:
     print("    " + _dim("Routes under 2 nodes at round end carry into the next"))
     print("    " + _dim("round — they don't score and aren't discarded."))
 
+    _section("ROUND STRUCTURE")
+    print("    " + _dim(f"Each player takes {config.turns_per_player_per_round} turns per round. After all turns,"))
+    print("    " + _dim("routes score and hands refill."))
+
+    _section("PASSING")
+    print("    " + _dim("You may only pass if you have no legal play. You still draw."))
+
     _section("CARD TYPES")
     _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if cap allows and can't extend any")
     _row("⊣", _ORANGE, "Terminal",  "closes any open route (≥ 2 nodes); terminal's own value scores")
     _row("⊕", _PURPLE, "Amplifier", "extends like a relay; if exit node at scoring, value ×2")
-    _row("⚠", _RED,    "Noise",     "targets a fixed channel (shown on card); destroys all scoring routes that output to it")
-    _row("⊘", _GREEN,  "Filter",    "extends like a relay; if noise targets its input channel, the whole route is immune")
+    _row("⚠", _RED,    "Noise",     "targets a fixed channel; destroys all scoring routes that output to it — including your own; only legal when such a route exists")
+    _row("⊘", _GREEN,  "Filter",    "extends like a relay; if noise targets its input channel, the whole route is immune on that channel only")
 
     _section("SCORING")
     print("    " + _dim("At round end, all valid routes (≥ 2 nodes) score."))
@@ -127,8 +140,7 @@ def print_how_to_play(config: "GameConfig") -> None:
     print("    " + _dim("The exit node's owner collects the points."))
 
     _section("TURN ORDER")
-    print("    " + _dim("Round winner goes first next round — a disadvantage,"))
-    print("    " + _dim("since you act before others can react to what you build."))
+    print("    " + _dim("Round winner goes first next round. On a tie, order is unchanged."))
     print()
 
 
