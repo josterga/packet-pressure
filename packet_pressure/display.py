@@ -117,7 +117,7 @@ def print_how_to_play(config: "GameConfig") -> None:
     print("    " + _dim("A route chains when each node's output channel matches"))
     print("    " + _dim("the next node's input channel. Routes need 2+ nodes to"))
     print("    " + _dim(f"score. Max {config.route_max_hops} hops; max {config.max_open_routes} routes open at once."))
-    print("    " + _dim("No channel can appear twice in the same route."))
+    print("    " + _dim("No output channel can appear twice in the same route."))
 
     _section("CARRY")
     print("    " + _dim("Routes under 2 nodes at round end carry into the next"))
@@ -134,11 +134,11 @@ def print_how_to_play(config: "GameConfig") -> None:
     _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if cap allows and can't extend any")
     _row("⊣", _ORANGE, "Terminal",  "closes any open route (≥ 2 nodes); terminal's own value scores")
     _row("⊕", _PURPLE, "Amplifier", "extends like a relay; if exit node at scoring, value ×2")
-    _row("⚠", _RED,    "Noise",     "targets a fixed channel; destroys all scoring routes that output to it — including your own; only legal when such a route exists")
+    _row("⚠", _RED,    "Noise",     "targets a fixed channel; destroys all scoring routes whose current output channel matches — including your own; only legal when such a route exists")
     _row("⊘", _GREEN,  "Filter",    "extends like a relay; if noise targets its input channel, the whole route is immune on that channel only")
 
     _section("SCORING")
-    print("    " + _dim("At round end, all valid routes (≥ 2 nodes) score."))
+    print("    " + _dim("At the end of each turn, all valid routes (≥ 2 nodes) score."))
     print("    " + _dim("Only the exit node's packet value counts — no sum."))
     print("    " + _dim("The exit node's owner collects the points."))
 
@@ -224,7 +224,8 @@ def render_card_lines(card: "Card", config: "GameConfig", dim: bool = False) -> 
         ch_sym = channel_symbol(card.output_channel, config) if card.output_channel else "??"
         type_line = pad(f"  ⚠  ≋≋ {ch_sym}    ")
     elif card.card_type == CardType.FILTER:
-        type_line = pad(f"  ⊘  FLT-CH{card.input_channel} ")
+        ch_sym = channel_symbol(card.input_channel, config)
+        type_line = pad(f"  ⊘  FLT-{ch_sym} ")
     else:
         type_line = pad("  ⇒             ")
 

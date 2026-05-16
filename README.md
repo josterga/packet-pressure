@@ -9,7 +9,7 @@
 ⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠
 ```
 
-A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint when the round closes. · 3–5 players · ~30–45 min
+A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint at the end of each turn. · 3–5 players · ~20 min
 
 ## Quickstart
 
@@ -97,7 +97,7 @@ Only relay, amplifier, and filter cards can start a new route. Terminal and nois
 Key rules:
 
 - Routes must be at least 2 nodes long to score.
-- A route may visit each channel at most once — this caps route length at the number of channels (3 by default).
+- Each channel may be used as an **output** at most once per route — this caps route length at the number of channels (3 by default). Channels can appear in any order; the only constraint is that no channel has already been used as a card's output in that route. The entry channel (input of the first card) is not counted, so a route can output back to it later.
 - No more than [player count] routes can be open at the same time. Routes close when terminated by a terminal card or broken by noise — their slot frees up immediately and a new route can begin. A route that reaches the hop limit is **full**: it cannot be extended further, but it stays in the tableau until round end, still counts toward the route cap, and can still be noised. The total number of open routes in the tableau can never exceed the player count.
 
 ## Route Ownership
@@ -237,7 +237,7 @@ Disrupts a specific channel, destroying all scoring-eligible routes (≥ 2 nodes
 
 - The target channel is fixed and shown on the card — it cannot be changed when played
 - Playable only when at least one scoring-eligible route outputs to the card's fixed channel
-- All eligible routes outputting to that channel are immediately destroyed; their cards go to the discard pile
+- All eligible routes outputting to that channel are immediately destroyed; their cards go to the discard pile. "Outputting to" means the route's **current exit channel** (its tail) — a route that passed through that channel earlier but now exits at a different channel is not affected.
 - Destroyed routes do not carry over to the next round — they are gone
 - Routes shorter than 2 nodes are not affected
 - Watch out: noise destroys any route outputting to that channel, including your own

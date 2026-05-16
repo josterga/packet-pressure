@@ -19,7 +19,7 @@
       <div id="pp-hero-icons" class="pp-hero-icons" aria-hidden="true"></div>
       <h1>PACKET PRESSURE</h1>
       <p class="tagline">Extend the route. Hold the endpoint.</p>
-      <p class="hero-desc">A competitive routing card game · 3–5 players · ~30–45 min</p>
+      <p class="hero-desc">A competitive routing card game · 3–5 players · ~20 min</p>
       <div class="ctas">
         <a href="https://github.com/josterga/packet-pressure" class="btn btn-primary">View on GitHub</a>
       </div>
@@ -30,7 +30,8 @@
   <section class="what">
     <div class="container">
       <h2>What it is</h2>
-      <p>Routes are shared infrastructure. Anyone can extend them; anyone can steal them. Points go to whoever holds the endpoint when the round closes — not whoever built the route.</p>
+      <p>Routes are shared infrastructure. Anyone can extend them, anyone can steal them.</p> 
+      <p>Points go to whoever holds the endpoint at round end.</p>
       <p>Every card you play either builds your lead or hands it to someone else.</p>
       <p>The terminal simulator runs today. A browser version is coming.</p>
     </div>
@@ -73,7 +74,7 @@
           <pre><span class="c-teal">┌</span>──────────────────<span class="c-orange">┐</span>
 <span class="c-teal">│</span> IN <span class="c-teal">CH01</span> <span class="c-orange">CH02</span> OUT <span class="c-orange">│</span>
 <span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
-<span class="c-teal">│</span>  ⊘  FLT-CH01     <span class="c-orange">│</span>
+<span class="c-teal">│</span>  ⊘  FLT-<span class="c-teal">CH01</span>     <span class="c-orange">│</span>
 <span class="c-teal">│</span>  PKT  200        <span class="c-orange">│</span>
 <span class="c-teal">│</span>──────────────────<span class="c-orange">│</span>
 <span class="c-teal">│</span>        FLT-0001  <span class="c-orange">│</span>
@@ -86,7 +87,7 @@
           <pre><span class="c-dim">┌</span>──────────────────<span class="c-dim">┐</span>
 <span class="c-dim">│</span> IN <span class="c-dim">ANY</span>   <span class="c-dim">END</span> OUT <span class="c-dim">│</span>
 <span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
-<span class="c-dim">│</span>  ⊣  ─ TERM ─     <span class="c-dim">│</span>
+<span class="c-dim">│</span>  <span class="glyph-1ch">⊣</span>  - TERM -     <span class="c-dim">│</span>
 <span class="c-dim">│</span>  PKT  500        <span class="c-dim">│</span>
 <span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
 <span class="c-dim">│</span>        TERM-0001 <span class="c-dim">│</span>
@@ -115,7 +116,7 @@
   <section class="routes">
     <div class="container">
       <h2>Routes</h2>
-      <p class="routes-desc">A route is a chain of cards where each card's output channel matches the next card's input. Points go to whoever holds the exit node when the round ends — not whoever started the route.</p>
+      <p class="routes-desc">A route is a chain of cards where each card's output channel matches the next card's input. Points go to whoever holds the exit node at the end of each turn.</p>
       <div class="route-label">ROUTE-01 &nbsp;·&nbsp; <span class="c-teal">CH01</span> → <span class="c-orange">CH02</span> → <span class="c-purple">CH03</span> → <span class="c-dim">END</span></div>
       <div class="route-row">
 
@@ -144,7 +145,7 @@
         <pre class="route-card"><span class="c-dim">┌</span>──────────────────<span class="c-dim">┐</span>
 <span class="c-dim">│</span> IN <span class="c-dim">ANY</span>   <span class="c-dim">END</span> OUT <span class="c-dim">│</span>
 <span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
-<span class="c-dim">│</span>  ⊣  ─ TERM ─     <span class="c-dim">│</span>
+<span class="c-dim">│</span>  <span class="glyph-1ch">⊣</span>  - TERM -     <span class="c-dim">│</span>
 <span class="c-dim">│</span>  PKT  500        <span class="c-dim">│</span>
 <span class="c-dim">│</span>──────────────────<span class="c-dim">│</span>
 <span class="c-dim">│</span>        TERM-0001 <span class="c-dim">│</span>

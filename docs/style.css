@@ -25,7 +25,7 @@ body {
 
 /* ── Layout ── */
 .container {
-  max-width: 760px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -112,6 +112,9 @@ section {
 .c-purple { color: var(--purple); }
 .c-dim    { color: var(--dim); }
 
+/* Force special glyphs to exactly 1ch so fallback fonts don't break card alignment */
+.glyph-1ch { display: inline-block; width: 1ch; overflow: hidden; vertical-align: top; }
+
 /* ── Center paragraph body text in all sections except roadmap ── */
 section:not(.roadmap) p {
   text-align: center;
@@ -122,7 +125,7 @@ section:not(.roadmap) p {
 /* ── What it is ── */
 .what p {
   color: var(--dim);
-  max-width: 600px;
+  max-width: 760px;
 }
 
 .what p + p { margin-top: 12px; }
@@ -171,7 +174,7 @@ h2 {
 .routes-desc {
   color: var(--dim);
   margin-bottom: 24px;
-  max-width: 600px;
+  max-width: 760px;
 }
 
 .route-label {
