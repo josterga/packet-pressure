@@ -9,7 +9,7 @@
 ⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠
 ```
 
-A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint at the end of each turn. · 3–5 players · ~20 min
+A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint at round end. · 3–5 players · ~20 min
 
 ## Quickstart
 
@@ -50,7 +50,7 @@ Why fewer seeds than players? Seeds per round = player count − 1, so one playe
 
 ## The Tableau
 
-The tableau is the shared play area where all routes are built. Routes are open (extendable) or closed (scored and done).
+The tableau is the shared play area where all routes are built. Routes are open (extendable) or closed (no longer extendable). A route **closes** when it reaches the hop limit or a terminal node is played on it; both types score at round end. Noise **destroys** a route instead — destroyed routes don't score and don't carry over.
 
 ## Channels
 
@@ -98,13 +98,15 @@ Key rules:
 
 - Routes must be at least 2 nodes long to score.
 - Each channel may be used as an **output** at most once per route — this caps route length at the number of channels (3 by default). Channels can appear in any order; the only constraint is that no channel has already been used as a card's output in that route. The entry channel (input of the first card) is not counted, so a route can output back to it later.
-- No more than [player count] routes can be open at the same time. Routes close when terminated by a terminal card or broken by noise — their slot frees up immediately and a new route can begin. A route that reaches the hop limit is **full**: it cannot be extended further, but it stays in the tableau until round end, still counts toward the route cap, and can still be noised. The total number of open routes in the tableau can never exceed the player count.
+- No more than [player count] routes can be open at the same time. Routes **close** when terminated by a terminal card or when they reach the hop limit — they can no longer be extended but stay in the tableau until round end. Closed routes do **not** count against the open-route cap, and can still be noised. A route broken by noise is **destroyed**: it's removed immediately, doesn't score, and doesn't carry over. The total number of open routes in the tableau can never exceed the player count.
 
 ## Route Ownership
 
 There is no locked ownership. Whoever played the current endpoint node is in position to score — that's it. The moment another player extends the route, scoring position passes to them. There are no other ownership effects: no player can block others from extending a route they "built," and no scoring bonuses are tied to who started it.
 
 Whoever holds the endpoint holds the points.
+
+Any player can extend any open route. The player who places the last card — the **endpoint** — scores it. Every route is contested until it closes.
 
 ## Carried Routes
 
