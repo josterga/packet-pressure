@@ -51,8 +51,7 @@ def print_splash() -> None:
     _TEAL   = _CHANNEL_ANSI["teal"]
     _ORANGE = _CHANNEL_ANSI["orange"]
     _PURPLE = _CHANNEL_ANSI["purple"]
-    _RED    = _CHANNEL_ANSI["red"]
-    _GREEN  = _CHANNEL_ANSI["green"]
+    _WHITE  = "\033[97m"
 
     # Icons and colors are independent cycles.
     # icon = syms[(c - r) % 5]  → diagonal shift each row
@@ -72,14 +71,14 @@ def print_splash() -> None:
             parts.append(" " + _c(sym, f"{_DIM}{color}") + " ")
         print("".join(parts))
 
-    # Hero icon row — each card type in its own full color, not dimmed
+    # Hero icon row — matches landing page color order: teal, orange, purple, white, white
     print()
     hero = "  ·  ".join([
         _c("⇒", f"{_BOLD}{_TEAL}"),
-        _c("⊕", f"{_BOLD}{_PURPLE}"),
-        _c("⊘", f"{_BOLD}{_GREEN}"),
-        _c("⊣", f"{_BOLD}{_ORANGE}"),
-        _c("⚠", f"{_BOLD}{_RED}"),
+        _c("⊕", f"{_BOLD}{_ORANGE}"),
+        _c("⊘", f"{_BOLD}{_PURPLE}"),
+        _c("⊣", f"{_BOLD}{_WHITE}"),
+        _c("⚠", f"{_BOLD}{_WHITE}"),
     ])
     print(f"  {hero}")
     print()
