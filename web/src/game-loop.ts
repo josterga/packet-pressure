@@ -347,7 +347,6 @@ export class GameLoop {
 
   private _renderFullState(state: GameState, player: PlayerState, drawn: Card[]): void {
     this._renderHeader(state);
-    setHtml("event-log", "");
     this._renderHand(state, player, drawn);
   }
 

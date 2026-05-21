@@ -142,10 +142,20 @@ export class HumanPolicy extends PlayerPolicy {
     }
 
     if (matching.length === 1) {
-      // Unambiguous — resolve immediately, no second click needed
-      this._resetHint();
-      resolve([card, matching[0][1]]);
-      return;
+      const ctx = matching[0][1];
+      if (ctx.targetRouteId) {
+        const route = state.tableau.routes.find(r => r.routeId === ctx.targetRouteId);
+        if (route) {
+          this._selectCard(card);
+          this._armRoutes([route], card, resolve);
+          return;
+        }
+      } else {
+        // Only option is a new route
+        this._selectCard(card);
+        this._armNewRoute(card, resolve);
+        return;
+      }
     }
 
     // Multiple targets
