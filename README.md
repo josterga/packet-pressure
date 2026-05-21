@@ -419,6 +419,8 @@ Packet values across the 60 relay nodes: 12×100, 13×200, 7×300, 7×400, 7×50
 
 Add `--no-hints` to either mode to hide the move suggestions that appear below each card in your hand. Useful once you know the rules and want to play without assistance.
 
+At any point during your turn, type `?` or `help` at the card prompt to view the full rules screen. Press Enter to return to your turn.
+
 Player count in interactive and solo modes is determined by `--policies` (default: `greedy denial` → 3 players total). Pass `--policies greedy denial builder` for 4, etc. The preset's player count is ignored in these modes.
 
 Each turn shows your full hand with all legal plays listed per node. After you play, the result (extension, block, noise, etc.) prints immediately before opponent turns.

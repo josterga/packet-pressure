@@ -58,10 +58,15 @@ class HumanPolicy(PlayerPolicy):
 
         while True:
             try:
-                raw = input(f"\n  Play card [1-{len(player.hand)}]: ").strip()
+                raw = input(f"\n  Play card [1-{len(player.hand)}] or ? for help: ").strip()
             except (EOFError, KeyboardInterrupt):
                 print("\n  Quitting.")
                 raise SystemExit(0)
+
+            if raw in ("?", "help"):
+                self._print_help(state)
+                self._print_turn(state, player, list(reversed(this_turn_drawn)))
+                continue
 
             if not raw.isdigit():
                 print("  Enter a number.")
@@ -138,6 +143,13 @@ class HumanPolicy(PlayerPolicy):
         hints = self._build_hints(state, player) if self._show_hints else None
         print("  YOUR HAND")
         print(render_hand(player, state, hints=hints))
+
+    def _print_help(self, state: GameState) -> None:
+        print_how_to_play(state.config)
+        try:
+            input("  Press Enter to return to your turn…")
+        except (EOFError, KeyboardInterrupt):
+            raise SystemExit(0)
 
     def _build_hints(self, state: GameState, player: PlayerState) -> list[list[str]]:
         open_routes = [r for r in state.tableau.routes if r.is_open()]
