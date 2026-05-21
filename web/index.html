@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Packet Pressure</title>
+  </head>
+  <body>
+    <div id="app">
+
+      <!-- START SCREEN -->
+      <div id="screen-start" class="screen">
+        <div class="splash-bg"></div>
+        <div class="splash-content">
+          <div class="splash-icons">
+            <span class="ch-teal">⇒</span>
+            <span class="ch-orange">⊕</span>
+            <span class="ch-purple">⊘</span>
+            <span>⊣</span>
+            <span>⚠</span>
+          </div>
+          <h1 class="game-title">PACKET PRESSURE</h1>
+          <p class="tagline">Extend the route. Hold the endpoint.</p>
+          <p id="seed-display" class="dim seed-display"></p>
+          <button id="btn-start" class="btn-primary">Start Game</button>
+          <div class="how-to-play">
+            <h3>HOW TO PLAY</h3>
+            <p>Draw one card, play one card each turn. Cards chain when output channel matches the next card's input. Routes need 2+ nodes to score. The player who places the <em>exit node</em> scores its PKT value.</p>
+            <p>Score to win: <b>1200</b> · Max rounds: <b>4</b> · 3 players</p>
+            <h4>Card types</h4>
+            <ul>
+              <li><span class="ch-teal">⇒</span> <b>Relay</b> — extends a route</li>
+              <li><span class="ch-orange">⊣</span> <b>Terminal</b> — closes any open route (≥2 nodes)</li>
+              <li><span class="ch-purple">⊕</span> <b>Amplifier</b> — like relay; exit node value ×2</li>
+              <li><b>⚠ Noise</b> — destroys scoring routes on target channel</li>
+              <li><b>⊘ Filter</b> — like relay; immune to noise on its input channel</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME SCREEN -->
+      <div id="screen-game" class="screen hidden">
+        <div class="game-topbar">
+          <div id="header-bar" class="header-bar"></div>
+          <div class="game-topbar-actions">
+            <button id="btn-help" class="topbar-btn">? Help</button>
+            <button id="btn-quit" class="topbar-btn topbar-btn-quit">✕ Quit</button>
+          </div>
+        </div>
+        <div id="scores-bar" class="scores-bar"></div>
+        <div class="game-body">
+          <div class="left-panel">
+            <div class="panel-label">TABLEAU</div>
+            <div id="tableau-area" class="tableau-area"></div>
+          </div>
+          <div class="right-panel">
+            <div id="hand-area" class="hand-area"></div>
+            <div id="action-area" class="action-area"></div>
+            <div class="panel-label">LOG</div>
+            <div id="event-log" class="event-log"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROUND END SCREEN -->
+      <div id="screen-round-end" class="screen hidden overlay-screen">
+        <div class="overlay-box">
+          <div id="round-end-content"></div>
+          <div class="overlay-actions">
+            <button id="btn-continue" class="btn-primary">Next Round →</button>
+            <button id="btn-new-round-end" class="btn-secondary">New Game</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME OVER SCREEN -->
+      <div id="screen-game-over" class="screen hidden overlay-screen">
+        <div class="overlay-box">
+          <div id="game-over-content"></div>
+          <div class="overlay-actions">
+            <button id="btn-new-game-over" class="btn-primary">New Game</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HELP MODAL -->
+      <div id="help-modal" class="screen hidden overlay-screen">
+        <div class="overlay-box help-box">
+          <div class="help-header">
+            <span class="help-title">HOW TO PLAY</span>
+            <button id="btn-help-close" class="help-close">✕</button>
+          </div>
+          <div class="help-body">
+            <div class="help-section">
+              <div class="help-section-title">GOAL</div>
+              <p>First to 1200 points wins. If no one does, most points after round 4 wins.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">YOUR TURN</div>
+              <p>Draw one card, then click a card in your hand to play it.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">ROUTES</div>
+              <p>Cards chain when each node's output channel matches the next node's input. Routes need 2+ nodes to score. Max 3 hops; max 3 routes open at once. No output channel can appear twice in one route. Any player can extend any open route — whoever holds the exit node when a route closes scores it.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">CARD TYPES</div>
+              <div class="help-cards">
+                <div class="help-card-row"><span class="ch-teal">⇒ Relay</span> — extends a route (input→output); starts a new route if cap allows</div>
+                <div class="help-card-row"><span class="ch-orange">⊣ Terminal</span> — closes any open route (≥2 nodes); terminal's own PKT value scores</div>
+                <div class="help-card-row"><span class="ch-purple">⊕ Amplifier</span> — like relay; if exit node at scoring, value ×2</div>
+                <div class="help-card-row"><span>⚠ Noise</span> — destroys all scoring routes whose current output channel matches; only legal when such a route exists</div>
+                <div class="help-card-row"><span>⊘ Filter</span> — like relay; route is immune to noise on this card's input channel</div>
+              </div>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">SCORING</div>
+              <p>At round end, all valid routes (≥2 nodes) score. Only the exit node's PKT value counts. The exit node's owner collects the points.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">HINTS</div>
+              <p>Green labels under each card show where it can be played. Cards with no valid label cannot be played this turn.</p>
+            </div>
+          </div>
+          <div class="overlay-actions">
+            <button id="btn-help-close-bottom" class="btn-primary">Got it</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
