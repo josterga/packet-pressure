@@ -5,11 +5,13 @@ import {
   PlacementContext,
   PlayerState,
   RouteState,
+  channelColor,
   emptyContext,
   passContext,
   routeIsOpen,
   targetContext,
 } from "./models";
+import { channelLabel } from "./render";
 import { PlayerPolicy } from "./policies";
 
 type PlayResolver = (result: [Card, PlacementContext]) => void;
@@ -101,8 +103,12 @@ export class HumanPolicy extends PlayerPolicy {
         this.attachCardListeners();
         return;
       }
-      this._resetHint();
-      resolve([card, emptyContext()]);
+      this._selectCard(card);
+      const chColor = this._channelCssToken(ch);
+      this._armConfirm(
+        `<span style="color:${chColor}">⚠ NOISE ${channelLabel(ch)}</span>`,
+        () => { this._clearSelection(); this._resetHint(); resolve([card, emptyContext()]); },
+      );
       return;
     }
 
@@ -113,11 +119,6 @@ export class HumanPolicy extends PlayerPolicy {
       if (terminable.length === 0) {
         this._showHint("No scoring routes to terminate (need ≥2 cards).");
         this.attachCardListeners();
-        return;
-      }
-      if (terminable.length === 1) {
-        this._resetHint();
-        resolve([card, targetContext(terminable[0].routeId)]);
         return;
       }
       this._selectCard(card);
@@ -190,7 +191,12 @@ export class HumanPolicy extends PlayerPolicy {
       const routeEl = document.querySelector<HTMLElement>(`.pp-route[data-route-id="${route.routeId}"]`);
       if (!routeEl) continue;
 
+      const inCh    = selectedCard.inputChannel;
+      const chColor = this._channelCssToken(inCh);
+      const chLabel = (inCh && inCh !== "ANY" && inCh !== "TERM") ? channelLabel(inCh) : "ANY";
+
       routeEl.classList.add("pp-route--drop");
+      routeEl.style.setProperty("--slot-color", chColor);
 
       const cardsRow = routeEl.querySelector<HTMLElement>(".pp-route__cards");
       if (!cardsRow) continue;
@@ -204,7 +210,7 @@ export class HumanPolicy extends PlayerPolicy {
       slot.className = "pp-route__newslot";
       slot.setAttribute("data-play-route", route.routeId);
       slot.setAttribute("aria-label", `Play ${selectedCard.cardId} onto ${route.routeId}`);
-      slot.innerHTML = `<div><div style="font-size:18px;margin-bottom:6px">+</div><div>PLAY HERE</div><div class="mute" style="margin-top:4px;font-size:10px">${selectedCard.cardId}</div></div>`;
+      slot.innerHTML = `<div style="text-align:center"><div style="font-weight:700;font-size:15px;letter-spacing:.05em">${chLabel}</div><div class="mute" style="margin-top:4px;font-size:10px">${selectedCard.cardId}</div></div>`;
 
       slot.addEventListener("click", () => {
         this._clearSelection();
@@ -217,6 +223,7 @@ export class HumanPolicy extends PlayerPolicy {
 
       this._cleanupFns.push(() => {
         routeEl.classList.remove("pp-route--drop");
+        routeEl.style.removeProperty("--slot-color");
         if (connector.parentNode) connector.remove();
         if (slot.parentNode)      slot.remove();
       });
@@ -253,6 +260,33 @@ export class HumanPolicy extends PlayerPolicy {
       btn.classList.remove("is-armed");
       btn.removeEventListener("click", handler);
     });
+  }
+
+  private _armConfirm(labelHtml: string, cb: () => void): void {
+    const btn = document.getElementById("new-route-btn");
+    if (!btn) return;
+    btn.innerHTML = labelHtml;
+    btn.classList.remove("hidden");
+    btn.classList.add("is-armed");
+    const handler = () => cb();
+    btn.addEventListener("click", handler, { once: true });
+    this._cleanupFns.push(() => {
+      btn.innerHTML = "+ NEW ROUTE";
+      btn.classList.add("hidden");
+      btn.classList.remove("is-armed");
+      btn.removeEventListener("click", handler);
+    });
+  }
+
+  private _channelCssToken(ch: string | null): string {
+    if (!ch || ch === "ANY" || ch === "TERM") return "var(--ink-mute)";
+    const cfg = this._pendingState?.config;
+    if (!cfg) return "var(--ink-mute)";
+    const color = channelColor(cfg, ch);
+    if (color === "teal")   return "var(--ch01)";
+    if (color === "orange") return "var(--ch02)";
+    if (color === "purple") return "var(--ch03)";
+    return "var(--ink-mute)";
   }
 
   private _clearSelection(): void {
