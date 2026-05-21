@@ -106,8 +106,9 @@ export class HumanPolicy extends PlayerPolicy {
       this._selectCard(card);
       const chColor = this._channelCssToken(ch);
       this._armConfirm(
-        `<span style="color:${chColor}">⚠ NOISE ${channelLabel(ch)}</span>`,
+        `⚠ NOISE ${channelLabel(ch)}`,
         () => { this._clearSelection(); this._resetHint(); resolve([card, emptyContext()]); },
+        chColor,
       );
       return;
     }
@@ -262,18 +263,20 @@ export class HumanPolicy extends PlayerPolicy {
     });
   }
 
-  private _armConfirm(labelHtml: string, cb: () => void): void {
+  private _armConfirm(labelHtml: string, cb: () => void, color?: string): void {
     const btn = document.getElementById("new-route-btn");
     if (!btn) return;
     btn.innerHTML = labelHtml;
     btn.classList.remove("hidden");
     btn.classList.add("is-armed");
+    if (color) btn.style.setProperty("--slot-color", color);
     const handler = () => cb();
     btn.addEventListener("click", handler, { once: true });
     this._cleanupFns.push(() => {
       btn.innerHTML = "+ NEW ROUTE";
       btn.classList.add("hidden");
       btn.classList.remove("is-armed");
+      btn.style.removeProperty("--slot-color");
       btn.removeEventListener("click", handler);
     });
   }

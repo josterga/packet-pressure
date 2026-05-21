@@ -368,8 +368,8 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
 }
 .pp-tableau__newroute:hover,
 .pp-tableau__newroute.is-armed {
-  border-color: var(--hi);
-  color: var(--hi);
+  border-color: var(--slot-color, var(--hi));
+  color: var(--slot-color, var(--hi));
 }
 .pp-section-label {
   font-size: 11px;
