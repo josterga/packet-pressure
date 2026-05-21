@@ -51,7 +51,6 @@
             <div class="pp-panel pp-rules">
               <div class="pp-rules__head">
                 <span>Quick rules</span>
-                <span class="mute">v1.4</span>
               </div>
               <p class="pp-rules__pre">Draw a card, play a card. Chain nodes by matching channels. Whoever closes a route scores it.</p>
               <div class="pp-rules__rows">
@@ -86,14 +85,14 @@
       <div id="screen-game" class="screen hidden" style="display:flex;flex-direction:column;min-height:100vh;">
 
         <div class="pp-topstrip pp-topstrip--sticky">
-          <a href="/" class="pp-topstrip__brand" style="text-decoration:none;color:inherit;border:none">PACKET&nbsp;PRESSURE</a>
+          <a href="/" class="pp-topstrip__brand" style="text-decoration:none;color:inherit;border:none"><span class="full">PACKET&nbsp;PRESSURE</span><span class="abbr">←</span></a>
           <span class="pp-topstrip__sep">·</span>
           <span id="header-bar" class="dim"></span>
           <span class="pp-topstrip__spacer"></span>
-          <button id="btn-hints-toggle" class="pp-topstrip__btn is-on">Hints: on</button>
-          <button id="btn-theme-toggle" class="pp-topstrip__btn">☾ Dark</button>
-          <button id="btn-help" class="pp-topstrip__btn">? Help</button>
-          <button id="btn-quit" class="pp-topstrip__btn">× Quit</button>
+          <button id="btn-hints-toggle" class="pp-topstrip__btn is-on"><span class="full">Hints: on</span><span class="abbr">HNT</span></button>
+          <button id="btn-theme-toggle" class="pp-topstrip__btn"><span class="full">☾ Dark</span><span class="abbr">☾</span></button>
+          <button id="btn-help" class="pp-topstrip__btn"><span class="full">? Help</span><span class="abbr">?</span></button>
+          <button id="btn-quit" class="pp-topstrip__btn"><span class="full">× Quit</span><span class="abbr">×</span></button>
         </div>
 
         <div id="scores-bar" class="pp-scoreboard"></div>

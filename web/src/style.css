@@ -743,12 +743,60 @@ body.hints-off .pp-hints { visibility: hidden; }
   100% { background-color: transparent; }
 }
 
-/* ── Mobile ─────────────────────────────────────────────────────────── */
+/* ── abbr spans: full visible by default, abbr hidden ───────────────── */
+.pp-topstrip__btn .abbr  { display: none; }
+.pp-topstrip__brand .abbr { display: none; }
+
+/* ── Mobile ≤ 720px (tablets + large phones) ────────────────────────── */
 @media (max-width: 720px) {
   .pp-landing__glyphs { gap: 18px; font-size: 24px; }
-  .pp-tableau-wrap    { padding: 12px 12px 0; }
+  .pp-tableau-wrap    { padding: 12px 12px calc(var(--hand-h) + 16px); }
   .pp-hand            { padding: 10px 12px 12px; }
   .pp-topstrip        { padding: 8px 12px; font-size: 11px; gap: 8px; }
   .pp-player          { padding: 8px 10px 10px; min-width: 90px; }
   .pp-player__score   { font-size: 18px; }
+}
+
+/* ── Mobile ≤ 480px (phones) ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Compact card + hand sizing */
+  :root {
+    --card-w:   140px;
+    --card-h:   185px;
+    --hand-h:   190px;
+    --topbar-h:  38px;
+    --gap:       10px;
+  }
+
+  /* Topstrip: hide brand + separator, abbreviate buttons, tighten */
+  .pp-topstrip {
+    padding: 6px 8px;
+    gap: 4px;
+    font-size: 11px;
+    min-height: var(--topbar-h);
+  }
+  .pp-topstrip__sep:first-of-type { display: none; }
+  .pp-topstrip__btn { padding: 4px 7px; font-size: 11px; }
+  .pp-topstrip__btn .full  { display: none; }
+  .pp-topstrip__btn .abbr  { display: inline; }
+  .pp-topstrip__brand .full { display: none; }
+  .pp-topstrip__brand .abbr { display: inline; }
+
+  /* Tableau */
+  .pp-tableau-wrap { padding: 10px 8px calc(var(--hand-h) + 14px); }
+
+  /* Scoreboard */
+  .pp-player       { min-width: 80px; padding: 6px 8px 8px; }
+  .pp-player__score { font-size: 16px; }
+  .pp-player__name  { font-size: 10px; }
+
+  /* Hand */
+  .pp-hand      { padding: 8px 8px 10px; }
+  .pp-hand__head { font-size: 10px; }
+  .pp-hand__hint { font-size: 10px; }
+
+  /* Landing */
+  .pp-landing__title { font-size: clamp(28px, 9vw, 42px); }
+  .pp-landing__main  { padding: 24px 16px 32px; gap: 18px; }
+  .pp-rules          { padding: 14px 16px; }
 }

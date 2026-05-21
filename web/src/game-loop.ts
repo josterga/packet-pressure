@@ -141,13 +141,19 @@ export class GameLoop {
     const gameBtn  = el("btn-theme-toggle");
     const btns = [startBtn, gameBtn];
 
+    const setLabel = (btn: HTMLElement, text: string) => {
+      const full = btn.querySelector<HTMLElement>(".full");
+      if (full) full.textContent = text;
+      else btn.textContent = text;
+    };
+
     const apply = (dark: boolean) => {
       if (dark) {
         document.documentElement.setAttribute("data-theme", "dark");
-        btns.forEach(b => b.textContent = "☀ Light");
+        btns.forEach(b => setLabel(b, "☀ Light"));
       } else {
         document.documentElement.removeAttribute("data-theme");
-        btns.forEach(b => b.textContent = "☾ Dark");
+        btns.forEach(b => setLabel(b, "☾ Dark"));
       }
       localStorage.setItem("pp-theme", dark ? "dark" : "light");
       applyPattern(dark);
@@ -166,7 +172,9 @@ export class GameLoop {
     const btn = el("btn-hints-toggle");
     const apply = (on: boolean) => {
       document.body.classList.toggle("hints-off", !on);
-      btn.textContent = on ? "Hints: on" : "Hints: off";
+      const full = btn.querySelector<HTMLElement>(".full");
+      if (full) full.textContent = on ? "Hints: on" : "Hints: off";
+      else btn.textContent = on ? "Hints: on" : "Hints: off";
       btn.classList.toggle("is-on", on);
       localStorage.setItem("pp-hints", on ? "on" : "off");
     };
