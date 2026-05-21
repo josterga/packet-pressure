@@ -101,6 +101,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Pause after each AI turn (default 0.5s)",
     )
     parser.add_argument(
+        "--no-hints",
+        action="store_true",
+        help="Hide move suggestions in the hand display (interactive/solo mode)",
+    )
+    parser.add_argument(
         "--dump-deck",
         action="store_true",
         help="Print the full deck as JSON and exit (no simulation)",
@@ -302,6 +307,7 @@ def _run_interactive(args: object, config: GameConfig) -> int:
     solo = getattr(args, "solo", False)
     delay = getattr(args, "opponent_delay", 0.5)
     seed = getattr(args, "seed", None)
+    show_hints = not getattr(args, "no_hints", False)
 
     if solo:
         # Determine player count from --policies if provided, else default to 3
@@ -315,6 +321,7 @@ def _run_interactive(args: object, config: GameConfig) -> int:
             seed=seed,
             opponent_delay=0.0,
             solo=True,
+            show_hints=show_hints,
         )
     else:
         policy_names = getattr(args, "policies", None) or ["greedy", "denial"]
@@ -333,6 +340,7 @@ def _run_interactive(args: object, config: GameConfig) -> int:
             ai_policies=ai_policies,
             seed=seed,
             opponent_delay=delay,
+            show_hints=show_hints,
         )
     game.run()
     return 0

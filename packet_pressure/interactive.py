@@ -29,8 +29,9 @@ from .policies import PlayerPolicy
 class HumanPolicy(PlayerPolicy):
     name = "human"
 
-    def __init__(self, human_index: int = 0) -> None:
+    def __init__(self, human_index: int = 0, show_hints: bool = True) -> None:
         self._human_index = human_index
+        self._show_hints = show_hints
 
     def choose_play(
         self, state: GameState, player: PlayerState
@@ -134,7 +135,7 @@ class HumanPolicy(PlayerPolicy):
                 parts.append(f"{card.card_id}  {in_sym}→{out_sym}  PKT {card.packet_value}")
             print(f"  DRAWN:  {',  '.join(parts)}\n")
 
-        hints = self._build_hints(state, player)
+        hints = self._build_hints(state, player) if self._show_hints else None
         print("  YOUR HAND")
         print(render_hand(player, state, hints=hints))
 
@@ -234,6 +235,7 @@ class InteractiveGame:
         seed: int | None = None,
         opponent_delay: float = 0.5,
         solo: bool = False,
+        show_hints: bool = True,
     ) -> None:
         self.config = config
         self.human_index = human_index
@@ -242,7 +244,7 @@ class InteractiveGame:
 
         if solo:
             all_policies: list[PlayerPolicy] = [
-                HumanPolicy(human_index=i) for i in range(config.player_count)
+                HumanPolicy(human_index=i, show_hints=show_hints) for i in range(config.player_count)
             ]
         else:
             if len(ai_policies) != config.player_count - 1:
@@ -251,7 +253,7 @@ class InteractiveGame:
                     f"(total players {config.player_count} minus 1 human), "
                     f"got {len(ai_policies)}"
                 )
-            human_policy = HumanPolicy(human_index=human_index)
+            human_policy = HumanPolicy(human_index=human_index, show_hints=show_hints)
             all_policies = list(ai_policies)
             all_policies.insert(human_index, human_policy)
 

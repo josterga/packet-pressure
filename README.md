@@ -376,6 +376,7 @@ Key flags:
 | `--solo` | — | Hot-seat mode: human controls every player's turn |
 | `--human-index` | `0` | Which player slot the human takes (interactive mode) |
 | `--opponent-delay` | `0.5` | Pause in seconds after each AI turn |
+| `--no-hints` | — | Hide move suggestions in the hand display (interactive/solo mode) |
 
 ## Config Presets
 
@@ -415,6 +416,8 @@ Packet values across the 60 relay nodes: 12×100, 13×200, 7×300, 7×400, 7×50
 ## Interactive Play
 
 `--interactive` puts you in one player slot; AIs fill the rest. `--solo` gives you control of every player's turn — useful for learning rules and exploring game states without AI noise.
+
+Add `--no-hints` to either mode to hide the move suggestions that appear below each card in your hand. Useful once you know the rules and want to play without assistance.
 
 Player count in interactive and solo modes is determined by `--policies` (default: `greedy denial` → 3 players total). Pass `--policies greedy denial builder` for 4, etc. The preset's player count is ignored in these modes.
 
