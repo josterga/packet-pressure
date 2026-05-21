@@ -73,6 +73,8 @@ export class GameLoop {
     this._setupStart();
     this._setupHelp();
     this._setupQuit();
+    this._setupTheme();
+    this._setupHintsToggle();
     showScreen("start");
   }
 
@@ -102,6 +104,37 @@ export class GameLoop {
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeHelp();
     });
+  }
+
+  private _setupTheme(): void {
+    const btn = el("btn-theme-toggle");
+    const apply = (theme: string) => {
+      if (theme === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+        btn.textContent = "☾ Dark";
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+        btn.textContent = "☀ Light";
+      }
+      localStorage.setItem("pp-theme", theme);
+    };
+    const current = document.documentElement.getAttribute("data-theme") ?? "dark";
+    apply(current);
+    btn.addEventListener("click", () => {
+      apply(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
+    });
+  }
+
+  private _setupHintsToggle(): void {
+    const btn = el("btn-hints-toggle");
+    const apply = (on: boolean) => {
+      document.body.classList.toggle("hints-off", !on);
+      btn.textContent = on ? "Hints: on" : "Hints: off";
+      localStorage.setItem("pp-hints", on ? "on" : "off");
+    };
+    const stored = localStorage.getItem("pp-hints") !== "off";
+    apply(stored);
+    btn.addEventListener("click", () => apply(document.body.classList.contains("hints-off")));
   }
 
   private _setupQuit(): void {

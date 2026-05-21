@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Packet Pressure</title>
+    <script>
+      (function() {
+        var t = localStorage.getItem("pp-theme") ||
+          (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        if (t === "light") document.documentElement.setAttribute("data-theme", "light");
+        // hints class applied after body loads — see main.ts
+      })();
+    </script>
   </head>
   <body>
     <div id="app">
@@ -44,6 +52,8 @@
         <div class="game-topbar">
           <div id="header-bar" class="header-bar"></div>
           <div class="game-topbar-actions">
+            <button id="btn-hints-toggle" class="topbar-btn">Hints: on</button>
+            <button id="btn-theme-toggle" class="topbar-btn">☀ Light</button>
             <button id="btn-help" class="topbar-btn">? Help</button>
             <button id="btn-quit" class="topbar-btn topbar-btn-quit">✕ Quit</button>
           </div>
