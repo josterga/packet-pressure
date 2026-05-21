@@ -56,23 +56,25 @@ function showScreen(screen: Screen): void {
 // Background pattern
 // ---------------------------------------------------------------------------
 
-function buildPatternDataUri(dark: boolean): string {
-  // 5 glyphs tiled in 88×88 grid, muted hues
-  const hues = dark
-    ? { rel: "%231A4D6B", amp: "%234A3012", flt: "%232A1A5C", trm: "%232D3748", noise: "%232D3748" }
-    : { rel: "%2363A5BF", amp: "%23B07030", flt: "%238065A8", trm: "%23607080", noise: "%23607080" };
+function buildPatternDataUri(_dark: boolean): string {
+  // 3×3 grid matching the landing page diagonal: sym=(c-r)%5, color=(r+c)%3
+  const syms   = ["⇒", "⊘", "⚠", "⊕", "⊣"];
+  const colors = ["%232dd4bf", "%23fb923c", "%23a78bfa"]; // ch01 ch02 ch03
+  const xs = [14, 44, 74];
+  const ys = [20, 48, 76];
 
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='88' height='88'><style>text{font-family:monospace;font-size:16px}</style>` +
-    `<text x='14' y='22' fill='${hues.rel}' opacity='1' text-anchor='middle'>⇒</text>` +
-    `<text x='44' y='22' fill='${hues.amp}' opacity='1' text-anchor='middle'>⊕</text>` +
-    `<text x='74' y='22' fill='${hues.flt}' opacity='1' text-anchor='middle'>⊘</text>` +
-    `<text x='14' y='55' fill='${hues.trm}' opacity='1' text-anchor='middle'>⊣</text>` +
-    `<text x='44' y='55' fill='${hues.noise}' opacity='1' text-anchor='middle'>⚠</text>` +
-    `<text x='74' y='55' fill='${hues.rel}' opacity='1' text-anchor='middle'>⇒</text>` +
-    `<text x='29' y='82' fill='${hues.amp}' opacity='1' text-anchor='middle'>⊕</text>` +
-    `<text x='59' y='82' fill='${hues.flt}' opacity='1' text-anchor='middle'>⊘</text>` +
-    `</svg>`;
+  let glyphs = "";
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const sym   = syms[((c - r) % 5 + 5) % 5];
+      const color = colors[(r + c) % 3];
+      glyphs += `<text x='${xs[c]}' y='${ys[r]}' fill='${color}' text-anchor='middle'>${sym}</text>`;
+    }
+  }
 
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='88' height='88'>` +
+    `<style>text{font-family:monospace;font-size:16px}</style>` +
+    `${glyphs}</svg>`;
   return `url("data:image/svg+xml,${svg}")`;
 }
 
