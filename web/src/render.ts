@@ -369,10 +369,8 @@ export function buildHints(
       const scoringChannels = new Set<string>();
       for (const r of state.tableau.routes) {
         if (r.isValid && r.length >= cfg.routeMinLength) {
-          for (const cid of r.cardIds) {
-            const c = lookupCard(state, cid);
-            if (c && c.outputChannel && c.outputChannel !== "TERM") scoringChannels.add(c.outputChannel);
-          }
+          const interChannels = r.channelsInRoute.slice(0, -1);
+          for (const c of interChannels) scoringChannels.add(c);
         }
       }
       if (ch && scoringChannels.has(ch)) {
@@ -399,7 +397,7 @@ export function buildHints(
       }
       if (cardHints.length === 0) {
         const openCount = state.tableau.routes.filter(routeIsOpen).length;
-        const capReached = openCount >= cfg.playerCount;
+        const capReached = openCount >= cfg.seedNodesPerRound;
         if (!capReached) cardHints.push({ label: "→ new route", className: "hint-new" });
       }
     }

@@ -92,10 +92,8 @@ export class HumanPolicy extends PlayerPolicy {
       const scoringChannels = new Set<string>();
       for (const r of state.tableau.routes) {
         if (r.isValid && r.length >= state.config.routeMinLength) {
-          for (const cid of r.cardIds) {
-            const c = state._cardRegistry.get(cid);
-            if (c && c.outputChannel && c.outputChannel !== "TERM") scoringChannels.add(c.outputChannel);
-          }
+          const interChannels = r.channelsInRoute.slice(0, -1);
+          for (const c of interChannels) scoringChannels.add(c);
         }
       }
       if (!ch || !scoringChannels.has(ch)) {

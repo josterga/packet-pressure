@@ -3,6 +3,9 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 
 export default defineConfig({
+  test: {
+    environment: "node",
+  },
   base: "/play/",
   build: {
     outDir: "../docs/play",
