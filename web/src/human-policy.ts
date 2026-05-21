@@ -4,13 +4,13 @@ import {
   GameState,
   PlacementContext,
   PlayerState,
+  RouteState,
   emptyContext,
   passContext,
   routeIsOpen,
   targetContext,
 } from "./models";
 import { PlayerPolicy } from "./policies";
-import { renderRoute } from "./render";
 
 type PlayResolver = (result: [Card, PlacementContext]) => void;
 
@@ -24,6 +24,8 @@ export class HumanPolicy extends PlayerPolicy {
   private _pendingResolve: PlayResolver | null = null;
   private _pendingState: GameState | null = null;
   private _pendingPlayer: PlayerState | null = null;
+  private _selectedCardId: string | null = null;
+  private _cleanupFns: (() => void)[] = [];
 
   constructor(humanIndex: number) {
     super();
@@ -40,21 +42,34 @@ export class HumanPolicy extends PlayerPolicy {
 
   requestPlay(state: GameState, player: PlayerState, resolve: PlayResolver): void {
     this._pendingResolve = resolve;
-    this._pendingState = state;
-    this._pendingPlayer = player;
-    this._attachCardListeners(state, player, resolve);
+    this._pendingState   = state;
+    this._pendingPlayer  = player;
+    this.attachCardListeners();
   }
 
-  private _attachCardListeners(state: GameState, player: PlayerState, resolve: PlayResolver): void {
-    const handArea = document.getElementById("hand-area");
-    if (!handArea) return;
+  // Called by game-loop after rendering the hand
+  attachCardListeners(): void {
+    const state  = this._pendingState;
+    const player = this._pendingPlayer;
+    const resolve = this._pendingResolve;
+    if (!state || !player || !resolve) return;
 
-    const cards = handArea.querySelectorAll<HTMLElement>(".card");
+    const handCards = document.getElementById("hand-cards");
+    if (!handCards) return;
+
+    const cards = handCards.querySelectorAll<HTMLElement>(".pp-card");
     cards.forEach(cardEl => {
-      cardEl.style.cursor = "pointer";
       cardEl.addEventListener("click", () => {
         const cardId = cardEl.dataset.cardId;
         if (!cardId) return;
+
+        // Deselect if clicking already-selected card
+        if (this._selectedCardId === cardId) {
+          this._clearSelection();
+          this.attachCardListeners();
+          return;
+        }
+
         const card = player.hand.find(c => c.cardId === cardId);
         if (!card) return;
         this._handleCardClick(card, state, player, resolve);
@@ -68,6 +83,8 @@ export class HumanPolicy extends PlayerPolicy {
     player: PlayerState,
     resolve: PlayResolver,
   ): Promise<void> {
+    this._clearSelection();
+
     if (card.cardType === CardType.NOISE) {
       const ch = card.outputChannel;
       const scoringChannels = new Set<string>();
@@ -80,10 +97,11 @@ export class HumanPolicy extends PlayerPolicy {
         }
       }
       if (!ch || !scoringChannels.has(ch)) {
-        this._showMessage(`No scoring routes on CH${ch} — choose another card.`);
-        this._attachCardListeners(state, player, resolve);
+        this._showHint(`No scoring routes on CH${ch} — choose another card.`);
+        this.attachCardListeners();
         return;
       }
+      this._resetHint();
       resolve([card, emptyContext()]);
       return;
     }
@@ -93,83 +111,160 @@ export class HumanPolicy extends PlayerPolicy {
         r => routeIsOpen(r) && r.length >= state.config.routeMinLength
       );
       if (terminable.length === 0) {
-        this._showMessage("No scoring routes to terminate (need ≥2 cards).");
-        this._attachCardListeners(state, player, resolve);
+        this._showHint("No scoring routes to terminate (need ≥2 cards).");
+        this.attachCardListeners();
         return;
       }
       if (terminable.length === 1) {
+        this._resetHint();
         resolve([card, targetContext(terminable[0].routeId)]);
         return;
       }
-      const routeId = await this._promptRoute(state, terminable, "Terminate which route?");
-      resolve([card, targetContext(routeId)]);
+      this._selectCard(card);
+      this._armRoutes(terminable, card, resolve);
       return;
     }
 
     // Relay / Amplifier / Filter
     const plays = this.legalPlays(state, player);
     const hasAnyValid = plays.some(([, ctx]) => !ctx.passTurn);
-    const matching = plays.filter(([c]) => c.cardId === card.cardId);
+    const matching    = plays.filter(([c]) => c.cardId === card.cardId);
 
     if (!matching.length || matching.every(([, ctx]) => ctx.passTurn)) {
       if (hasAnyValid) {
-        this._showMessage("That card can't be played right now — choose another.");
-        this._attachCardListeners(state, player, resolve);
+        this._showHint("That card can't be played right now — choose another.");
+        this.attachCardListeners();
         return;
       }
+      this._resetHint();
       resolve([card, passContext()]);
       return;
     }
 
     if (matching.length === 1) {
+      // Unambiguous — resolve immediately, no second click needed
+      this._resetHint();
       resolve([card, matching[0][1]]);
       return;
     }
 
-    // Multiple target routes — ask
-    const routeIds = matching.map(([, ctx]) => ctx.targetRouteId).filter((id): id is string => id !== null);
-    const openRoutes = state.tableau.routes.filter(r => routeIds.includes(r.routeId));
-    const routeId = await this._promptRoute(state, openRoutes, "Extend which route?");
-    const ctx = matching.find(([, c]) => c.targetRouteId === routeId)?.[1] ?? matching[0][1];
-    resolve([card, ctx]);
+    // Multiple targets
+    const routeIds   = matching.map(([, c]) => c.targetRouteId).filter((id): id is string => id !== null);
+    const newRouteCtx = matching.find(([, c]) => c.targetRouteId === null)?.[1];
+    const openRoutes  = state.tableau.routes.filter(r => routeIds.includes(r.routeId));
+
+    this._selectCard(card);
+    this._armRoutes(openRoutes, card, resolve, newRouteCtx ? () => {
+      this._clearSelection();
+      this._resetHint();
+      resolve([card, newRouteCtx]);
+    } : undefined);
   }
 
-  private _promptRoute(state: GameState, routes: typeof state.tableau.routes, prompt: string): Promise<string> {
-    return new Promise(resolve => {
-      const actionArea = document.getElementById("action-area")!;
-      actionArea.innerHTML = `
-        <div class="route-prompt">
-          <div class="prompt-label">${prompt}</div>
-          <div class="route-choices">
-            ${routes.map((r, i) => `
-              <button class="route-choice-btn" data-route-id="${r.routeId}">
-                [${i + 1}] ${r.routeId} len ${r.length}
-                ${r.isScoringCandidate ? " ✓" : ""}
-              </button>
-            `).join("")}
-          </div>
-        </div>
-      `;
+  // ── Selection state ─────────────────────────────────────────────────
 
-      actionArea.querySelectorAll<HTMLButtonElement>(".route-choice-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const routeId = btn.dataset.routeId!;
-          actionArea.innerHTML = "";
-          resolve(routeId);
-        }, { once: true });
+  private _selectCard(card: Card): void {
+    this._selectedCardId = card.cardId;
+    const cardEl = document.querySelector<HTMLElement>(`.pp-card[data-card-id="${card.cardId}"]`);
+    cardEl?.classList.add("is-selected");
+    this._updateHandHint(`Selected ${card.cardId} · pick a route above`);
+  }
+
+  private _armRoutes(
+    routes: RouteState[],
+    selectedCard: Card,
+    resolve: PlayResolver,
+    onNewRoute?: () => void,
+  ): void {
+    for (const route of routes) {
+      const routeEl = document.querySelector<HTMLElement>(`.pp-route[data-route-id="${route.routeId}"]`);
+      if (!routeEl) continue;
+
+      routeEl.classList.add("pp-route--drop");
+
+      const cardsRow = routeEl.querySelector<HTMLElement>(".pp-route__cards");
+      if (!cardsRow) continue;
+
+      const connector = document.createElement("div");
+      connector.className = "pp-route__connector";
+      connector.setAttribute("aria-hidden", "true");
+      connector.textContent = "·";
+
+      const slot = document.createElement("button");
+      slot.className = "pp-route__newslot";
+      slot.setAttribute("data-play-route", route.routeId);
+      slot.setAttribute("aria-label", `Play ${selectedCard.cardId} onto ${route.routeId}`);
+      slot.innerHTML = `<div><div style="font-size:18px;margin-bottom:6px">+</div><div>PLAY HERE</div><div class="mute" style="margin-top:4px;font-size:10px">${selectedCard.cardId}</div></div>`;
+
+      slot.addEventListener("click", () => {
+        this._clearSelection();
+        this._resetHint();
+        resolve([selectedCard, targetContext(route.routeId)]);
+      }, { once: true });
+
+      cardsRow.appendChild(connector);
+      cardsRow.appendChild(slot);
+
+      this._cleanupFns.push(() => {
+        routeEl.classList.remove("pp-route--drop");
+        if (connector.parentNode) connector.remove();
+        if (slot.parentNode)      slot.remove();
       });
+    }
+
+    // Optionally arm the new-route button too
+    if (onNewRoute) {
+      this._armNewRouteWithCallback(onNewRoute);
+    }
+  }
+
+  private _armNewRoute(card: Card, resolve: PlayResolver): void {
+    this._armNewRouteWithCallback(() => {
+      this._clearSelection();
+      this._resetHint();
+      resolve([card, emptyContext()]);
     });
   }
 
-  private _showMessage(msg: string): void {
-    const actionArea = document.getElementById("action-area")!;
-    const div = document.createElement("div");
-    div.className = "action-message";
-    div.textContent = msg;
-    actionArea.innerHTML = "";
-    actionArea.appendChild(div);
-    setTimeout(() => {
-      if (actionArea.contains(div)) actionArea.removeChild(div);
-    }, 2500);
+  private _armNewRouteWithCallback(cb: () => void): void {
+    const btn = document.getElementById("new-route-btn");
+    if (!btn) return;
+    btn.classList.remove("hidden");
+    btn.classList.add("is-armed");
+
+    const handler = () => {
+      btn.removeEventListener("click", handler);
+      cb();
+    };
+    btn.addEventListener("click", handler, { once: true });
+
+    this._cleanupFns.push(() => {
+      btn.classList.add("hidden");
+      btn.classList.remove("is-armed");
+      btn.removeEventListener("click", handler);
+    });
+  }
+
+  private _clearSelection(): void {
+    this._selectedCardId = null;
+    this._cleanupFns.forEach(fn => fn());
+    this._cleanupFns = [];
+    document.querySelectorAll(".pp-card.is-selected").forEach(el => el.classList.remove("is-selected"));
+  }
+
+  // ── Hint text helpers ────────────────────────────────────────────────
+
+  private _showHint(msg: string): void {
+    this._updateHandHint(msg);
+    setTimeout(() => this._resetHint(), 2500);
+  }
+
+  private _resetHint(): void {
+    this._updateHandHint("Select a card to play");
+  }
+
+  private _updateHandHint(text: string): void {
+    const el = document.getElementById("hand-hint");
+    if (el) el.textContent = text;
   }
 }

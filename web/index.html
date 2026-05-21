@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Packet Pressure</title>
+    <title>Packet Pressure · /play</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <script>
       (function() {
-        var t = localStorage.getItem("pp-theme") ||
-          (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-        if (t === "light") document.documentElement.setAttribute("data-theme", "light");
-        // hints class applied after body loads — see main.ts
+        var stored = localStorage.getItem("pp-theme");
+        var osDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var t = stored || (osDark ? "dark" : "light");
+        if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
       })();
     </script>
   </head>
@@ -18,61 +21,99 @@
 
       <!-- START SCREEN -->
       <div id="screen-start" class="screen">
-        <div class="splash-bg"></div>
-        <div class="splash-topbar">
-          <a href="/" class="splash-back">← packetpressure.com</a>
-          <button id="btn-theme-toggle-start" class="topbar-btn">☀ Light</button>
-        </div>
-        <div class="splash-content">
-          <div class="splash-icons">
-            <span class="ch-teal">⇒</span>
-            <span class="ch-orange">⊕</span>
-            <span class="ch-purple">⊘</span>
-            <span>⊣</span>
-            <span>⚠</span>
+        <div class="pp-landing">
+
+          <div class="pp-topstrip">
+            <a href="/" class="pp-topstrip__brand" style="text-decoration:none;color:inherit;border:none">PACKET&nbsp;PRESSURE</a>
+            <span class="pp-topstrip__spacer"></span>
+            <button id="btn-start-help" class="pp-topstrip__btn">↗ Full rules</button>
+            <button id="btn-theme-toggle-start" class="pp-topstrip__btn">☾ Dark</button>
           </div>
-          <h1 class="game-title">PACKET PRESSURE</h1>
-          <p class="tagline">Extend the route. Hold the endpoint.</p>
-          <p id="seed-display" class="dim seed-display"></p>
-          <button id="btn-start" class="btn-primary">Start Game</button>
-          <div class="how-to-play">
-            <p class="htp-summary">Draw a card, play a card. Chain nodes by matching channels. Whoever closes a route scores it.</p>
-            <ul class="htp-cards">
-              <li><span class="ch-teal">⇒ Relay</span> — extends or starts a route</li>
-              <li><span class="ch-orange">⊣ Terminal</span> — closes a route; scores its own PKT</li>
-              <li><span class="ch-purple">⊕ Amplifier</span> — relay; ×2 if exit node</li>
-              <li><b>⚠ Noise</b> — destroys routes on a channel</li>
-              <li><b>⊘ Filter</b> — relay; immune to noise on its input</li>
-            </ul>
-            <div class="htp-meta">Score to win: <b>1200</b> · Rounds: <b>4</b> · Players: <b>3</b> · <button class="htp-help-link" id="btn-start-help">Full rules ↗</button></div>
+
+          <div class="pp-landing__main">
+            <div class="pp-landing__glyphs" aria-hidden>
+              <span style="color:var(--rel)">⇒</span>
+              <span style="color:var(--amp)">⊕</span>
+              <span style="color:var(--flt)">⊘</span>
+              <span style="color:var(--trm)">⊣</span>
+              <span style="color:var(--noise)">⚠</span>
+            </div>
+            <h1 class="pp-landing__title">PACKET&nbsp;PRESSURE</h1>
+            <p class="pp-landing__tag">Extend the route. Hold the endpoint.</p>
+            <div class="pp-landing__meta">
+              <span>3–5 players</span><span class="dot">·</span>
+              <span>~20 min</span><span class="dot">·</span>
+              <span id="seed-display">Seed …</span>
+            </div>
+            <div class="pp-landing__cta">
+              <button id="btn-start" class="pp-btn pp-btn--primary">▶ Start Game</button>
+            </div>
+            <div class="pp-panel pp-rules">
+              <div class="pp-rules__head">
+                <span>Quick rules</span>
+                <span class="mute">v1.4</span>
+              </div>
+              <p class="pp-rules__pre">Draw a card, play a card. Chain nodes by matching channels. Whoever closes a route scores it.</p>
+              <div class="pp-rules__rows">
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--rel)">⇒</div>
+                  <div><span class="pp-rules__name">Relay</span><span class="pp-rules__desc"> — extends or starts a route</span></div>
+                </div>
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--trm)">⊣</div>
+                  <div><span class="pp-rules__name">Terminal</span><span class="pp-rules__desc"> — closes a route; scores its own PKT</span></div>
+                </div>
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--amp)">⊕</div>
+                  <div><span class="pp-rules__name">Amplifier</span><span class="pp-rules__desc"> — relay; ×2 if exit node</span></div>
+                </div>
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--noise)">⚠</div>
+                  <div><span class="pp-rules__name">Noise</span><span class="pp-rules__desc"> — destroys routes on a channel</span></div>
+                </div>
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--flt)">⊘</div>
+                  <div><span class="pp-rules__name">Filter</span><span class="pp-rules__desc"> — relay; immune to noise on its input</span></div>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
 
       <!-- GAME SCREEN -->
-      <div id="screen-game" class="screen hidden">
-        <div class="game-topbar">
-          <div id="header-bar" class="header-bar"></div>
-          <div class="game-topbar-actions">
-            <button id="btn-hints-toggle" class="topbar-btn">Hints: on</button>
-            <button id="btn-theme-toggle" class="topbar-btn">☀ Light</button>
-            <button id="btn-help" class="topbar-btn">? Help</button>
-            <button id="btn-quit" class="topbar-btn topbar-btn-quit">✕ Quit</button>
-          </div>
+      <div id="screen-game" class="screen hidden" style="display:flex;flex-direction:column;min-height:100vh;">
+
+        <div class="pp-topstrip pp-topstrip--sticky">
+          <a href="/" class="pp-topstrip__brand" style="text-decoration:none;color:inherit;border:none">PACKET&nbsp;PRESSURE</a>
+          <span class="pp-topstrip__sep">·</span>
+          <span id="header-bar" class="dim"></span>
+          <span class="pp-topstrip__spacer"></span>
+          <button id="btn-hints-toggle" class="pp-topstrip__btn is-on">Hints: on</button>
+          <button id="btn-theme-toggle" class="pp-topstrip__btn">☾ Dark</button>
+          <button id="btn-help" class="pp-topstrip__btn">? Help</button>
+          <button id="btn-quit" class="pp-topstrip__btn">× Quit</button>
         </div>
-        <div id="scores-bar" class="scores-bar"></div>
-        <div class="game-body">
-          <div class="left-panel">
-            <div class="panel-label">TABLEAU</div>
-            <div id="tableau-area" class="tableau-area"></div>
+
+        <div id="scores-bar" class="pp-scoreboard"></div>
+
+        <div class="pp-tableau-wrap" style="flex:1;overflow-y:auto;">
+          <div class="pp-tableau">
+            <div id="tableau-area"></div>
+            <button id="new-route-btn" class="pp-tableau__newroute hidden">+ NEW ROUTE</button>
           </div>
-          <div class="right-panel">
-            <div id="hand-area" class="hand-area"></div>
-            <div id="action-area" class="action-area"></div>
-            <div class="panel-label">LOG</div>
-            <div id="event-log" class="event-log"></div>
-          </div>
+          <div id="event-log" class="pp-log"></div>
         </div>
+
+        <div id="hand-area" class="pp-hand">
+          <div class="pp-hand__head">
+            <span>Your hand</span>
+            <span id="hand-hint" class="pp-hand__hint">Select a card to play</span>
+          </div>
+          <div id="hand-cards" class="pp-hand__cards"></div>
+        </div>
+
       </div>
 
       <!-- ROUND END SCREEN -->
@@ -132,11 +173,11 @@
             <div class="help-section">
               <div class="help-section-title">CARD TYPES</div>
               <div class="help-cards">
-                <div class="help-card-row"><span class="ch-teal">⇒ Relay</span> — extends a route (input→output); starts a new route if the cap allows and no route can be extended</div>
-                <div class="help-card-row"><span class="ch-orange">⊣ Terminal</span> — closes any open route (≥2 nodes); the terminal's own PKT value scores</div>
-                <div class="help-card-row"><span class="ch-purple">⊕ Amplifier</span> — extends like a relay; if it's the exit node at scoring, value ×2</div>
+                <div class="help-card-row"><span style="color:var(--rel)">⇒ Relay</span> — extends a route (input→output); starts a new route if the cap allows and no route can be extended</div>
+                <div class="help-card-row"><span style="color:var(--trm)">⊣ Terminal</span> — closes any open route (≥2 nodes); the terminal's own PKT value scores</div>
+                <div class="help-card-row"><span style="color:var(--amp)">⊕ Amplifier</span> — extends like a relay; if it's the exit node at scoring, value ×2</div>
                 <div class="help-card-row"><span>⚠ Noise</span> — targets a fixed channel; destroys all scoring routes whose current output channel matches — including your own; only legal when such a route exists</div>
-                <div class="help-card-row"><span>⊘ Filter</span> — extends like a relay; if noise targets its input channel, the whole route is immune on that channel only</div>
+                <div class="help-card-row"><span style="color:var(--flt)">⊘ Filter</span> — extends like a relay; if noise targets its input channel, the whole route is immune on that channel only</div>
               </div>
             </div>
             <div class="help-section">
@@ -149,7 +190,7 @@
             </div>
             <div class="help-section">
               <div class="help-section-title">HINTS</div>
-              <p>Green labels under each card show where it can be played. Cards with no valid label cannot be played this turn.</p>
+              <p>When hints are on, cards with no valid play are dimmed. Select a card to see PLAY HERE slots on valid routes.</p>
             </div>
           </div>
           <div class="overlay-actions">

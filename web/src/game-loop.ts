@@ -47,9 +47,37 @@ type Screen = "start" | "game" | "round-end" | "game-over";
 
 function showScreen(screen: Screen): void {
   for (const s of ["start", "game", "round-end", "game-over"]) {
-    const el = document.getElementById(`screen-${s}`);
-    if (el) el.classList.toggle("hidden", s !== screen);
+    const elem = document.getElementById(`screen-${s}`);
+    if (elem) elem.classList.toggle("hidden", s !== screen);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Background pattern
+// ---------------------------------------------------------------------------
+
+function buildPatternDataUri(dark: boolean): string {
+  // 5 glyphs tiled in 88×88 grid, muted hues
+  const hues = dark
+    ? { rel: "%232D6F6A", amp: "%236E3818", flt: "%235C1B70", trm: "%239C937F", noise: "%239C937F" }
+    : { rel: "%237E938F", amp: "%23A86D4A", flt: "%237B5894", trm: "%235C564B", noise: "%235C564B" };
+
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='88' height='88'><style>text{font-family:monospace;font-size:16px}</style>` +
+    `<text x='14' y='22' fill='${hues.rel}' opacity='1' text-anchor='middle'>⇒</text>` +
+    `<text x='44' y='22' fill='${hues.amp}' opacity='1' text-anchor='middle'>⊕</text>` +
+    `<text x='74' y='22' fill='${hues.flt}' opacity='1' text-anchor='middle'>⊘</text>` +
+    `<text x='14' y='55' fill='${hues.trm}' opacity='1' text-anchor='middle'>⊣</text>` +
+    `<text x='44' y='55' fill='${hues.noise}' opacity='1' text-anchor='middle'>⚠</text>` +
+    `<text x='74' y='55' fill='${hues.rel}' opacity='1' text-anchor='middle'>⇒</text>` +
+    `<text x='29' y='82' fill='${hues.amp}' opacity='1' text-anchor='middle'>⊕</text>` +
+    `<text x='59' y='82' fill='${hues.flt}' opacity='1' text-anchor='middle'>⊘</text>` +
+    `</svg>`;
+
+  return `url("data:image/svg+xml,${svg}")`;
+}
+
+function applyPattern(dark: boolean): void {
+  document.documentElement.style.setProperty("--pattern-bg", buildPatternDataUri(dark));
 }
 
 // ---------------------------------------------------------------------------
@@ -94,7 +122,7 @@ export class GameLoop {
   }
 
   private _setupHelp(): void {
-    const openHelp = () => el("help-modal").classList.remove("hidden");
+    const openHelp  = () => el("help-modal").classList.remove("hidden");
     const closeHelp = () => el("help-modal").classList.add("hidden");
     el("btn-help").addEventListener("click", openHelp);
     el("btn-start-help").addEventListener("click", openHelp);
@@ -109,21 +137,28 @@ export class GameLoop {
   }
 
   private _setupTheme(): void {
-    const btns = [el("btn-theme-toggle"), el("btn-theme-toggle-start")];
-    const apply = (theme: string) => {
-      if (theme === "light") {
-        document.documentElement.setAttribute("data-theme", "light");
-        btns.forEach(b => b.textContent = "☾ Dark");
+    const startBtn = el("btn-theme-toggle-start");
+    const gameBtn  = el("btn-theme-toggle");
+    const btns = [startBtn, gameBtn];
+
+    const apply = (dark: boolean) => {
+      if (dark) {
+        document.documentElement.setAttribute("data-theme", "dark");
+        btns.forEach(b => b.textContent = "☀ Light");
       } else {
         document.documentElement.removeAttribute("data-theme");
-        btns.forEach(b => b.textContent = "☀ Light");
+        btns.forEach(b => b.textContent = "☾ Dark");
       }
-      localStorage.setItem("pp-theme", theme);
+      localStorage.setItem("pp-theme", dark ? "dark" : "light");
+      applyPattern(dark);
     };
-    const current = document.documentElement.getAttribute("data-theme") ?? "dark";
-    apply(current);
+
+    // Init from current state (set by inline script before body)
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    apply(isDark);
+
     btns.forEach(b => b.addEventListener("click", () => {
-      apply(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
+      apply(document.documentElement.getAttribute("data-theme") !== "dark");
     }));
   }
 
@@ -132,6 +167,7 @@ export class GameLoop {
     const apply = (on: boolean) => {
       document.body.classList.toggle("hints-off", !on);
       btn.textContent = on ? "Hints: on" : "Hints: off";
+      btn.classList.toggle("is-on", on);
       localStorage.setItem("pp-hints", on ? "on" : "off");
     };
     const stored = localStorage.getItem("pp-hints") !== "off";
@@ -151,7 +187,7 @@ export class GameLoop {
 
   private _updateSeedDisplay(): void {
     const seedEl = document.getElementById("seed-display");
-    if (seedEl) seedEl.textContent = `Seed: ${this.seed}`;
+    if (seedEl) seedEl.textContent = `Seed ${this.seed}`;
   }
 
   private _startGame(): void {
@@ -224,24 +260,20 @@ export class GameLoop {
   private async _runHumanTurn(state: GameState, pIdx: number): Promise<void> {
     const player = state.players[pIdx];
 
-    // Draw
     const drawn = this._engineDrawForTurn(state, pIdx);
 
     this._renderFullState(state, player, drawn);
 
-    // Wait for card selection
     const [card, ctx] = await this._waitForHumanPlay(state, player);
     if (this._aborted) return;
 
-    // Apply the play directly (mirror engine._runTurn but after async input)
     player.hand.splice(player.hand.indexOf(card), 1);
     player.playHistory.push(card.cardId);
     const owned = this.engine._applyPlay(pIdx, card, 0, ctx.targetRouteId);
-    // resolveCardEffects and updateRoutes are private — we expose them via a shim
     (this.engine as any)._resolveCardEffects(owned);
     (this.engine as any)._updateRoutes(owned);
 
-    // Show result events
+    this._renderHeader(state);
     const newEvents = state.eventLog.slice(this._lastLogIdx);
     this._appendEventLog(newEvents, state);
   }
@@ -250,8 +282,6 @@ export class GameLoop {
 
   private _engineDrawForTurn(state: GameState, pIdx: number): Card[] {
     const player = state.players[pIdx];
-    const before = player.hand.length;
-    // We call the engine's _drawN via reflection since we handle turn-by-turn
     const drawn: Card[] = (this.engine as any)._drawN(state, this.config.drawPerTurn);
     for (const card of drawn) {
       player.hand.push(card);
@@ -284,7 +314,7 @@ export class GameLoop {
     const newEvents = state.eventLog.slice(logBefore);
 
     const policyName = this.engine.policies[pIdx].name;
-    const playerId = state.players[pIdx].playerId;
+    const playerId   = state.players[pIdx].playerId;
 
     const keyLines = newEvents
       .map(e => renderEvent(e, state))
@@ -307,43 +337,64 @@ export class GameLoop {
   }
 
   private _renderHeader(state: GameState): void {
-    setHtml("header-bar", renderRoundHeader(state));
-    setHtml("scores-bar", renderScores(state, this.humanIndex));
+    setHtml("header-bar",  renderRoundHeader(state));
+    setHtml("scores-bar",  renderScores(state, this.humanIndex));
     setHtml("tableau-area", renderTableau(state));
+    // hide new-route btn by default (armed by human-policy when needed)
+    el("new-route-btn").classList.add("hidden");
+    el("new-route-btn").classList.remove("is-armed");
   }
 
   private _renderFullState(state: GameState, player: PlayerState, drawn: Card[]): void {
     this._renderHeader(state);
-    this._renderHand(state, player, drawn);
     setHtml("event-log", "");
-    el("action-area").innerHTML = "";
+    this._renderHand(state, player, drawn);
   }
 
   private _renderHand(state: GameState, player: PlayerState, drawn: Card[]): void {
-    const cfg = state.config;
+    const cfg   = state.config;
     const proxy = this.humanPolicy.getProxy();
     const hints = buildHints(state, player, proxy);
 
-    const cardsHtml = player.hand.map((card, i) => {
-      const hintHtml = hints[i].map(h => `<div class="hint ${h.className}">${h.label}</div>`).join("");
-      const isNew = drawn.some(d => d.cardId === card.cardId);
+    const slotsHtml = player.hand.map((card, i) => {
+      const hasValidPlay = hints[i].some(h =>
+        h.className !== "hint-invalid" && h.className !== ""
+      );
+      const isInvalid = !hasValidPlay && hints[i].length > 0;
+
+      const hintsHtml = hints[i].map(h => {
+        const cls = h.className.replace("hint-", "pp-hint--");
+        return `<span class="pp-hint ${cls}">${h.label}</span>`;
+      }).join("");
+
       return `
-        <div class="hand-slot ${isNew ? "drawn" : ""}">
-          ${renderCard(card, cfg, { label: String(i + 1) })}
-          <div class="hints">${hintHtml}</div>
+        <div class="pp-hand__slot">
+          <span class="pp-hand__index">[${i + 1}]</span>
+          ${renderCard(card, cfg, { invalid: isInvalid })}
+          <div class="pp-hints">${hintsHtml}</div>
         </div>
       `;
     }).join("");
 
-    setHtml("hand-area", `<div class="hand-label">YOUR HAND</div><div class="hand-cards">${cardsHtml}</div>`);
+    setHtml("hand-cards", slotsHtml);
+
+    // Update hint text
+    const hintEl = document.getElementById("hand-hint");
+    if (hintEl) hintEl.textContent = "Select a card to play";
 
     if (drawn.length > 0) {
       const drawnText = drawn.map(c =>
-        `${c.cardId} ${c.inputChannel ?? "--"}→${c.outputChannel ?? "--"} PKT ${c.packetValue}`
+        `${c.cardId} ${c.inputChannel ?? "—"}→${c.outputChannel ?? "—"} PKT ${c.packetValue}`
       ).join(", ");
-      const existing = el("event-log").innerHTML;
-      setHtml("event-log", `<div class="event drawn-notice">DRAWN: ${drawnText}</div>` + existing);
+      const logEl = el("event-log");
+      const div = document.createElement("div");
+      div.className = "pp-log__line is-drawn";
+      div.textContent = `Drew: ${drawnText}`;
+      logEl.prepend(div);
     }
+
+    // Attach card click listeners via human-policy
+    this.humanPolicy.attachCardListeners();
   }
 
   private _appendEventLog(events: Record<string, unknown>[], state: GameState): void {
@@ -351,9 +402,9 @@ export class GameLoop {
       .map(e => renderEvent(e, state))
       .filter((l): l is string => l !== null);
     const logEl = el("event-log");
-    for (const line of lines) {
+    for (const line of lines.reverse()) {
       const div = document.createElement("div");
-      div.className = `event ${line.includes("SCORE") ? "event-score" : ""}`;
+      div.className = `pp-log__line${line.includes("SCORE") ? " is-score" : ""}`;
       div.textContent = line;
       logEl.prepend(div);
     }
@@ -362,7 +413,7 @@ export class GameLoop {
   private _appendOpponentSummary(playerId: string, policyName: string, lines: string[], state: GameState): void {
     const logEl = el("event-log");
     const wrapper = document.createElement("div");
-    wrapper.className = "event opponent-turn";
+    wrapper.className = "pp-log__line is-opponent";
     wrapper.innerHTML = `<b>${playerId} [${policyName}]</b><br>` + lines.map(l => `<span>${l}</span>`).join("<br>");
     logEl.prepend(wrapper);
   }
@@ -372,22 +423,26 @@ export class GameLoop {
   // ------------------------------------------------------------------
 
   private _showRoundEnd(state: GameState): Promise<void> {
-    const cfg = state.config;
     const scored = state.eventLog.filter(
       e => e.event === "SCORE_AWARDED" && e.round === state.roundNumber
     );
 
     let html = `<h2>End of Round ${state.roundNumber}</h2>`;
-    html += `<div class="scores-bar">${renderScores(state, this.humanIndex)}</div>`;
+
+    const scoreLine = state.players.map((p, i) => {
+      const name = i === this.humanIndex ? "YOU" : p.playerId;
+      return `${name} ${p.score}`;
+    }).join(" · ");
+    html += `<div class="overlay-scores">${scoreLine}</div>`;
 
     if (scored.length > 0) {
       html += "<ul class='round-scores'>";
       for (const e of scored) {
-        html += `<li>+${e.score}  ${e.player_id}  (${e.route_id} len ${e.route_length})</li>`;
+        html += `<li>+${e.score} · ${e.player_id} · (${e.route_id} len ${e.route_length})</li>`;
       }
       html += "</ul>";
     } else {
-      html += "<p class='dim'>(no scoring routes this round)</p>";
+      html += "<p class='mute' style='font-size:0.88em'>(no scoring routes this round)</p>";
     }
 
     setHtml("round-end-content", html);
@@ -401,13 +456,11 @@ export class GameLoop {
         showScreen("game");
         this._renderHeader(state);
         setHtml("event-log", "");
-        setHtml("hand-area", "");
-        el("action-area").innerHTML = "";
+        setHtml("hand-cards", "");
         resolve();
       };
       btn.addEventListener("click", handler);
 
-      // Also resolve immediately if aborted (quit pressed)
       const abortCheck = setInterval(() => {
         if (this._aborted) { clearInterval(abortCheck); btn.removeEventListener("click", handler); resolve(); }
       }, 100);
@@ -420,7 +473,7 @@ export class GameLoop {
 
   private _showGameOver(state: GameState): void {
     const ranked = [...state.players].sort((a, b) => b.score - a.score);
-    const you = state.players[this.humanIndex];
+    const you    = state.players[this.humanIndex];
     const winner = ranked[0];
 
     let html = `<h2>GAME OVER</h2>`;
