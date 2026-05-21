@@ -94,8 +94,10 @@ export class GameLoop {
   }
 
   private _setupHelp(): void {
+    const openHelp = () => el("help-modal").classList.remove("hidden");
     const closeHelp = () => el("help-modal").classList.add("hidden");
-    el("btn-help").addEventListener("click", () => el("help-modal").classList.remove("hidden"));
+    el("btn-help").addEventListener("click", openHelp);
+    el("btn-start-help").addEventListener("click", openHelp);
     el("btn-help-close").addEventListener("click", closeHelp);
     el("btn-help-close-bottom").addEventListener("click", closeHelp);
     el("help-modal").addEventListener("click", (e) => {
@@ -107,22 +109,22 @@ export class GameLoop {
   }
 
   private _setupTheme(): void {
-    const btn = el("btn-theme-toggle");
+    const btns = [el("btn-theme-toggle"), el("btn-theme-toggle-start")];
     const apply = (theme: string) => {
       if (theme === "light") {
         document.documentElement.setAttribute("data-theme", "light");
-        btn.textContent = "☾ Dark";
+        btns.forEach(b => b.textContent = "☾ Dark");
       } else {
         document.documentElement.removeAttribute("data-theme");
-        btn.textContent = "☀ Light";
+        btns.forEach(b => b.textContent = "☀ Light");
       }
       localStorage.setItem("pp-theme", theme);
     };
     const current = document.documentElement.getAttribute("data-theme") ?? "dark";
     apply(current);
-    btn.addEventListener("click", () => {
+    btns.forEach(b => b.addEventListener("click", () => {
       apply(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
-    });
+    }));
   }
 
   private _setupHintsToggle(): void {
