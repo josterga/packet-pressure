@@ -460,7 +460,8 @@ def render_round_header(state: "GameState") -> str:
         f"Round {state.round_number} of {cfg.max_rounds}{turn_info}  ·  "
         f"Score to win: {cfg.score_to_win}"
     )
-    bar = "━" * max(60, len(plain))
+    hand_width = 22 * (cfg.starting_hand_size + 1) - 2
+    bar = "━" * max(hand_width, len(plain))
     content = (
         f"  {_bold('PACKET PRESSURE')}  ·  "
         f"Round {state.round_number} of {cfg.max_rounds}{turn_info}  ·  "

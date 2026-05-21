@@ -415,6 +415,8 @@ Packet values across the 60 relay nodes: 12×100, 13×200, 7×300, 7×400, 7×50
 
 ## Interactive Play
 
+![A game turn showing the tableau, player hand with move hints, and round header](game-turn.png)
+
 `--interactive` puts you in one player slot; AIs fill the rest. `--solo` gives you control of every player's turn — useful for learning rules and exploring game states without AI noise.
 
 Add `--no-hints` to either mode to hide the move suggestions that appear below each card in your hand. Useful once you know the rules and want to play without assistance.
