@@ -1,4 +1,4 @@
-![a title header](title-header.png)
+![a title header](assets/title-header.png)
 
 A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint at round end. · 3–5 players · ~20 min
 
@@ -407,7 +407,7 @@ Packet values across the 60 relay nodes: 12×100, 13×200, 7×300, 7×400, 7×50
 
 ## Interactive Play
 
-![A game turn showing the tableau, player hand with move hints, and round header](game-turn.png)
+![A game turn showing the tableau, player hand with move hints, and round header](assets/game-turn.png)
 
 `--interactive` puts you in one player slot; AIs fill the rest. `--solo` gives you control of every player's turn — useful for learning rules and exploring game states without AI noise.
 
@@ -507,4 +507,4 @@ In both interactive modes, player count is set by `--policies` (default: `greedy
 
 © 2026 Packet Pressure — licensed under [CC BY-NC 4.0](LICENSE). Commercial use requires permission.
 
-![footer](footer.png)
+![footer](assets/footer.png)
