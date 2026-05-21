@@ -47,29 +47,31 @@ def _dim(text: str) -> str:
     return _c(text, _DIM)
 
 
-def print_splash() -> None:
+def _print_background_grid() -> None:
+    import shutil
     _TEAL   = _CHANNEL_ANSI["teal"]
     _ORANGE = _CHANNEL_ANSI["orange"]
     _PURPLE = _CHANNEL_ANSI["purple"]
-    _WHITE  = "\033[97m"
-
-    # Icons and colors are independent cycles.
-    # icon = syms[(c - r) % 5]  → diagonal shift each row
-    # color = bg_colors[(r + c) % 3]  → 3-color cycle independent of icon type
     _syms = ["⇒", "⊘", "⚠", "⊕", "⊣"]
     _bg_colors = [_TEAL, _ORANGE, _PURPLE]
-
-    import shutil
     term_width = shutil.get_terminal_size().columns
-    n_cols = term_width // 3  # each cell is " X " = 3 chars (⚠ is double-width but close enough)
-    n_rows = 5
-    for r in range(n_rows):
+    n_cols = term_width // 3
+    for r in range(5):
         parts = []
         for c in range(n_cols):
             sym   = _syms[(c - r) % 5]
             color = _bg_colors[(r + c) % 3]
             parts.append(" " + _c(sym, f"{_DIM}{color}") + " ")
         print("".join(parts))
+
+
+def print_splash() -> None:
+    _TEAL   = _CHANNEL_ANSI["teal"]
+    _ORANGE = _CHANNEL_ANSI["orange"]
+    _PURPLE = _CHANNEL_ANSI["purple"]
+    _WHITE  = "\033[97m"
+
+    _print_background_grid()
 
     # Hero icon row — matches landing page color order: teal, orange, purple, white, white
     print()
@@ -85,6 +87,11 @@ def print_splash() -> None:
     print(f"  {_bold('PACKET PRESSURE')}")
     print(f"  {_dim('Extend the route. Hold the endpoint.')}")
     print()
+
+
+def print_quit_screen() -> None:
+    print("\n  Quitting.\n")
+    _print_background_grid()
 
 
 def print_how_to_play(config: "GameConfig") -> None:

@@ -8,6 +8,7 @@ from .deck import DeckBuilder
 from .display import (
     channel_symbol,
     print_how_to_play,
+    print_quit_screen,
     render_event,
     render_hand,
     render_round_header,
@@ -58,15 +59,20 @@ class HumanPolicy(PlayerPolicy):
 
         while True:
             try:
-                raw = input(f"\n  Play card [1-{len(player.hand)}] or ? for help: ").strip()
+                print("\n  \033[2m[? help · q quit]\033[0m")
+                raw = input(f"  Play card [1-{len(player.hand)}]: ").strip()
             except (EOFError, KeyboardInterrupt):
-                print("\n  Quitting.")
+                print_quit_screen()
                 raise SystemExit(0)
 
             if raw in ("?", "help"):
                 self._print_help(state)
                 self._print_turn(state, player, list(reversed(this_turn_drawn)))
                 continue
+
+            if raw in ("q", "quit", "exit"):
+                print_quit_screen()
+                raise SystemExit(0)
 
             if not raw.isdigit():
                 print("  Enter a number.")
