@@ -4,24 +4,24 @@ html, body { margin: 0; padding: 0; min-height: 100%; }
 
 /* ── Design tokens — light (default) ───────────────────────────────── */
 :root {
-  --bg:        #F4EFE2;
-  --bg-panel:  #FBF7EB;
-  --bg-soft:   #EEE7D2;
-  --ink:       #1B1916;
-  --ink-soft:  rgba(27, 25, 22, 0.62);
-  --ink-mute:  rgba(27, 25, 22, 0.38);
-  --ink-faint: rgba(27, 25, 22, 0.18);
-  --rule:      rgba(27, 25, 22, 0.14);
-  --rule-strong: rgba(27, 25, 22, 0.32);
+  --bg:        #f8fafc;
+  --bg-panel:  #f1f5f9;
+  --bg-soft:   #e2e8f0;
+  --ink:       #0f172a;
+  --ink-soft:  rgba(15, 23, 42, 0.62);
+  --ink-mute:  rgba(15, 23, 42, 0.38);
+  --ink-faint: rgba(15, 23, 42, 0.18);
+  --rule:      rgba(15, 23, 42, 0.14);
+  --rule-strong: rgba(15, 23, 42, 0.32);
 
-  --ch01: #0EA39A;
-  --ch02: #D5511C;
-  --ch03: #9419B1;
-  --rel:   #0EA39A;
-  --amp:   #D5511C;
-  --flt:   #9419B1;
-  --trm:   #1B1916;
-  --noise: #1B1916;
+  --ch01: #2dd4bf;
+  --ch02: #fb923c;
+  --ch03: #a78bfa;
+  --rel:   #2dd4bf;
+  --amp:   #fb923c;
+  --flt:   #a78bfa;
+  --trm:   #0f172a;
+  --noise: #0f172a;
   --hi:    var(--ch01);
 
   --gap:      14px;
@@ -40,17 +40,17 @@ html, body { margin: 0; padding: 0; min-height: 100%; }
 
 /* ── Dark theme ─────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg:        #0D0C0A;
-  --bg-panel:  #161410;
-  --bg-soft:   #1D1A15;
-  --ink:       #EFE9D6;
-  --ink-soft:  rgba(239, 233, 214, 0.62);
-  --ink-mute:  rgba(239, 233, 214, 0.38);
-  --ink-faint: rgba(239, 233, 214, 0.16);
-  --rule:      rgba(239, 233, 214, 0.14);
-  --rule-strong: rgba(239, 233, 214, 0.32);
-  --trm:   #EFE9D6;
-  --noise: #EFE9D6;
+  --bg:        #0a0f1e;
+  --bg-panel:  #111827;
+  --bg-soft:   #1e293b;
+  --ink:       #e2e8f0;
+  --ink-soft:  rgba(226, 232, 240, 0.62);
+  --ink-mute:  rgba(226, 232, 240, 0.38);
+  --ink-faint: rgba(226, 232, 240, 0.16);
+  --rule:      rgba(226, 232, 240, 0.14);
+  --rule-strong: rgba(226, 232, 240, 0.32);
+  --trm:   #e2e8f0;
+  --noise: #e2e8f0;
   --pattern-opacity: 0.10;
   color-scheme: dark;
 }

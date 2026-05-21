@@ -59,8 +59,8 @@ function showScreen(screen: Screen): void {
 function buildPatternDataUri(dark: boolean): string {
   // 5 glyphs tiled in 88×88 grid, muted hues
   const hues = dark
-    ? { rel: "%232D6F6A", amp: "%236E3818", flt: "%235C1B70", trm: "%239C937F", noise: "%239C937F" }
-    : { rel: "%237E938F", amp: "%23A86D4A", flt: "%237B5894", trm: "%235C564B", noise: "%235C564B" };
+    ? { rel: "%231A4D6B", amp: "%234A3012", flt: "%232A1A5C", trm: "%232D3748", noise: "%232D3748" }
+    : { rel: "%2363A5BF", amp: "%23B07030", flt: "%238065A8", trm: "%23607080", noise: "%23607080" };
 
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='88' height='88'><style>text{font-family:monospace;font-size:16px}</style>` +
     `<text x='14' y='22' fill='${hues.rel}' opacity='1' text-anchor='middle'>⇒</text>` +
