@@ -1,13 +1,4 @@
-```
-⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠
-⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘
-
-       P A C K E T   P R E S S U R E
-       Extend the route. Hold the endpoint.
-
-⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕─⊘─⊣─⚠─⇒─⊕
-⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠─⊕─⇒─⊘─⊣─⚠
-```
+![a title header](title-header.png)
 
 A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint at round end. · 3–5 players · ~20 min
 
@@ -372,6 +363,7 @@ Key flags:
 | `--dump-deck` | — | Print the full deck as JSON and exit (no simulation runs) |
 | `--print-cards` | — | Render one example of each card type as ANSI blocks and exit |
 | `--print-deck` | — | Render the full deck as ANSI card blocks and exit |
+| `--print-splash` | — | Render the centered splash screen and exit (screenshot helper) |
 | `--interactive` | — | Play as a human against AI opponents |
 | `--solo` | — | Hot-seat mode: human controls every player's turn |
 | `--human-index` | `0` | Which player slot the human takes (interactive mode) |
@@ -514,3 +506,5 @@ In both interactive modes, player count is set by `--policies` (default: `greedy
 ---
 
 © 2026 Packet Pressure — licensed under [CC BY-NC 4.0](LICENSE). Commercial use requires permission.
+
+![footer](footer.png)

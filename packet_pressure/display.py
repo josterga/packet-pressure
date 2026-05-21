@@ -47,14 +47,15 @@ def _dim(text: str) -> str:
     return _c(text, _DIM)
 
 
-def _print_background_grid() -> None:
+def _print_background_grid(term_width: int | None = None) -> None:
     import shutil
     _TEAL   = _CHANNEL_ANSI["teal"]
     _ORANGE = _CHANNEL_ANSI["orange"]
     _PURPLE = _CHANNEL_ANSI["purple"]
     _syms = ["⇒", "⊘", "⚠", "⊕", "⊣"]
     _bg_colors = [_TEAL, _ORANGE, _PURPLE]
-    term_width = shutil.get_terminal_size().columns
+    if term_width is None:
+        term_width = shutil.get_terminal_size().columns
     n_cols = term_width // 3
     for r in range(5):
         parts = []
@@ -86,6 +87,39 @@ def print_splash() -> None:
     print()
     print(f"  {_bold('PACKET PRESSURE')}")
     print(f"  {_dim('Extend the route. Hold the endpoint.')}")
+    print()
+
+
+def print_splash_screenshot() -> None:
+    import shutil
+    _TEAL   = _CHANNEL_ANSI["teal"]
+    _ORANGE = _CHANNEL_ANSI["orange"]
+    _PURPLE = _CHANNEL_ANSI["purple"]
+    _WHITE  = "\033[97m"
+
+    term_width = shutil.get_terminal_size().columns
+    _print_background_grid(term_width)
+
+    def _centered(text: str, plain_len: int) -> str:
+        pad = max(0, (term_width - plain_len) // 2)
+        return " " * pad + text
+
+    hero_plain = "⇒  ·  ⊕  ·  ⊘  ·  ⊣  ·  ⚠"
+    hero = "  ·  ".join([
+        _c("⇒", f"{_BOLD}{_TEAL}"),
+        _c("⊕", f"{_BOLD}{_ORANGE}"),
+        _c("⊘", f"{_BOLD}{_PURPLE}"),
+        _c("⊣", f"{_BOLD}{_WHITE}"),
+        _c("⚠", f"{_BOLD}{_WHITE}"),
+    ])
+    title_plain = "P A C K E T   P R E S S U R E"
+    tagline_plain = "Extend the route. Hold the endpoint."
+
+    print()
+    print(_centered(hero, len(hero_plain)))
+    print()
+    print(_centered(_bold(title_plain), len(title_plain)))
+    print(_centered(_dim(tagline_plain), len(tagline_plain)))
     print()
 
 

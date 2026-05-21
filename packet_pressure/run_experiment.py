@@ -120,6 +120,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Render the full deck as ANSI card blocks and exit",
     )
+    parser.add_argument(
+        "--print-splash",
+        action="store_true",
+        help="Render the centered splash screen and exit (for screenshots)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -131,6 +136,10 @@ def main(argv: list[str] | None = None) -> int:
         return _print_cards(config, args.seed)
     if args.print_deck:
         return _print_deck(config, args.seed)
+    if args.print_splash:
+        from .display import print_splash_screenshot
+        print_splash_screenshot()
+        return 0
 
     # Interactive / solo mode: launch a single human game
     if args.interactive or args.solo:
