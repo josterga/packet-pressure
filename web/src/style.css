@@ -95,13 +95,9 @@ body { background: var(--bg); min-height: 100vh; }
 .splash-bg {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    135deg,
-    transparent,
-    transparent 18px,
-    rgba(45,212,191,0.03) 18px,
-    rgba(45,212,191,0.03) 36px
-  );
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='100'><style>text{font-family:monospace;font-size:13px}</style><text x='12' y='14' fill='%232dd4bf' fill-opacity='0.15' text-anchor='middle'>⇒</text><text x='36' y='14' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⊘</text><text x='60' y='14' fill='%23c084fc' fill-opacity='0.15' text-anchor='middle'>⚠</text><text x='84' y='14' fill='%232dd4bf' fill-opacity='0.15' text-anchor='middle'>⊕</text><text x='108' y='14' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⊣</text><text x='12' y='34' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⊣</text><text x='36' y='34' fill='%23c084fc' fill-opacity='0.15' text-anchor='middle'>⇒</text><text x='60' y='34' fill='%232dd4bf' fill-opacity='0.15' text-anchor='middle'>⊘</text><text x='84' y='34' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⚠</text><text x='108' y='34' fill='%23c084fc' fill-opacity='0.15' text-anchor='middle'>⊕</text><text x='12' y='54' fill='%23c084fc' fill-opacity='0.15' text-anchor='middle'>⊕</text><text x='36' y='54' fill='%232dd4bf' fill-opacity='0.15' text-anchor='middle'>⊣</text><text x='60' y='54' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⇒</text><text x='84' y='54' fill='%23c084fc' fill-opacity='0.15' text-anchor='middle'>⊘</text><text x='108' y='54' fill='%232dd4bf' fill-opacity='0.15' text-anchor='middle'>⚠</text><text x='12' y='74' fill='%232dd4bf' fill-opacity='0.15' text-anchor='middle'>⚠</text><text x='36' y='74' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⊕</text><text x='60' y='74' fill='%23c084fc' fill-opacity='0.15' text-anchor='middle'>⊣</text><text x='84' y='74' fill='%232dd4bf' fill-opacity='0.15' text-anchor='middle'>⇒</text><text x='108' y='74' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⊘</text><text x='12' y='94' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⊘</text><text x='36' y='94' fill='%23c084fc' fill-opacity='0.15' text-anchor='middle'>⚠</text><text x='60' y='94' fill='%232dd4bf' fill-opacity='0.15' text-anchor='middle'>⊕</text><text x='84' y='94' fill='%23fb923c' fill-opacity='0.15' text-anchor='middle'>⊣</text><text x='108' y='94' fill='%23c084fc' fill-opacity='0.15' text-anchor='middle'>⇒</text></svg>");
+  background-size: 120px 100px;
+  background-repeat: repeat;
   pointer-events: none;
 }
 
