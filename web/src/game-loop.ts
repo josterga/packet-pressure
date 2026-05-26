@@ -290,7 +290,11 @@ export class GameLoop {
     player.playHistory.push(card.cardId);
     const owned = this.engine._applyPlay(pIdx, card, 0, ctx.targetRouteId);
     (this.engine as any)._resolveCardEffects(owned);
-    (this.engine as any)._updateRoutes(owned);
+    if (ctx.newRoute) {
+      (this.engine as any)._tryStartRoute(owned);
+    } else {
+      (this.engine as any)._updateRoutes(owned);
+    }
 
     this._renderHeader(state);
     const newEvents = state.eventLog.slice(this._lastLogIdx);
