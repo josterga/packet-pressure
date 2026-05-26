@@ -399,10 +399,22 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
 .pp-log__line.is-opponent { color: var(--ink-mute); }
 .pp-log__line.is-opponent b { color: var(--ink-soft); }
 
-/* ── OPPONENT CONTINUE BUTTON (rendered dynamically in hand area) ───── */
-.pp-continue-btn {
-  align-self: center;
-  margin: 8px 0;
+/* ── OPPONENT CONTINUE (rendered dynamically in hand area) ──────────── */
+.pp-continue-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.pp-continue-moves {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 
 /* ── PP-HAND ────────────────────────────────────────────────────────── */
@@ -438,7 +450,7 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
 .pp-hand__cards {
   display: flex;
   gap: 10px;
-  align-items: flex-end;
+  align-items: flex-start;
   overflow-x: auto;
   padding: 6px 2px 4px;
   scrollbar-width: thin;
@@ -741,7 +753,7 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
 .pp-hint--flt     { color: var(--flt); }
 .pp-hint--new     { color: var(--ch02); }
 .pp-hint--invalid { color: var(--ink-mute); }
-body.hints-off .pp-hints { visibility: hidden; }
+body.hints-off .pp-hints { display: none; }
 
 /* ── Animations ─────────────────────────────────────────────────────── */
 .pp-flash { animation: pp-flash 0.4s ease; }

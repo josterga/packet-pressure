@@ -509,7 +509,7 @@ def render_round_header(state: "GameState") -> str:
 # ---------------------------------------------------------------------------
 
 _SKIP_EVENTS = {
-    "ROUND_START", "ROUND_END", "CARD_DRAWN",
+    "ROUND_START", "ROUND_END",
     "ROUTE_STARTED", "GAME_OVER",
 }
 
@@ -521,6 +521,14 @@ def render_event(event: dict, state: "GameState") -> str | None:
 
     player = event.get("player", "?")
     cfg = state.config
+
+    if etype == "CARD_DRAWN":
+        card = state.lookup_card(event.get("card_id", ""))
+        if card is None:
+            return None
+        in_ch = channel_tag(card.input_channel, cfg) if card.input_channel else "—"
+        out_ch = channel_tag(card.output_channel, cfg) if card.output_channel else "—"
+        return f"  {player}  drew {card.card_id}  {in_ch}→{out_ch}  PKT {card.packet_value}"
 
     if etype == "CARD_PLAYED":
         card = state.lookup_card(event.get("card_id", ""))

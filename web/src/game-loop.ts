@@ -324,41 +324,38 @@ export class GameLoop {
     this.engine._runTurn(pIdx);
     const newEvents = state.eventLog.slice(logBefore);
 
-    const policyName = this.engine.policies[pIdx].name;
-    const playerId   = state.players[pIdx].playerId;
+    const playerId = state.players[pIdx].playerId;
 
     const keyLines = newEvents
       .map(e => renderEvent(e, state))
       .filter((l): l is string => l !== null && /played|noised|SCORE|invalidated|terminated|collision|passed/.test(l));
 
     if (keyLines.length > 0) {
-      this._appendOpponentSummary(playerId, policyName, keyLines.slice(0, 3), state);
+      this._appendOpponentSummary(keyLines.slice(0, 3), state);
     }
 
     this._renderHeader(state);
-    await this._waitForOpponentContinue(state, playerId, policyName, keyLines.slice(0, 3));
+    await this._waitForOpponentContinue(state, playerId, keyLines.slice(0, 3));
   }
 
-  private _waitForOpponentContinue(state: GameState, playerId: string, policyName: string, lines: string[]): Promise<void> {
+  private _waitForOpponentContinue(state: GameState, playerId: string, lines: string[]): Promise<void> {
     return new Promise(resolve => {
-      const hintEl  = document.getElementById("hand-hint");
+      const headEl  = document.getElementById("hand-head");
       const cardsEl = document.getElementById("hand-cards");
-      const titleEl = document.getElementById("hand-title");
-      if (!hintEl || !cardsEl) { resolve(); return; }
+      if (!cardsEl) { resolve(); return; }
 
-      if (titleEl) titleEl.textContent = `Round ${state.roundNumber}  ·  Turn ${state.turnNumber + 1}`;
+      if (headEl) headEl.classList.add("hidden");
 
-      const summary = lines.length > 0
-        ? `${playerId} [${policyName}]: ${lines.join(" · ")}`
-        : `${playerId} [${policyName}] took their turn`;
+      const movesHtml = lines.length > 0
+        ? lines.map(l => `<span>${l}</span>`).join("")
+        : `<span>${playerId} took their turn</span>`;
 
-      hintEl.textContent = summary;
-      cardsEl.innerHTML = "";
-
-      const btn = document.createElement("button");
-      btn.className = "btn-secondary pp-continue-btn";
-      btn.textContent = "Press Enter to continue →";
-      cardsEl.appendChild(btn);
+      cardsEl.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:14px;padding:16px 24px;overflow:visible;";
+      cardsEl.innerHTML = `
+        <div class="pp-continue-label">Round ${state.roundNumber} · Turn ${state.turnNumber + 1}</div>
+        <div class="pp-continue-moves">${movesHtml}</div>
+        <button class="btn-secondary pp-continue-btn" id="pp-live-continue-btn">Press Enter to continue →</button>
+      `;
 
       let resolved = false;
       const done = () => {
@@ -366,13 +363,13 @@ export class GameLoop {
         resolved = true;
         window.removeEventListener("keydown", onKey);
         clearInterval(abortCheck);
-        if (titleEl) titleEl.textContent = "Your hand";
-        hintEl.textContent = "Select a card to play";
+        if (headEl) headEl.classList.remove("hidden");
+        cardsEl.style.cssText = "";
         cardsEl.innerHTML = "";
         resolve();
       };
 
-      btn.addEventListener("click", done, { once: true });
+      document.getElementById("pp-live-continue-btn")?.addEventListener("click", done, { once: true });
 
       const onKey = (e: KeyboardEvent) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -380,7 +377,6 @@ export class GameLoop {
           done();
         }
       };
-      // Defer keydown listener one tick to avoid capturing the Enter that triggered this turn
       setTimeout(() => window.addEventListener("keydown", onKey), 0);
 
       const abortCheck = setInterval(() => {
@@ -449,7 +445,7 @@ export class GameLoop {
       const logEl = el("event-log");
       const div = document.createElement("div");
       div.className = "pp-log__line is-drawn";
-      div.textContent = `Drew: ${drawnText}`;
+      div.textContent = `${player.playerId} drew ${drawnText}`;
       logEl.prepend(div);
     }
 
@@ -470,11 +466,11 @@ export class GameLoop {
     }
   }
 
-  private _appendOpponentSummary(playerId: string, policyName: string, lines: string[], state: GameState): void {
+  private _appendOpponentSummary(lines: string[], state: GameState): void {
     const logEl = el("event-log");
     const wrapper = document.createElement("div");
     wrapper.className = "pp-log__line is-opponent";
-    wrapper.innerHTML = `<b>${playerId} [${policyName}]</b><br>` + lines.map(l => `<span>${l}</span>`).join("<br>");
+    wrapper.innerHTML = lines.map(l => `<span>${l}</span>`).join("<br>");
     logEl.prepend(wrapper);
   }
 
@@ -540,7 +536,7 @@ export class GameLoop {
     html += "<ol class='final-scores'>";
     for (const p of ranked) {
       const isYou = state.players.indexOf(p) === this.humanIndex;
-      html += `<li class="${isYou ? "you" : ""}">${p.playerId} [${p.policyName}] — ${p.score}${isYou ? " ← you" : ""}</li>`;
+      html += `<li class="${isYou ? "you" : ""}">${p.playerId} — ${p.score}${isYou ? " ← you" : ""}</li>`;
     }
     html += "</ol>";
 

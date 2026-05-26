@@ -366,7 +366,6 @@ class InteractiveGame:
     def _print_opponent_turn(
         self, events: list[dict], state: GameState, p_idx: int
     ) -> None:
-        policy_name = self._engine.policies[p_idx].name
         player_id = state.players[p_idx].player_id
 
         key_lines = []
@@ -379,7 +378,7 @@ class InteractiveGame:
                 key_lines.append(rendered.strip())
 
         if key_lines:
-            print(f"  {player_id} [{policy_name}]:")
+            print(f"  {player_id}:")
             for line in key_lines[:3]:
                 print(f"    {line}")
 
@@ -417,7 +416,7 @@ class InteractiveGame:
             tag = ""
             if not self.solo and state.players.index(p) == self.human_index:
                 tag = " ← you"
-            print(f"  #{rank + 1}  {p.player_id} [{p.policy_name}]{'':>4}{p.score}{tag}")
+            print(f"  #{rank + 1}  {p.player_id}{'':>4}{p.score}{tag}")
 
         winner = ranked[0]
         print()
