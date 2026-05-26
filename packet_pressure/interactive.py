@@ -185,7 +185,9 @@ class HumanPolicy(PlayerPolicy):
             elif card.card_type == CardType.TERMINAL:
                 for route in open_routes:
                     if route.length >= cfg.route_min_length:
-                        card_hints.append(f"→ TERM {route.route_id} ✓")
+                        card_hints.append(f"terminate {route.route_id}")
+                if not card_hints:
+                    card_hints.append("no routes to terminate")
 
             else:
                 for route in open_routes:
@@ -197,10 +199,9 @@ class HumanPolicy(PlayerPolicy):
                         card_hints.append(f"→ FLT {route.route_id}")
                     else:
                         card_hints.append(f"→ {route.route_id}")
-                if not card_hints:
-                    cap_reached = sum(1 for r in state.tableau.routes if r.is_open()) >= cfg.max_open_routes
-                    if not cap_reached:
-                        card_hints = ["→ new route"]
+                cap_reached = sum(1 for r in state.tableau.routes if r.is_open()) >= cfg.max_open_routes
+                if not cap_reached:
+                    card_hints.append("→ new route")
 
             hints.append(card_hints)
 
