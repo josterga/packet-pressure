@@ -13,12 +13,6 @@ import {
   renderCard,
 } from "./render";
 
-const OPPONENT_DELAY_MS = 600;
-
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // ---------------------------------------------------------------------------
 // DOM helpers
 // ---------------------------------------------------------------------------
@@ -219,8 +213,15 @@ export class GameLoop {
     const state = this.engine.state;
     this._renderGameHeader(state);
 
-    while (!this.engine._isTerminal() && !this._aborted) {
-      await this._runRound(state);
+    try {
+      while (!this.engine._isTerminal() && !this._aborted) {
+        await this._runRound(state);
+      }
+    } catch (err) {
+      console.error("[packet-pressure] game loop error:", err);
+      const hintEl = document.getElementById("hand-hint");
+      if (hintEl) hintEl.textContent = `Error: ${err instanceof Error ? err.message : String(err)}`;
+      return;
     }
 
     if (!this._aborted) this._showGameOver(state);
@@ -335,7 +336,53 @@ export class GameLoop {
     }
 
     this._renderHeader(state);
-    await delay(OPPONENT_DELAY_MS);
+    await this._waitForOpponentContinue(playerId, policyName, keyLines.slice(0, 3));
+  }
+
+  private _waitForOpponentContinue(playerId: string, policyName: string, lines: string[]): Promise<void> {
+    return new Promise(resolve => {
+      const hintEl  = document.getElementById("hand-hint");
+      const cardsEl = document.getElementById("hand-cards");
+      if (!hintEl || !cardsEl) { resolve(); return; }
+
+      const summary = lines.length > 0
+        ? `${playerId} [${policyName}]: ${lines.join(" · ")}`
+        : `${playerId} [${policyName}] took their turn`;
+
+      hintEl.textContent = summary;
+      cardsEl.innerHTML = "";
+
+      const btn = document.createElement("button");
+      btn.className = "btn-secondary pp-continue-btn";
+      btn.textContent = "Press Enter to continue →";
+      cardsEl.appendChild(btn);
+
+      let resolved = false;
+      const done = () => {
+        if (resolved) return;
+        resolved = true;
+        window.removeEventListener("keydown", onKey);
+        clearInterval(abortCheck);
+        hintEl.textContent = "Select a card to play";
+        cardsEl.innerHTML = "";
+        resolve();
+      };
+
+      btn.addEventListener("click", done, { once: true });
+
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          done();
+        }
+      };
+      // Defer keydown listener one tick to avoid capturing the Enter that triggered this turn
+      setTimeout(() => window.addEventListener("keydown", onKey), 0);
+
+      const abortCheck = setInterval(() => {
+        if (this._aborted) done();
+      }, 100);
+    });
   }
 
   // ------------------------------------------------------------------

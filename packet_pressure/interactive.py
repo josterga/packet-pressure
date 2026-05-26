@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 
 import numpy as np
 
@@ -327,8 +326,10 @@ class InteractiveGame:
                 self._print_human_turn_result(new_events, state)
             else:
                 self._print_opponent_turn(new_events, state, p_idx)
-                if self.opponent_delay > 0:
-                    time.sleep(self.opponent_delay)
+                if not engine._is_terminal():
+                    self._print_between_turns(state)
+                    input("  Press Enter to continue…")
+                continue
 
             is_last = i + 1 >= len(all_turns)
             next_is_human = (

@@ -399,6 +399,12 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
 .pp-log__line.is-opponent { color: var(--ink-mute); }
 .pp-log__line.is-opponent b { color: var(--ink-soft); }
 
+/* ── OPPONENT CONTINUE BUTTON (rendered dynamically in hand area) ───── */
+.pp-continue-btn {
+  align-self: center;
+  margin: 8px 0;
+}
+
 /* ── PP-HAND ────────────────────────────────────────────────────────── */
 .pp-hand {
   position: sticky;
