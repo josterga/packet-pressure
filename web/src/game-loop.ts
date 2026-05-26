@@ -103,6 +103,9 @@ export class GameLoop {
   }
 
   private _setupStart(): void {
+    document.getElementById("log-toggle")?.addEventListener("click", () => {
+      document.getElementById("event-log")?.classList.toggle("is-open");
+    });
     el("btn-start").addEventListener("click", () => this._startGame());
     el("btn-new-game-over").addEventListener("click", () => {
       this.seed = Math.floor(Math.random() * 0xffffffff);
@@ -196,6 +199,11 @@ export class GameLoop {
 
   private _startGame(): void {
     this._aborted = false;
+    setHtml("log-lines", "");
+    const latest = document.getElementById("log-latest");
+    if (latest) latest.textContent = "—";
+    document.getElementById("event-log")?.classList.remove("is-open");
+
     const rng = makeMulberry32(this.seed);
     const deck = new DeckBuilder(this.config, rng).build();
 
@@ -442,36 +450,41 @@ export class GameLoop {
       const drawnText = drawn.map(c =>
         `${c.cardId} ${c.inputChannel ?? "—"}→${c.outputChannel ?? "—"} PKT ${c.packetValue}`
       ).join(", ");
-      const logEl = el("event-log");
       const div = document.createElement("div");
       div.className = "pp-log__line is-drawn";
       div.textContent = `${player.playerId} drew ${drawnText}`;
-      logEl.prepend(div);
+      this._prependLog(div);
     }
 
     // Attach card click listeners via human-policy
     this.humanPolicy.attachCardListeners();
   }
 
+  private _prependLog(el: HTMLElement): void {
+    const lines = document.getElementById("log-lines");
+    if (!lines) return;
+    lines.prepend(el);
+    const latest = document.getElementById("log-latest");
+    if (latest) latest.textContent = el.textContent ?? "—";
+  }
+
   private _appendEventLog(events: Record<string, unknown>[], state: GameState): void {
     const lines = events
       .map(e => renderEvent(e, state))
       .filter((l): l is string => l !== null);
-    const logEl = el("event-log");
     for (const line of lines.reverse()) {
       const div = document.createElement("div");
       div.className = `pp-log__line${line.includes("SCORE") ? " is-score" : ""}`;
       div.textContent = line;
-      logEl.prepend(div);
+      this._prependLog(div);
     }
   }
 
   private _appendOpponentSummary(lines: string[], state: GameState): void {
-    const logEl = el("event-log");
     const wrapper = document.createElement("div");
     wrapper.className = "pp-log__line is-opponent";
     wrapper.innerHTML = lines.map(l => `<span>${l}</span>`).join("<br>");
-    logEl.prepend(wrapper);
+    this._prependLog(wrapper);
   }
 
   // ------------------------------------------------------------------
@@ -511,7 +524,9 @@ export class GameLoop {
         if (this._aborted) { resolve(); return; }
         showScreen("game");
         this._renderHeader(state);
-        setHtml("event-log", "");
+        setHtml("log-lines", "");
+        const latest = document.getElementById("log-latest");
+        if (latest) latest.textContent = "—";
         setHtml("hand-cards", "");
         resolve();
       };

@@ -217,7 +217,11 @@ export class GameEngine {
 
     const ownedCard = this._applyPlay(playerIndex, card, legalCount, context.targetRouteId);
     this._resolveCardEffects(ownedCard);
-    this._updateRoutes(ownedCard);
+    if (context.newRoute) {
+      this._tryStartRoute(ownedCard);
+    } else {
+      this._updateRoutes(ownedCard);
+    }
   }
 
   _applyPlay(

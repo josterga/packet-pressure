@@ -120,10 +120,14 @@ class HumanPolicy(PlayerPolicy):
                 return card, PlacementContext(pass_turn=True)
             if len(matching) == 1:
                 return card, matching[0][1]
-            # Multiple routes available — ask the user which one to target
+            # Multiple options — ask the user which one to target
             route_ids = [ctx.target_route_id for _, ctx in matching if ctx.target_route_id]
             open_routes = [r for r in state.tableau.routes if r.route_id in route_ids]
-            route_id = self._prompt_route(state, open_routes, prompt="  Extend which route")
+            has_new_route = any(ctx.target_route_id is None for _, ctx in matching)
+            route_id = self._prompt_route(state, open_routes, prompt="  Extend which route",
+                                          include_new_route=has_new_route)
+            if route_id is None:
+                return card, PlacementContext(new_route=True)
             ctx = next((c for _, c in matching if c.target_route_id == route_id), matching[0][1])
             return card, ctx
 
@@ -202,21 +206,28 @@ class HumanPolicy(PlayerPolicy):
 
         return hints
 
-    def _prompt_route(self, state: GameState, open_routes: list, prompt: str = "  Terminate which route") -> str:
+    def _prompt_route(self, state: GameState, open_routes: list, prompt: str = "  Terminate which route",
+                      include_new_route: bool = False) -> str | None:
         from .display import _render_route_line
         print()
         for i, route in enumerate(open_routes):
             print(f"  [{i + 1}]  {_render_route_line(route, state).strip()}")
+        new_route_idx = len(open_routes) + 1
+        if include_new_route:
+            print(f"  [{new_route_idx}]  → new route")
+        total = new_route_idx if include_new_route else len(open_routes)
         while True:
             try:
-                raw = input(f"  {prompt} [1-{len(open_routes)}]: ").strip()
+                raw = input(f"  {prompt} [1-{total}]: ").strip()
             except (EOFError, KeyboardInterrupt):
                 raise SystemExit(0)
             if raw.isdigit():
                 idx = int(raw) - 1
                 if 0 <= idx < len(open_routes):
                     return open_routes[idx].route_id
-            print(f"  Enter a number between 1 and {len(open_routes)}.")
+                if include_new_route and idx == len(open_routes):
+                    return None
+            print(f"  Enter a number between 1 and {total}.")
 
     def _prompt_channel(self, state: GameState, channels: list[str]) -> str:
         print()

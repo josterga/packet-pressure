@@ -9,6 +9,7 @@ import {
   cardSpecial,
   emptyContext,
   passContext,
+  maxOpenRoutes,
   routeIsOpen,
   routeLastOutputChannel,
   routeMaxHops,
@@ -52,13 +53,12 @@ export abstract class PlayerPolicy {
         }
       } else {
         const validRouteCount = state.tableau.routes.filter(routeIsOpen).length;
-        const capReached = validRouteCount >= state.config.seedNodesPerRound;
+        const capReached = validRouteCount >= maxOpenRoutes(state.config);
         const extendable = openRoutes.filter(r => this._canCardExtendRoute(card, r, state));
-        if (extendable.length > 0) {
-          for (const route of extendable) {
-            plays.push([card, targetContext(route.routeId)]);
-          }
-        } else if (!capReached) {
+        for (const route of extendable) {
+          plays.push([card, targetContext(route.routeId)]);
+        }
+        if (!capReached) {
           plays.push([card, emptyContext()]);
         }
       }

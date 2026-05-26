@@ -129,10 +129,15 @@ export function withSpecial(card: Card, props: readonly SpecialProp[]): Card {
 export interface PlacementContext {
   targetRouteId: string | null;
   passTurn: boolean;
+  newRoute?: boolean;
 }
 
 export function emptyContext(): PlacementContext {
   return { targetRouteId: null, passTurn: false };
+}
+
+export function newRouteContext(): PlacementContext {
+  return { targetRouteId: null, passTurn: false, newRoute: true };
 }
 
 export function targetContext(routeId: string): PlacementContext {

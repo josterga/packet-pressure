@@ -15,8 +15,8 @@
         if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
       })();
     </script>
-    <script type="module" crossorigin src="/play/assets/index-BKO7SSSp.js"></script>
-    <link rel="stylesheet" crossorigin href="/play/assets/index-C6HcAxWy.css">
+    <script type="module" crossorigin src="/play/assets/index-BlAc0yfD.js"></script>
+    <link rel="stylesheet" crossorigin href="/play/assets/index-C_ft1vOP.css">
   </head>
   <body>
     <div id="app">
@@ -84,7 +84,7 @@
       </div>
 
       <!-- GAME SCREEN -->
-      <div id="screen-game" class="screen hidden" style="display:flex;flex-direction:column;min-height:100vh;">
+      <div id="screen-game" class="screen hidden">
 
         <div class="pp-topstrip pp-topstrip--sticky">
           <a href="/" class="pp-topstrip__brand" style="text-decoration:none;color:inherit;border:none"><span class="full">PACKET&nbsp;PRESSURE</span><span class="abbr">←</span></a>
@@ -99,17 +99,25 @@
 
         <div id="scores-bar" class="pp-scoreboard"></div>
 
-        <div class="pp-tableau-wrap" style="flex:1;overflow-y:auto;">
-          <div class="pp-tableau">
-            <div id="tableau-area"></div>
+        <div class="pp-tableau-wrap">
+          <div class="pp-tableau-col">
+            <div class="pp-tableau">
+              <div id="tableau-area"></div>
+            </div>
             <button id="new-route-btn" class="pp-tableau__newroute hidden">+ NEW ROUTE</button>
           </div>
-          <div id="event-log" class="pp-log"></div>
+          <div id="event-log" class="pp-log">
+            <button class="pp-log__toggle" id="log-toggle" aria-expanded="false">
+              <span id="log-latest" class="pp-log__latest">—</span>
+              <span class="pp-log__chevron" aria-hidden="true">▾</span>
+            </button>
+            <div id="log-lines" class="pp-log__lines"></div>
+          </div>
         </div>
 
         <div id="hand-area" class="pp-hand">
-          <div class="pp-hand__head">
-            <span>Your hand</span>
+          <div id="hand-head" class="pp-hand__head">
+            <span id="hand-title">Your hand</span>
             <span id="hand-hint" class="pp-hand__hint">Select a card to play</span>
           </div>
           <div id="hand-cards" class="pp-hand__cards"></div>

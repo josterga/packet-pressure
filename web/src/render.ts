@@ -8,6 +8,7 @@ import {
   cardSpecial,
   channelColor,
   lookupCard,
+  maxOpenRoutes,
   routeIsOpen,
   routeLastOutputChannel,
 } from "./models";
@@ -376,13 +377,16 @@ export function buildHints(
       if (ch && scoringChannels.has(ch)) {
         cardHints.push({ label: `noise CH${ch} ✓`, className: "hint-valid" });
       } else {
-        cardHints.push({ label: `noise CH${ch} (no target)`, className: "hint-invalid" });
+        cardHints.push({ label: `CH${ch} — no target`, className: "hint-invalid" });
       }
     } else if (card.cardType === CardType.TERMINAL) {
       for (const route of openRoutes) {
         if (route.length >= cfg.routeMinLength) {
-          cardHints.push({ label: `TERM ${route.routeId} ✓`, className: "hint-valid" });
+          cardHints.push({ label: `terminate ${route.routeId}`, className: "hint-valid" });
         }
+      }
+      if (cardHints.length === 0) {
+        cardHints.push({ label: "no routes to terminate", className: "hint-invalid" });
       }
     } else {
       for (const route of openRoutes) {
@@ -395,11 +399,9 @@ export function buildHints(
           cardHints.push({ label: `→ ${route.routeId}`, className: "hint-relay" });
         }
       }
-      if (cardHints.length === 0) {
-        const openCount = state.tableau.routes.filter(routeIsOpen).length;
-        const capReached = openCount >= cfg.seedNodesPerRound;
-        if (!capReached) cardHints.push({ label: "→ new route", className: "hint-new" });
-      }
+      const openCount = state.tableau.routes.filter(routeIsOpen).length;
+      const capReached = openCount >= maxOpenRoutes(cfg);
+      if (!capReached) cardHints.push({ label: "→ new route", className: "hint-new" });
     }
 
     hints.push(cardHints);

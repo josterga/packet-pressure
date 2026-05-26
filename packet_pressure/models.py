@@ -150,6 +150,7 @@ class Card:
 class PlacementContext:
     target_route_id: str | None = None
     pass_turn: bool = False
+    new_route: bool = False
 
 
 # ---------------------------------------------------------------------------

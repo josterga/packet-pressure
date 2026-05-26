@@ -7,6 +7,7 @@ import {
   RouteState,
   channelColor,
   emptyContext,
+  newRouteContext,
   passContext,
   routeIsOpen,
   targetContext,
@@ -61,6 +62,7 @@ export class HumanPolicy extends PlayerPolicy {
 
     const cards = handCards.querySelectorAll<HTMLElement>(".pp-card");
     cards.forEach(cardEl => {
+      if (cardEl.classList.contains("is-invalid")) return;
       cardEl.addEventListener("click", () => {
         const cardId = cardEl.dataset.cardId;
         if (!cardId) return;
@@ -103,6 +105,18 @@ export class HumanPolicy extends PlayerPolicy {
       }
       this._selectCard(card);
       const chColor = this._channelCssToken(ch);
+      const noiseTargets = state.tableau.routes.filter(r =>
+        r.isValid && r.length >= state.config.routeMinLength &&
+        r.channelsInRoute.slice(0, -1).includes(ch!)
+      );
+      for (const r of noiseTargets) {
+        document.querySelector<HTMLElement>(`.pp-route[data-route-id="${r.routeId}"]`)
+          ?.classList.add("pp-route--noise-target");
+      }
+      this._cleanupFns.push(() => {
+        document.querySelectorAll(".pp-route--noise-target")
+          .forEach(el => el.classList.remove("pp-route--noise-target"));
+      });
       this._armConfirm(
         `⚠ NOISE ${channelLabel(ch)}`,
         () => { this._clearSelection(); this._resetHint(); resolve([card, emptyContext()]); },
@@ -159,15 +173,15 @@ export class HumanPolicy extends PlayerPolicy {
     }
 
     // Multiple targets
-    const routeIds   = matching.map(([, c]) => c.targetRouteId).filter((id): id is string => id !== null);
-    const newRouteCtx = matching.find(([, c]) => c.targetRouteId === null)?.[1];
+    const routeIds    = matching.map(([, c]) => c.targetRouteId).filter((id): id is string => id !== null);
+    const hasNewRoute = matching.some(([, c]) => c.targetRouteId === null);
     const openRoutes  = state.tableau.routes.filter(r => routeIds.includes(r.routeId));
 
     this._selectCard(card);
-    this._armRoutes(openRoutes, card, resolve, newRouteCtx ? () => {
+    this._armRoutes(openRoutes, card, resolve, hasNewRoute ? () => {
       this._clearSelection();
       this._resetHint();
-      resolve([card, newRouteCtx]);
+      resolve([card, newRouteContext()]);
     } : undefined);
   }
 
@@ -238,7 +252,7 @@ export class HumanPolicy extends PlayerPolicy {
     this._armNewRouteWithCallback(() => {
       this._clearSelection();
       this._resetHint();
-      resolve([card, emptyContext()]);
+      resolve([card, newRouteContext()]);
     });
   }
 
