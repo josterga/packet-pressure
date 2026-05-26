@@ -325,9 +325,9 @@ class InteractiveGame:
             if self.solo or p_idx == self.human_index:
                 self._print_human_turn_result(new_events, state)
             else:
-                self._print_opponent_turn(new_events, state, p_idx)
                 if not engine._is_terminal():
                     self._print_between_turns(state)
+                    self._print_opponent_turn(new_events, state, p_idx)
                     input("  Press Enter to continue…")
                 continue
 

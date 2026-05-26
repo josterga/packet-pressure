@@ -121,7 +121,7 @@ export function renderCard(
         <div class="pp-card__pkt">PKT&nbsp;<b>${card.packetValue}</b></div>
       </div>
       <div class="pp-card__foot">
-        <span>${meta.shortCode}</span>
+        <span>${card.ownerId ?? ''}</span>
         <span>${card.cardId}</span>
       </div>
     </div>

@@ -336,14 +336,17 @@ export class GameLoop {
     }
 
     this._renderHeader(state);
-    await this._waitForOpponentContinue(playerId, policyName, keyLines.slice(0, 3));
+    await this._waitForOpponentContinue(state, playerId, policyName, keyLines.slice(0, 3));
   }
 
-  private _waitForOpponentContinue(playerId: string, policyName: string, lines: string[]): Promise<void> {
+  private _waitForOpponentContinue(state: GameState, playerId: string, policyName: string, lines: string[]): Promise<void> {
     return new Promise(resolve => {
       const hintEl  = document.getElementById("hand-hint");
       const cardsEl = document.getElementById("hand-cards");
+      const titleEl = document.getElementById("hand-title");
       if (!hintEl || !cardsEl) { resolve(); return; }
+
+      if (titleEl) titleEl.textContent = `Round ${state.roundNumber}  ·  Turn ${state.turnNumber + 1}`;
 
       const summary = lines.length > 0
         ? `${playerId} [${policyName}]: ${lines.join(" · ")}`
@@ -363,6 +366,7 @@ export class GameLoop {
         resolved = true;
         window.removeEventListener("keydown", onKey);
         clearInterval(abortCheck);
+        if (titleEl) titleEl.textContent = "Your hand";
         hintEl.textContent = "Select a card to play";
         cardsEl.innerHTML = "";
         resolve();
