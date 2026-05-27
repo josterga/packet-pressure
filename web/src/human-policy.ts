@@ -204,13 +204,13 @@ export class HumanPolicy extends PlayerPolicy {
     resolve: PlayResolver,
     onNewRoute?: () => void,
   ): void {
+    const inCh    = selectedCard.inputChannel;
+    const chColor = this._channelCssToken(inCh);
+    const chLabel = (inCh && inCh !== "ANY" && inCh !== "TERM") ? channelLabel(inCh) : "ANY";
+
     for (const route of routes) {
       const routeEl = document.querySelector<HTMLElement>(`.pp-route[data-route-id="${route.routeId}"]`);
       if (!routeEl) continue;
-
-      const inCh    = selectedCard.inputChannel;
-      const chColor = this._channelCssToken(inCh);
-      const chLabel = (inCh && inCh !== "ANY" && inCh !== "TERM") ? channelLabel(inCh) : "ANY";
 
       routeEl.classList.add("pp-route--drop");
       routeEl.style.setProperty("--slot-color", chColor);
@@ -251,7 +251,7 @@ export class HumanPolicy extends PlayerPolicy {
 
     // Optionally arm the new-route button too
     if (onNewRoute) {
-      this._armNewRouteWithCallback(onNewRoute);
+      this._armNewRouteWithCallback(onNewRoute, chColor);
     }
 
     this.attachCardListeners();
@@ -262,15 +262,16 @@ export class HumanPolicy extends PlayerPolicy {
       this._clearSelection();
       this._resetHint();
       resolve([card, newRouteContext()]);
-    });
+    }, this._channelCssToken(card.inputChannel));
     this.attachCardListeners();
   }
 
-  private _armNewRouteWithCallback(cb: () => void): void {
+  private _armNewRouteWithCallback(cb: () => void, color?: string): void {
     const btn = document.getElementById("new-route-btn");
     if (!btn) return;
     btn.classList.remove("hidden");
     btn.classList.add("is-armed");
+    if (color) btn.style.setProperty("--slot-color", color);
 
     const handler = () => {
       btn.removeEventListener("click", handler);
@@ -281,6 +282,7 @@ export class HumanPolicy extends PlayerPolicy {
     this._cleanupFns.push(() => {
       btn.classList.add("hidden");
       btn.classList.remove("is-armed");
+      btn.style.removeProperty("--slot-color");
       btn.removeEventListener("click", handler);
     });
   }

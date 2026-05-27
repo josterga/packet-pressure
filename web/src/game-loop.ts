@@ -461,8 +461,6 @@ export class GameLoop {
       this._prependLog(div);
     }
 
-    // Attach card click listeners via human-policy
-    this.humanPolicy.attachCardListeners();
   }
 
   private _prependLog(el: HTMLElement): void {

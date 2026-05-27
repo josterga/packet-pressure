@@ -337,6 +337,8 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
 }
 
 .pp-route__newslot {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,13 +387,14 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
   padding: 14px;
   border: 1.5px dashed var(--rule);
   border-radius: var(--rad);
-  background: var(--bg);
+  background: var(--bg-panel);
   color: var(--ink-mute);
   font-size: 12px;
   letter-spacing: 0.06em;
   transition: border-color 0.12s, color 0.12s;
   position: sticky;
   bottom: 0;
+  z-index: 2;
 }
 .pp-tableau__newroute:hover,
 .pp-tableau__newroute.is-armed {
@@ -800,10 +803,9 @@ body.hints-off .pp-hints { display: none; }
 /* ── Mobile ≤ 720px (tablets + large phones) ────────────────────────── */
 @media (max-width: 720px) {
   .pp-landing__glyphs { gap: 18px; font-size: 24px; }
-  .pp-tableau-wrap    { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
-  .pp-tableau-col     { flex: none; overflow-y: visible; padding: 12px 12px 8px; }
-  .pp-tableau__newroute { position: static; }
-  .pp-log             { order: -1; width: auto; max-height: none; border-left: none; border-bottom: 1px solid var(--rule); border-top: none; border-radius: 0; padding: 0; }
+  .pp-tableau-wrap    { flex-direction: column; overflow: hidden; }
+  .pp-tableau-col     { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 12px 8px; }
+  .pp-log             { order: -1; flex-shrink: 0; width: auto; max-height: none; border-left: none; border-bottom: 1px solid var(--rule); border-top: none; border-radius: 0; padding: 0; }
   .pp-log__toggle     { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 12px; background: transparent; border: none; text-align: left; cursor: pointer; font: inherit; font-size: 11px; color: var(--ink-soft); letter-spacing: 0.02em; }
   .pp-log__latest     { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pp-log__chevron    { flex-shrink: 0; font-size: 10px; transition: transform 0.15s; }
