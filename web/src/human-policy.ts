@@ -63,7 +63,7 @@ export class HumanPolicy extends PlayerPolicy {
     const cards = handCards.querySelectorAll<HTMLElement>(".pp-card");
     cards.forEach(cardEl => {
       if (cardEl.classList.contains("is-invalid")) return;
-      cardEl.addEventListener("click", () => {
+      const handler = () => {
         const cardId = cardEl.dataset.cardId;
         if (!cardId) return;
 
@@ -77,7 +77,9 @@ export class HumanPolicy extends PlayerPolicy {
         const card = player.hand.find(c => c.cardId === cardId);
         if (!card) return;
         this._handleCardClick(card, state, player, resolve);
-      }, { once: true });
+      };
+      cardEl.addEventListener("click", handler);
+      this._cleanupFns.push(() => cardEl.removeEventListener("click", handler));
     });
   }
 
@@ -191,6 +193,8 @@ export class HumanPolicy extends PlayerPolicy {
     this._selectedCardId = card.cardId;
     const cardEl = document.querySelector<HTMLElement>(`.pp-card[data-card-id="${card.cardId}"]`);
     cardEl?.classList.add("is-selected");
+    const selCh = card.cardType === CardType.NOISE ? card.outputChannel : card.inputChannel;
+    cardEl?.style.setProperty("--selection-color", this._channelCssToken(selCh));
     this._updateHandHint(`Selected ${card.cardId} · pick a route above`);
   }
 
@@ -223,7 +227,10 @@ export class HumanPolicy extends PlayerPolicy {
       slot.className = "pp-route__newslot";
       slot.setAttribute("data-play-route", route.routeId);
       slot.setAttribute("aria-label", `Play ${selectedCard.cardId} onto ${route.routeId}`);
-      slot.innerHTML = `<div style="text-align:center"><div style="font-weight:700;font-size:15px;letter-spacing:.05em">${chLabel}</div><div class="mute" style="margin-top:4px;font-size:10px">${selectedCard.cardId}</div></div>`;
+      const isTerminal = selectedCard.cardType === CardType.TERMINAL;
+      const topLine    = isTerminal ? "→" : chLabel;
+      const bottomLine = isTerminal ? route.routeId : selectedCard.cardId;
+      slot.innerHTML = `<div style="text-align:center"><div style="font-weight:700;font-size:15px;letter-spacing:.05em">${topLine}</div><div class="mute" style="margin-top:4px;font-size:10px">${bottomLine}</div></div>`;
 
       slot.addEventListener("click", () => {
         this._clearSelection();
@@ -246,6 +253,8 @@ export class HumanPolicy extends PlayerPolicy {
     if (onNewRoute) {
       this._armNewRouteWithCallback(onNewRoute);
     }
+
+    this.attachCardListeners();
   }
 
   private _armNewRoute(card: Card, resolve: PlayResolver): void {
@@ -254,6 +263,7 @@ export class HumanPolicy extends PlayerPolicy {
       this._resetHint();
       resolve([card, newRouteContext()]);
     });
+    this.attachCardListeners();
   }
 
   private _armNewRouteWithCallback(cb: () => void): void {
@@ -291,6 +301,7 @@ export class HumanPolicy extends PlayerPolicy {
       btn.style.removeProperty("--slot-color");
       btn.removeEventListener("click", handler);
     });
+    this.attachCardListeners();
   }
 
   private _channelCssToken(ch: string | null): string {
@@ -308,7 +319,10 @@ export class HumanPolicy extends PlayerPolicy {
     this._selectedCardId = null;
     this._cleanupFns.forEach(fn => fn());
     this._cleanupFns = [];
-    document.querySelectorAll(".pp-card.is-selected").forEach(el => el.classList.remove("is-selected"));
+    document.querySelectorAll(".pp-card.is-selected").forEach(el => {
+      (el as HTMLElement).style.removeProperty("--selection-color");
+      el.classList.remove("is-selected", "is-terminal");
+    });
   }
 
   // ── Hint text helpers ────────────────────────────────────────────────

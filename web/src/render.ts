@@ -351,6 +351,7 @@ export function renderEvent(event: Record<string, unknown>, state: GameState): s
 export interface Hint {
   label: string;
   className: string;
+  color?: string;
 }
 
 export function buildHints(
@@ -375,33 +376,34 @@ export function buildHints(
         }
       }
       if (ch && scoringChannels.has(ch)) {
-        cardHints.push({ label: `noise CH${ch} ✓`, className: "hint-valid" });
+        cardHints.push({ label: `noise CH${ch} ✓`, className: "hint-valid", color: channelToken(ch, cfg) });
       } else {
         cardHints.push({ label: `CH${ch} — no target`, className: "hint-invalid" });
       }
     } else if (card.cardType === CardType.TERMINAL) {
       for (const route of openRoutes) {
         if (route.length >= cfg.routeMinLength) {
-          cardHints.push({ label: `terminate ${route.routeId}`, className: "hint-valid" });
+          cardHints.push({ label: `→ ${route.routeId}`, className: "hint-relay" });
         }
       }
       if (cardHints.length === 0) {
         cardHints.push({ label: "no routes to terminate", className: "hint-invalid" });
       }
     } else {
+      const chColor = channelToken(card.inputChannel, cfg);
       for (const route of openRoutes) {
         if (!policy._canCardExtendRoute(card, route, state)) continue;
         if (card.cardType === CardType.AMPLIFIER) {
-          cardHints.push({ label: `AMP ${route.routeId} ×${cfg.amplifierMultiplier}`, className: "hint-amp" });
+          cardHints.push({ label: `AMP ${route.routeId} ×${cfg.amplifierMultiplier}`, className: "hint-amp", color: chColor });
         } else if (card.cardType === CardType.FILTER) {
-          cardHints.push({ label: `FLT ${route.routeId}`, className: "hint-flt" });
+          cardHints.push({ label: `FLT ${route.routeId}`, className: "hint-flt", color: chColor });
         } else {
-          cardHints.push({ label: `→ ${route.routeId}`, className: "hint-relay" });
+          cardHints.push({ label: `→ ${route.routeId}`, className: "hint-relay", color: chColor });
         }
       }
       const openCount = state.tableau.routes.filter(routeIsOpen).length;
       const capReached = openCount >= maxOpenRoutes(cfg);
-      if (!capReached) cardHints.push({ label: "→ new route", className: "hint-new" });
+      if (!capReached) cardHints.push({ label: "→ new route", className: "hint-new", color: chColor });
     }
 
     hints.push(cardHints);

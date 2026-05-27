@@ -432,7 +432,8 @@ export class GameLoop {
 
       const hintsHtml = hints[i].map(h => {
         const cls = h.className.replace("hint-", "pp-hint--");
-        return `<span class="pp-hint ${cls}">${h.label}</span>`;
+        const styleAttr = h.color ? ` style="color:${h.color}"` : "";
+        return `<span class="pp-hint ${cls}"${styleAttr}>${h.label}</span>`;
       }).join("");
 
       return `

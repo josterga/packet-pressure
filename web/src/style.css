@@ -213,8 +213,8 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
 }
 .pp-card:hover { border-color: var(--ink); transform: translateY(-2px); }
 .pp-card.is-selected {
-  border-color: var(--hi);
-  box-shadow: 0 0 0 2px color-mix(in oklch, var(--hi) 35%, transparent);
+  border-color: var(--selection-color, var(--hi));
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--selection-color, var(--hi)) 35%, transparent);
   transform: translateY(-6px);
 }
 .pp-card.is-invalid { opacity: 0.35; cursor: not-allowed; }
