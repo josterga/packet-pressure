@@ -137,6 +137,30 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
 .pp-topstrip__btn:hover { border-color: var(--ink); color: var(--ink); }
 .pp-topstrip__btn.is-on { color: var(--ink); border-color: var(--rule-strong); }
 
+.pp-topstrip__menu {
+  position: relative;
+}
+.pp-topstrip__dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--rad);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  z-index: 20;
+  min-width: 130px;
+}
+.pp-topstrip__dropdown.hidden { display: none; }
+.pp-topstrip__dropdown .pp-topstrip__btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
 /* ── PP-SCOREBOARD ──────────────────────────────────────────────────── */
 .pp-scoreboard {
   display: flex;
@@ -838,10 +862,10 @@ body.hints-off .pp-hints { display: none; }
   }
   .pp-topstrip__sep:first-of-type { display: none; }
   .pp-topstrip__btn { padding: 4px 7px; font-size: 11px; }
-  .pp-topstrip__btn .full  { display: none; }
-  .pp-topstrip__btn .abbr  { display: inline; }
   .pp-topstrip__brand .full { display: none; }
   .pp-topstrip__brand .abbr { display: inline; }
+  .pp-topstrip__btn .full  { display: none; }
+  .pp-topstrip__btn .abbr  { display: inline; }
 
   /* Tableau */
   .pp-tableau-col { padding: 10px 8px 8px; }

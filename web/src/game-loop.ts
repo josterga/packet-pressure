@@ -99,6 +99,7 @@ export class GameLoop {
     this._setupQuit();
     this._setupTheme();
     this._setupHintsToggle();
+    this._setupMenu();
     showScreen("start");
   }
 
@@ -131,7 +132,11 @@ export class GameLoop {
       if (e.target === el("help-modal")) closeHelp();
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeHelp();
+      if (e.key === "Escape") {
+        closeHelp();
+        document.getElementById("menu-dropdown")?.classList.add("hidden");
+        document.getElementById("btn-menu")?.setAttribute("aria-expanded", "false");
+      }
     });
   }
 
@@ -180,6 +185,24 @@ export class GameLoop {
     const stored = localStorage.getItem("pp-hints") !== "off";
     apply(stored);
     btn.addEventListener("click", () => apply(document.body.classList.contains("hints-off")));
+  }
+
+  private _setupMenu(): void {
+    const btn      = document.getElementById("btn-menu");
+    const dropdown = document.getElementById("menu-dropdown");
+    if (!btn || !dropdown) return;
+
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const open = !dropdown.classList.contains("hidden");
+      dropdown.classList.toggle("hidden", open);
+      btn.setAttribute("aria-expanded", String(!open));
+    });
+
+    document.addEventListener("click", () => {
+      dropdown.classList.add("hidden");
+      btn.setAttribute("aria-expanded", "false");
+    });
   }
 
   private _setupQuit(): void {
