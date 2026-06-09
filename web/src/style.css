@@ -631,6 +631,8 @@ body.hints-off .pp-card.is-invalid { opacity: 1; cursor: pointer; }
   justify-content: center;
   flex-wrap: wrap;
 }
+.pp-landing__footer a { color: var(--ink-mute); }
+.pp-landing__footer a:hover { color: var(--ink); opacity: 1; }
 
 /* compact rules card */
 .pp-rules {
