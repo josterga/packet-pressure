@@ -1,7 +1,7 @@
-import { trackCardPlayed, trackGameAbandoned, trackGameCompleted, trackGameStarted, trackHelpOpened, trackHintsToggled, trackNewGame, trackNoisePlayed, trackPassTaken, trackRouteDestroyed, trackRouteScored, trackRoundCompleted } from "./analytics";
+import { trackCardPlayed, trackGameAbandoned, trackGameCompleted, trackGameStarted, trackHelpOpened, trackHintsToggled, trackNewGame, trackNoisePlayed, trackRoundCompleted } from "./analytics";
 import { DeckBuilder } from "./deck";
 import { GameEngine } from "./engine";
-import { Card, CardType, EVT_CARD_DRAWN, EVT_ROUTE_INVALIDATED, EVT_SCORE_AWARDED, GameConfig, GameState, PlacementContext, PlayerState, emptyContext, lookupCard, makeMulberry32, passContext, routeIsOpen, targetContext } from "./models";
+import { Card, CardType, EVT_CARD_DRAWN, EVT_ROUTE_INVALIDATED, EVT_SCORE_AWARDED, GameConfig, GameState, PlacementContext, PlayerState, emptyContext, lookupCard, makeMulberry32, routeIsOpen, targetContext } from "./models";
 import { PlayerPolicy, makeDefaultPolicies } from "./policies";
 import { HumanPolicy } from "./human-policy";
 import {
@@ -300,12 +300,10 @@ export class GameLoop {
 
     const logBeforeScoring = state.eventLog.length;
     this.engine._endOfRoundScoring();
-    for (const e of state.eventLog.slice(logBeforeScoring)) {
-      if (e.event === EVT_SCORE_AWARDED) {
-        const humanOwned = e.player_id === state.players[this.humanIndex].playerId;
-        trackRouteScored(e.route_length as number, e.termination_reason as string, e.score as number, humanOwned);
-      }
-    }
+    const scoringEvents = state.eventLog.slice(logBeforeScoring).filter(e => e.event === EVT_SCORE_AWARDED);
+    const humanPlayerId = state.players[this.humanIndex].playerId;
+    const humanRoutesScored = scoringEvents.filter(e => e.player_id === humanPlayerId).length;
+    const maxRouteLength = scoringEvents.reduce((max, e) => Math.max(max, e.route_length as number), 0);
     this.engine._discardTableau();
     this.engine._advanceRound();
 
@@ -340,15 +338,14 @@ export class GameLoop {
 
     const action = ctx.passTurn ? "pass" : ctx.newRoute ? "new_route" : "extend";
     trackCardPlayed(owned.cardType, action);
-    if (ctx.passTurn) trackPassTaken(state.roundNumber);
 
     if (owned.cardType === CardType.NOISE) {
       const noiseEvents = state.eventLog.slice(this._lastLogIdx).filter(e => e.event === EVT_ROUTE_INVALIDATED && e.reason === "noise");
-      trackNoisePlayed(noiseEvents.length);
-      for (const e of noiseEvents) {
+      const destroyedLengths = noiseEvents.map(e => {
         const route = state.tableau.routes.find(r => r.routeId === e.route_id);
-        trackRouteDestroyed(route?.length ?? 0);
-      }
+        return route?.length ?? 0;
+      });
+      trackNoisePlayed(noiseEvents.length, destroyedLengths);
     }
 
     this._renderHeader(state);
@@ -390,13 +387,6 @@ export class GameLoop {
     const logBefore = state.eventLog.length;
     this.engine._runTurn(pIdx);
     const newEvents = state.eventLog.slice(logBefore);
-
-    for (const e of newEvents) {
-      if (e.event === EVT_ROUTE_INVALIDATED && e.reason === "noise") {
-        const route = state.tableau.routes.find(r => r.routeId === e.route_id);
-        trackRouteDestroyed(route?.length ?? 0);
-      }
-    }
 
     const playerId = state.players[pIdx].playerId;
 
@@ -561,7 +551,10 @@ export class GameLoop {
       e => e.event === "SCORE_AWARDED" && e.round === state.roundNumber
     );
 
-    trackRoundCompleted(state.roundNumber, state.players[this.humanIndex].score, scored.length);
+    const humanPlayerId = state.players[this.humanIndex].playerId;
+    const humanRoutesScored = scored.filter(e => e.player_id === humanPlayerId).length;
+    const maxRouteLength = scored.reduce((max, e) => Math.max(max, e.route_length as number), 0);
+    trackRoundCompleted(state.roundNumber, state.players[this.humanIndex].score, scored.length, humanRoutesScored, maxRouteLength);
     let html = `<h2>End of Round ${state.roundNumber}</h2>`;
 
     const scoreLine = state.players.map((p, i) => {

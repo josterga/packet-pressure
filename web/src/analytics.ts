@@ -8,8 +8,20 @@ export function trackGameStarted(playerCount: number, roundsMax: number, scoreTo
   _gtag("event", "game_started", { player_count: playerCount, rounds_max: roundsMax, score_to_win: scoreToWin });
 }
 
-export function trackRoundCompleted(roundNumber: number, humanScore: number, routesScoredCount: number): void {
-  _gtag("event", "round_completed", { round_number: roundNumber, human_score: humanScore, routes_scored_count: routesScoredCount });
+export function trackRoundCompleted(
+  roundNumber: number,
+  humanScore: number,
+  routesScoredCount: number,
+  humanRoutesScored: number,
+  maxRouteLength: number,
+): void {
+  _gtag("event", "round_completed", {
+    round_number: roundNumber,
+    human_score: humanScore,
+    routes_scored_count: routesScoredCount,
+    human_routes_scored: humanRoutesScored,
+    max_route_length: maxRouteLength,
+  });
 }
 
 export function trackGameCompleted(roundsPlayed: number, humanWon: boolean, humanScore: number, winnerScore: number, humanRank: number): void {
@@ -28,20 +40,13 @@ export function trackCardPlayed(cardType: string, action: "extend" | "new_route"
   _gtag("event", "card_played", { card_type: cardType, action });
 }
 
-export function trackNoisePlayed(routesDestroyed: number): void {
-  _gtag("event", "noise_played", { routes_destroyed: routesDestroyed });
-}
-
-export function trackPassTaken(roundNumber: number): void {
-  _gtag("event", "pass_taken", { round_number: roundNumber });
-}
-
-export function trackRouteScored(routeLength: number, terminationReason: string, score: number, humanOwned: boolean): void {
-  _gtag("event", "route_scored", { route_length: routeLength, termination_reason: terminationReason, score, human_owned: humanOwned });
-}
-
-export function trackRouteDestroyed(routeLength: number): void {
-  _gtag("event", "route_destroyed", { route_length: routeLength });
+export function trackNoisePlayed(routesDestroyed: number, destroyedLengths: number[]): void {
+  _gtag("event", "noise_played", {
+    routes_destroyed: routesDestroyed,
+    avg_destroyed_length: destroyedLengths.length > 0
+      ? Math.round(destroyedLengths.reduce((a, b) => a + b, 0) / destroyedLengths.length)
+      : 0,
+  });
 }
 
 export function trackHelpOpened(): void {
