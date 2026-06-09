@@ -15,8 +15,16 @@
         if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
       })();
     </script>
-    <script type="module" crossorigin src="/play/assets/index-BlAc0yfD.js"></script>
-    <link rel="stylesheet" crossorigin href="/play/assets/index-C_ft1vOP.css">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5MP6TMCJDY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-5MP6TMCJDY');
+    </script>
+    <script type="module" crossorigin src="/play/assets/index-DXx_nIeI.js"></script>
+    <link rel="stylesheet" crossorigin href="/play/assets/index-D3CcRYh9.css">
   </head>
   <body>
     <div id="app">
@@ -91,9 +99,14 @@
           <span class="pp-topstrip__sep">·</span>
           <span id="header-bar" class="dim"></span>
           <span class="pp-topstrip__spacer"></span>
-          <button id="btn-hints-toggle" class="pp-topstrip__btn is-on"><span class="full">Hints: on</span><span class="abbr">HNT</span></button>
-          <button id="btn-theme-toggle" class="pp-topstrip__btn"><span class="full">☾ Dark</span><span class="abbr">☾</span></button>
-          <button id="btn-help" class="pp-topstrip__btn"><span class="full">? Help</span><span class="abbr">?</span></button>
+          <div class="pp-topstrip__menu" id="topstrip-menu">
+            <button id="btn-menu" class="pp-topstrip__btn" aria-haspopup="true" aria-expanded="false">⋯</button>
+            <div class="pp-topstrip__dropdown hidden" id="menu-dropdown">
+              <button id="btn-hints-toggle" class="pp-topstrip__btn is-on">Hints: on</button>
+              <button id="btn-theme-toggle" class="pp-topstrip__btn">☾ Dark</button>
+              <button id="btn-help" class="pp-topstrip__btn">? Help</button>
+            </div>
+          </div>
           <button id="btn-quit" class="pp-topstrip__btn"><span class="full">× Quit</span><span class="abbr">×</span></button>
         </div>
 

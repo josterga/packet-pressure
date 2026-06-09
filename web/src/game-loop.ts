@@ -1,3 +1,4 @@
+import { trackGameCompleted, trackGameStarted, trackRoundCompleted } from "./analytics";
 import { DeckBuilder } from "./deck";
 import { GameEngine } from "./engine";
 import { Card, CardType, EVT_CARD_DRAWN, GameConfig, GameState, PlacementContext, PlayerState, emptyContext, lookupCard, makeMulberry32, passContext, routeIsOpen, targetContext } from "./models";
@@ -236,6 +237,7 @@ export class GameLoop {
     allPolicies.splice(this.humanIndex, 0, this.humanPolicy);
 
     this.engine = new GameEngine(this.config, allPolicies, deck, rng);
+    trackGameStarted(this.config.playerCount, this.config.maxRounds, this.config.scoreToWin);
     showScreen("game");
     this._runGame();
   }
@@ -522,6 +524,7 @@ export class GameLoop {
       e => e.event === "SCORE_AWARDED" && e.round === state.roundNumber
     );
 
+    trackRoundCompleted(state.roundNumber, state.players[this.humanIndex].score, scored.length);
     let html = `<h2>End of Round ${state.roundNumber}</h2>`;
 
     const scoreLine = state.players.map((p, i) => {
@@ -572,6 +575,8 @@ export class GameLoop {
     const ranked = [...state.players].sort((a, b) => b.score - a.score);
     const you    = state.players[this.humanIndex];
     const winner = ranked[0];
+    const humanRank = ranked.findIndex(p => state.players.indexOf(p) === this.humanIndex) + 1;
+    trackGameCompleted(state.roundNumber, you.playerId === winner.playerId, you.score, winner.score, humanRank);
 
     let html = `<h2>GAME OVER</h2>`;
     html += "<ol class='final-scores'>";
