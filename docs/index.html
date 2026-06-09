@@ -207,10 +207,12 @@
     </div>
   </section>
 
-  <!-- ── Install ── -->
+  <!-- ── Play ── -->
   <section class="install">
     <div class="container">
       <h2>Play it now</h2>
+      <p class="install-note"><a href="/play/" class="btn btn-primary">Play in Browser</a></p>
+      <h2 style="margin-top:2.5rem;">Run locally in terminal</h2>
       <div class="code-block">
         <pre><span class="comment"># requires Python 3.10+</span>
 git clone https://github.com/josterga/packet-pressure
@@ -219,7 +221,6 @@ pip install -r requirements.txt
 python -m packet_pressure.run_experiment --interactive    <span class="comment"># you vs AI opponents</span>
 python -m packet_pressure.run_experiment --solo           <span class="comment"># you control all players</span></pre>
       </div>
-      <p class="install-note">Or install as a package: <code>pip install git+https://github.com/josterga/packet-pressure</code> then run <code>packet-pressure --interactive</code>.</p>
     </div>
   </section>
 
