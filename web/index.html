@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Packet Pressure · /play</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        var stored = localStorage.getItem("pp-theme");
+        var osDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var t = stored || (osDark ? "dark" : "light");
+        if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+      })();
+    </script>
+    <script>
+    (function () {
+      var GA_ID = 'G-5MP6TMCJDY';
+      function loadGA() {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', GA_ID);
+      }
+      window.ppConsent = function (choice) {
+        localStorage.setItem('pp-consent', choice);
+        var b = document.getElementById('pp-consent-banner');
+        if (b) b.style.display = 'none';
+        if (choice === 'yes') loadGA();
+      };
+      var stored = localStorage.getItem('pp-consent');
+      if (stored === 'yes') { loadGA(); }
+      else if (!stored) {
+        document.addEventListener('DOMContentLoaded', function () {
+          var b = document.getElementById('pp-consent-banner');
+          if (b) b.style.display = 'flex';
+        });
+      }
+    })();
+    </script>
+  </head>
+  <body>
+    <div id="app">
+
+      <!-- START SCREEN -->
+      <div id="screen-start" class="screen">
+        <div class="pp-landing">
+
+          <div class="pp-topstrip">
+            <a href="/" class="pp-topstrip__brand" style="text-decoration:none;color:inherit;border:none">PACKET&nbsp;PRESSURE</a>
+            <span class="pp-topstrip__spacer"></span>
+            <button id="btn-start-help" class="pp-topstrip__btn">↗ Full rules</button>
+            <button id="btn-theme-toggle-start" class="pp-topstrip__btn">☾ Dark</button>
+            <a href="/privacy/" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Privacy</a>
+            <a href="/terms/" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Terms</a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSdgYoK3mfejXper7kxybo06wDFPMdA5gW2LcWSC9rCVsFO8Mw/viewform?usp=dialog" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Feedback</a>
+          </div>
+
+          <div class="pp-landing__main">
+            <div class="pp-landing__glyphs" aria-hidden>
+              <span style="color:var(--rel)">⇒</span>
+              <span style="color:var(--amp)">⊕</span>
+              <span style="color:var(--flt)">⊘</span>
+              <span style="color:var(--trm)">⊣</span>
+              <span style="color:var(--noise)">⚠</span>
+            </div>
+            <h1 class="pp-landing__title">PACKET&nbsp;PRESSURE</h1>
+            <p class="pp-landing__tag">Extend the route. Hold the endpoint.</p>
+            <div class="pp-landing__meta">
+              <span>3–5 players</span><span class="dot">·</span>
+              <span>~20 min</span><span class="dot">·</span>
+              <span id="seed-display">Seed …</span>
+            </div>
+            <div class="pp-landing__cta">
+              <button id="btn-start" class="pp-btn pp-btn--primary">▶ Start Game</button>
+            </div>
+            <div class="pp-panel pp-rules">
+              <div class="pp-rules__head">
+                <span>Quick rules</span>
+              </div>
+              <p class="pp-rules__pre">Draw a card, play a card. Chain nodes by matching channels. Whoever closes a route scores it.</p>
+              <div class="pp-rules__rows">
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--rel)">⇒</div>
+                  <div><span class="pp-rules__name">Relay</span><span class="pp-rules__desc"> — extends or starts a route</span></div>
+                </div>
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--trm)">⊣</div>
+                  <div><span class="pp-rules__name">Terminal</span><span class="pp-rules__desc"> — closes a route; scores its own PKT</span></div>
+                </div>
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--amp)">⊕</div>
+                  <div><span class="pp-rules__name">Amplifier</span><span class="pp-rules__desc"> — relay; ×2 if exit node</span></div>
+                </div>
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--noise)">⚠</div>
+                  <div><span class="pp-rules__name">Noise</span><span class="pp-rules__desc"> — destroys routes on a channel</span></div>
+                </div>
+                <div class="pp-rules__row">
+                  <div class="pp-rules__sym" style="color:var(--flt)">⊘</div>
+                  <div><span class="pp-rules__name">Filter</span><span class="pp-rules__desc"> — relay; immune to noise on its input</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- GAME SCREEN -->
+      <div id="screen-game" class="screen hidden">
+
+        <div class="pp-topstrip pp-topstrip--sticky">
+          <a href="/" class="pp-topstrip__brand" style="text-decoration:none;color:inherit;border:none"><span class="full">PACKET&nbsp;PRESSURE</span><span class="abbr">←</span></a>
+          <span class="pp-topstrip__sep">·</span>
+          <span id="header-bar" class="dim"></span>
+          <span class="pp-topstrip__spacer"></span>
+          <div class="pp-topstrip__menu" id="topstrip-menu">
+            <button id="btn-menu" class="pp-topstrip__btn" aria-haspopup="true" aria-expanded="false">⋯</button>
+            <div class="pp-topstrip__dropdown hidden" id="menu-dropdown">
+              <button id="btn-hints-toggle" class="pp-topstrip__btn is-on">Hints: on</button>
+              <button id="btn-theme-toggle" class="pp-topstrip__btn">☾ Dark</button>
+              <button id="btn-help" class="pp-topstrip__btn">? Help</button>
+              <a href="/privacy/" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Privacy</a>
+              <a href="/terms/" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Terms</a>
+              <a href="https://docs.google.com/forms/d/e/1FAIpQLSdgYoK3mfejXper7kxybo06wDFPMdA5gW2LcWSC9rCVsFO8Mw/viewform?usp=dialog" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Feedback</a>
+            </div>
+          </div>
+          <button id="btn-quit" class="pp-topstrip__btn"><span class="full">× Quit</span><span class="abbr">×</span></button>
+        </div>
+
+        <div id="scores-bar" class="pp-scoreboard"></div>
+
+        <div class="pp-tableau-wrap">
+          <div class="pp-tableau-col">
+            <div class="pp-tableau">
+              <div id="tableau-area"></div>
+            </div>
+            <button id="new-route-btn" class="pp-tableau__newroute hidden">+ NEW ROUTE</button>
+          </div>
+          <div id="event-log" class="pp-log">
+            <button class="pp-log__toggle" id="log-toggle" aria-expanded="false">
+              <span id="log-latest" class="pp-log__latest">—</span>
+              <span class="pp-log__chevron" aria-hidden="true">▾</span>
+            </button>
+            <div id="log-lines" class="pp-log__lines"></div>
+          </div>
+        </div>
+
+        <div id="hand-area" class="pp-hand">
+          <div id="hand-head" class="pp-hand__head">
+            <span id="hand-title">Your hand</span>
+            <span id="hand-hint" class="pp-hand__hint">Select a card to play</span>
+          </div>
+          <div id="hand-cards" class="pp-hand__cards"></div>
+        </div>
+
+      </div>
+
+      <!-- ROUND END SCREEN -->
+      <div id="screen-round-end" class="screen hidden overlay-screen">
+        <div class="overlay-box">
+          <div id="round-end-content"></div>
+          <div class="overlay-actions">
+            <button id="btn-continue" class="btn-primary">Next Round →</button>
+            <button id="btn-new-round-end" class="btn-secondary">New Game</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME OVER SCREEN -->
+      <div id="screen-game-over" class="screen hidden overlay-screen">
+        <div class="overlay-box">
+          <div id="game-over-content"></div>
+          <div class="overlay-actions">
+            <button id="btn-new-game-over" class="btn-primary">New Game</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HELP MODAL -->
+      <div id="help-modal" class="screen hidden overlay-screen">
+        <div class="overlay-box help-box">
+          <div class="help-header">
+            <span class="help-title">HOW TO PLAY</span>
+            <button id="btn-help-close" class="help-close">✕</button>
+          </div>
+          <div class="help-body">
+            <div class="help-section">
+              <div class="help-section-title">GOAL</div>
+              <p>First to reach 1200 points wins. If no one does, most points after round 4 wins.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">YOUR TURN</div>
+              <p>Draw one card, then play one card onto the tableau. Cards extend open routes or start new ones.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">ROUTES</div>
+              <p>A route chains when each node's output channel matches the next node's input channel. Routes need 2+ nodes to score. Max 3 hops; max 3 routes open at once. No output channel can appear twice in the same route.</p>
+              <p>Any player can extend any open route. The player who places the last card — the endpoint — scores it. Routes are contested until they close (hop limit reached or a terminal is played on them).</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">CARRY</div>
+              <p>Routes under 2 nodes at round end carry into the next round — they don't score and aren't discarded.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">ROUND STRUCTURE</div>
+              <p>Each player takes 2 turns per round. After all turns, routes score and hands refill to 4 cards.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">PASSING</div>
+              <p>You may only pass if you have no legal play. You still draw.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">CARD TYPES</div>
+              <div class="help-cards">
+                <div class="help-card-row"><span style="color:var(--rel)">⇒ Relay</span> — extends a route (input→output); starts a new route if the cap allows and no route can be extended</div>
+                <div class="help-card-row"><span style="color:var(--trm)">⊣ Terminal</span> — closes any open route (≥2 nodes); the terminal's own PKT value scores</div>
+                <div class="help-card-row"><span style="color:var(--amp)">⊕ Amplifier</span> — extends like a relay; if it's the exit node at scoring, value ×2</div>
+                <div class="help-card-row"><span>⚠ Noise</span> — targets a fixed channel; destroys all scoring routes that use it as an interior output (not the exit node) — including your own; only legal when such a route exists</div>
+                <div class="help-card-row"><span style="color:var(--flt)">⊘ Filter</span> — extends like a relay; if noise targets its input channel, the whole route is immune on that channel only</div>
+              </div>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">SCORING</div>
+              <p>At the end of each round, all valid routes (≥2 nodes) score. PKT on each card is its packet value — the points you score if it's your exit node. Only the exit node's packet value counts — no sum. The exit node's owner collects the points.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">TURN ORDER</div>
+              <p>Round winner goes first next round. On a tie, order is unchanged.</p>
+            </div>
+            <div class="help-section">
+              <div class="help-section-title">HINTS</div>
+              <p>When hints are on, cards with no valid play are dimmed. Select a card to see PLAY HERE slots on valid routes.</p>
+            </div>
+          </div>
+          <div class="overlay-actions">
+            <button id="btn-help-close-bottom" class="btn-primary">Got it</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Cookie consent banner -->
+    <div id="pp-consent-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--bg);border-top:1px solid var(--border);padding:12px 24px;font-family:inherit;font-size:13px;align-items:center;gap:16px;flex-wrap:wrap">
+      <span style="flex:1;min-width:200px;color:var(--dim)">We use analytics to understand how the game is played — no personal data collected. <a href="/privacy/" style="color:var(--rel)">Privacy policy</a></span>
+      <button onclick="ppConsent('yes')" style="background:var(--rel);color:#0a0f1e;border:none;padding:6px 16px;font-family:inherit;font-size:13px;cursor:pointer">Accept</button>
+      <button onclick="ppConsent('no')" style="background:none;color:var(--dim);border:1px solid var(--border);padding:6px 16px;font-family:inherit;font-size:13px;cursor:pointer">Decline</button>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy · Packet Pressure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <script>
+    (function () {
+      var saved = localStorage.getItem('theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <style>
+    .legal { padding: 72px 0; }
+    .legal h1 { font-size: 1.4em; margin-bottom: 8px; }
+    .legal .meta { color: var(--dim); margin-bottom: 48px; font-size: 13px; }
+    .legal h2 { margin: 36px 0 8px; font-size: 1em; color: var(--teal); }
+    .legal p { margin-bottom: 16px; color: var(--dim); }
+    .legal a { color: var(--teal); }
+    .back { display: inline-block; margin-bottom: 32px; color: var(--dim); font-size: 13px; }
+    .back:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <div class="legal">
+    <div class="container">
+      <a href="/" class="back">← Packet Pressure</a>
+      <h1>Privacy Policy</h1>
+      <p class="meta">Effective date: 2026-06-09 &nbsp;·&nbsp; packetpressure.com</p>
+
+      <h2>What we collect</h2>
+      <p>This site uses Google Analytics 4 (GA4) to collect anonymous gameplay telemetry. This includes: game configuration (player count, round count), round and game outcomes, card types played, and gameplay events (help opened, hints toggled). No personally identifiable information is collected. No account is required to play.</p>
+      <p>This site also stores your theme preference and hints preference in your browser's <code>localStorage</code>. These values never leave your device.</p>
+
+      <h2>Why we collect it</h2>
+      <p>Gameplay telemetry is used to understand how the game is played — which cards are most common, how long games last, how often the game is completed — so we can improve the rules and balance.</p>
+
+      <h2>Your consent</h2>
+      <p>Analytics are only loaded after you click <strong>Accept</strong> on the cookie banner. If you click <strong>Decline</strong>, no analytics data is sent. You can change your choice at any time by clearing your browser's <code>localStorage</code> for this site.</p>
+
+      <h2>Third parties</h2>
+      <p>Analytics data is processed by Google LLC under their <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Privacy Policy</a>. No data is sold or shared with any other party.</p>
+
+      <h2>Data retention</h2>
+      <p>GA4 retains event data for 14 months by default. No other data is stored server-side — this is a static site.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about this policy: <a href="mailto:parcl0@pm.me">parcl0@pm.me</a></p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      © 2026 Packet Pressure &middot;
+      <a href="https://github.com/josterga/packet-pressure/blob/main/LICENSE">CC BY-NC 4.0</a>
+      &middot;
+      <a href="https://github.com/josterga/packet-pressure">GitHub</a>
+      &middot;
+      <a href="/privacy/">Privacy</a>
+      &middot;
+      <a href="/terms/">Terms</a>
+    </div>
+  </footer>
+
+</body>
+</html>

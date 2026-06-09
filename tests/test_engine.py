@@ -147,6 +147,22 @@ class TestRouteExtension:
         can = engine._can_extend(s.tableau.routes[0], c_return)
         assert can is False
 
+    def test_no_output_channel_reuse(self):
+        engine = make_engine(n_policies=3)
+        s = engine.state
+
+        # Route starts with output channel "01" in channels_in_route
+        c1 = make_card("PKT-A", in_ch="03", out_ch="01", owner="P0")
+        s.register_card(c1)
+        s.tableau.active_cards[c1.card_id] = c1
+        engine._try_start_route(c1)
+
+        # c2 input matches route tail ("01"), but output "01" already in channels_in_route
+        c2 = make_card("PKT-B", in_ch="01", out_ch="01", owner="P1")
+        s.register_card(c2)
+        can = engine._can_extend(s.tableau.routes[0], c2)
+        assert can is False
+
 
 # ---------------------------------------------------------------------------
 # Terminal node

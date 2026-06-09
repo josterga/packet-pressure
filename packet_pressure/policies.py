@@ -58,15 +58,14 @@ class PlayerPolicy(ABC):
                         plays.append((card, ctx))
             else:
                 valid_route_count = sum(1 for r in state.tableau.routes if r.is_open())
-                cap_reached = valid_route_count >= state.config.seed_nodes_per_round
+                cap_reached = valid_route_count >= state.config.max_open_routes
                 extendable = [
                     r for r in open_routes
                     if self._can_card_extend_route(card, r, state)
                 ]
-                if extendable:
-                    for route in extendable:
-                        plays.append((card, PlacementContext(target_route_id=route.route_id)))
-                elif not cap_reached:
+                for route in extendable:
+                    plays.append((card, PlacementContext(target_route_id=route.route_id)))
+                if not cap_reached:
                     plays.append((card, PlacementContext()))
 
         return plays if plays else self._fallback_play(state, player)

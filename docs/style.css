@@ -332,6 +332,20 @@ h2 {
   border: 1px solid color-mix(in srgb, var(--purple) 30%, transparent);
 }
 
+/* ── Roadmap done badge ── */
+.badge-done {
+  background: color-mix(in srgb, var(--teal) 15%, transparent);
+  color: var(--teal);
+  border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent);
+}
+
+.roadmap-link {
+  color: var(--teal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.roadmap-link:hover { opacity: 0.8; }
+
 /* ── Footer ── */
 footer {
   border-top: 1px solid var(--border);

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 
 import numpy as np
 
@@ -121,10 +120,14 @@ class HumanPolicy(PlayerPolicy):
                 return card, PlacementContext(pass_turn=True)
             if len(matching) == 1:
                 return card, matching[0][1]
-            # Multiple routes available — ask the user which one to target
+            # Multiple options — ask the user which one to target
             route_ids = [ctx.target_route_id for _, ctx in matching if ctx.target_route_id]
             open_routes = [r for r in state.tableau.routes if r.route_id in route_ids]
-            route_id = self._prompt_route(state, open_routes, prompt="  Extend which route")
+            has_new_route = any(ctx.target_route_id is None for _, ctx in matching)
+            route_id = self._prompt_route(state, open_routes, prompt="  Extend which route",
+                                          include_new_route=has_new_route)
+            if route_id is None:
+                return card, PlacementContext(new_route=True)
             ctx = next((c for _, c in matching if c.target_route_id == route_id), matching[0][1])
             return card, ctx
 
@@ -182,7 +185,9 @@ class HumanPolicy(PlayerPolicy):
             elif card.card_type == CardType.TERMINAL:
                 for route in open_routes:
                     if route.length >= cfg.route_min_length:
-                        card_hints.append(f"→ TERM {route.route_id} ✓")
+                        card_hints.append(f"terminate {route.route_id}")
+                if not card_hints:
+                    card_hints.append("no routes to terminate")
 
             else:
                 for route in open_routes:
@@ -194,30 +199,36 @@ class HumanPolicy(PlayerPolicy):
                         card_hints.append(f"→ FLT {route.route_id}")
                     else:
                         card_hints.append(f"→ {route.route_id}")
-                if not card_hints:
-                    cap_reached = sum(1 for r in state.tableau.routes if r.is_open()) >= cfg.max_open_routes
-                    if not cap_reached:
-                        card_hints = ["→ new route"]
+                cap_reached = sum(1 for r in state.tableau.routes if r.is_open()) >= cfg.max_open_routes
+                if not cap_reached:
+                    card_hints.append("→ new route")
 
             hints.append(card_hints)
 
         return hints
 
-    def _prompt_route(self, state: GameState, open_routes: list, prompt: str = "  Terminate which route") -> str:
+    def _prompt_route(self, state: GameState, open_routes: list, prompt: str = "  Terminate which route",
+                      include_new_route: bool = False) -> str | None:
         from .display import _render_route_line
         print()
         for i, route in enumerate(open_routes):
             print(f"  [{i + 1}]  {_render_route_line(route, state).strip()}")
+        new_route_idx = len(open_routes) + 1
+        if include_new_route:
+            print(f"  [{new_route_idx}]  → new route")
+        total = new_route_idx if include_new_route else len(open_routes)
         while True:
             try:
-                raw = input(f"  {prompt} [1-{len(open_routes)}]: ").strip()
+                raw = input(f"  {prompt} [1-{total}]: ").strip()
             except (EOFError, KeyboardInterrupt):
                 raise SystemExit(0)
             if raw.isdigit():
                 idx = int(raw) - 1
                 if 0 <= idx < len(open_routes):
                     return open_routes[idx].route_id
-            print(f"  Enter a number between 1 and {len(open_routes)}.")
+                if include_new_route and idx == len(open_routes):
+                    return None
+            print(f"  Enter a number between 1 and {total}.")
 
     def _prompt_channel(self, state: GameState, channels: list[str]) -> str:
         print()
@@ -326,9 +337,11 @@ class InteractiveGame:
             if self.solo or p_idx == self.human_index:
                 self._print_human_turn_result(new_events, state)
             else:
-                self._print_opponent_turn(new_events, state, p_idx)
-                if self.opponent_delay > 0:
-                    time.sleep(self.opponent_delay)
+                if not engine._is_terminal():
+                    self._print_between_turns(state)
+                    self._print_opponent_turn(new_events, state, p_idx)
+                    input("  Press Enter to continue…")
+                continue
 
             is_last = i + 1 >= len(all_turns)
             next_is_human = (
@@ -365,7 +378,6 @@ class InteractiveGame:
     def _print_opponent_turn(
         self, events: list[dict], state: GameState, p_idx: int
     ) -> None:
-        policy_name = self._engine.policies[p_idx].name
         player_id = state.players[p_idx].player_id
 
         key_lines = []
@@ -378,7 +390,7 @@ class InteractiveGame:
                 key_lines.append(rendered.strip())
 
         if key_lines:
-            print(f"  {player_id} [{policy_name}]:")
+            print(f"  {player_id}:")
             for line in key_lines[:3]:
                 print(f"    {line}")
 
@@ -416,7 +428,7 @@ class InteractiveGame:
             tag = ""
             if not self.solo and state.players.index(p) == self.human_index:
                 tag = " ← you"
-            print(f"  #{rank + 1}  {p.player_id} [{p.policy_name}]{'':>4}{p.score}{tag}")
+            print(f"  #{rank + 1}  {p.player_id}{'':>4}{p.score}{tag}")
 
         winner = ranked[0]
         print()

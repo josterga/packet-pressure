@@ -1,0 +1,30 @@
+import { GameConfig } from "./models";
+
+export const FAST_CONFIG: GameConfig = {
+  playerCount: 3,
+  scoreToWin: 1200,
+  maxRounds: 4,
+  startingHandSize: 4,
+  drawPerTurn: 1,
+  turnsPerPlayerPerRound: 2,
+  channels: ["01", "02", "03"],
+  channelShapes: ["circle", "square", "triangle"],
+  channelColors: ["teal", "orange", "purple"],
+  colors: ["red", "blue", "green", "yellow"],
+  seedNodesPerRound: 2,
+  routeMinLength: 2,
+  deckSize: 60,
+  noLoops: true,
+  noReturnToFirstHop: false,
+  winnerGoesFirst: true,
+  amplifierMultiplier: 2,
+  noiseScope: "single",
+  terminalPacketValues: [400, 500, 600, 700],
+  specialDistribution: [
+    ["terminal", 0.10],
+    ["amplifier", 0.08],
+    ["noise", 0.07],
+    ["filter", 0.06],
+  ],
+  packetValues: [100, 100, 200, 200, 300, 400, 500, 600, 700],
+};

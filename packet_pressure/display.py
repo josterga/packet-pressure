@@ -177,7 +177,7 @@ def print_how_to_play(config: "GameConfig") -> None:
     _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if cap allows and can't extend any")
     _row("⊣", _ORANGE, "Terminal",  "closes any open route (≥ 2 nodes); terminal's own value scores")
     _row("⊕", _PURPLE, "Amplifier", "extends like a relay; if exit node at scoring, value ×2")
-    _row("⚠", _RED,    "Noise",     "targets a fixed channel; destroys all scoring routes whose current output channel matches — including your own; only legal when such a route exists")
+    _row("⚠", _RED,    "Noise",     "targets a fixed channel; destroys all scoring routes that use it as an interior output (not the exit node) — including your own; only legal when such a route exists")
     _row("⊘", _GREEN,  "Filter",    "extends like a relay; if noise targets its input channel, the whole route is immune on that channel only")
 
     _section("SCORING")
@@ -509,7 +509,7 @@ def render_round_header(state: "GameState") -> str:
 # ---------------------------------------------------------------------------
 
 _SKIP_EVENTS = {
-    "ROUND_START", "ROUND_END", "CARD_DRAWN",
+    "ROUND_START", "ROUND_END",
     "ROUTE_STARTED", "GAME_OVER",
 }
 
@@ -521,6 +521,14 @@ def render_event(event: dict, state: "GameState") -> str | None:
 
     player = event.get("player", "?")
     cfg = state.config
+
+    if etype == "CARD_DRAWN":
+        card = state.lookup_card(event.get("card_id", ""))
+        if card is None:
+            return None
+        in_ch = channel_tag(card.input_channel, cfg) if card.input_channel else "—"
+        out_ch = channel_tag(card.output_channel, cfg) if card.output_channel else "—"
+        return f"  {player}  drew {card.card_id}  {in_ch}→{out_ch}  PKT {card.packet_value}"
 
     if etype == "CARD_PLAYED":
         card = state.lookup_card(event.get("card_id", ""))

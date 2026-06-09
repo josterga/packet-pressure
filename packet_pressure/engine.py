@@ -208,7 +208,10 @@ class GameEngine:
         self._resolve_card_effects(owned_card)
 
         # 6. Update routes
-        self._update_routes(owned_card)
+        if getattr(context, "new_route", False):
+            self._try_start_route(owned_card)
+        else:
+            self._update_routes(owned_card)
 
     def _apply_play(self, player_index: int, card: Card,
                     legal_count: int = 0, target_route_id: str | None = None) -> Card:
