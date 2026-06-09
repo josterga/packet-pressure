@@ -1,7 +1,7 @@
-import { trackGameCompleted, trackGameStarted, trackRoundCompleted } from "./analytics";
+import { trackCardPlayed, trackGameAbandoned, trackGameCompleted, trackGameStarted, trackHelpOpened, trackHintsToggled, trackNewGame, trackNoisePlayed, trackPassTaken, trackRouteDestroyed, trackRouteScored, trackRoundCompleted } from "./analytics";
 import { DeckBuilder } from "./deck";
 import { GameEngine } from "./engine";
-import { Card, CardType, EVT_CARD_DRAWN, GameConfig, GameState, PlacementContext, PlayerState, emptyContext, lookupCard, makeMulberry32, passContext, routeIsOpen, targetContext } from "./models";
+import { Card, CardType, EVT_CARD_DRAWN, EVT_ROUTE_INVALIDATED, EVT_SCORE_AWARDED, GameConfig, GameState, PlacementContext, PlayerState, emptyContext, lookupCard, makeMulberry32, passContext, routeIsOpen, targetContext } from "./models";
 import { PlayerPolicy, makeDefaultPolicies } from "./policies";
 import { HumanPolicy } from "./human-policy";
 import {
@@ -110,11 +110,13 @@ export class GameLoop {
     });
     el("btn-start").addEventListener("click", () => this._startGame());
     el("btn-new-game-over").addEventListener("click", () => {
+      trackNewGame("game_over");
       this.seed = Math.floor(Math.random() * 0xffffffff);
       showScreen("start");
       this._updateSeedDisplay();
     });
     el("btn-new-round-end").addEventListener("click", () => {
+      trackNewGame("round_end");
       this.seed = Math.floor(Math.random() * 0xffffffff);
       showScreen("start");
       this._updateSeedDisplay();
@@ -123,7 +125,7 @@ export class GameLoop {
   }
 
   private _setupHelp(): void {
-    const openHelp  = () => el("help-modal").classList.remove("hidden");
+    const openHelp  = () => { trackHelpOpened(); el("help-modal").classList.remove("hidden"); };
     const closeHelp = () => el("help-modal").classList.add("hidden");
     el("btn-help").addEventListener("click", openHelp);
     el("btn-start-help").addEventListener("click", openHelp);
@@ -185,7 +187,11 @@ export class GameLoop {
     };
     const stored = localStorage.getItem("pp-hints") !== "off";
     apply(stored);
-    btn.addEventListener("click", () => apply(document.body.classList.contains("hints-off")));
+    btn.addEventListener("click", () => {
+      const turningOn = document.body.classList.contains("hints-off");
+      trackHintsToggled(turningOn);
+      apply(turningOn);
+    });
   }
 
   private _setupMenu(): void {
@@ -208,6 +214,10 @@ export class GameLoop {
 
   private _setupQuit(): void {
     el("btn-quit").addEventListener("click", () => {
+      if (this.engine && !this.engine._isTerminal()) {
+        const s = this.engine.state;
+        trackGameAbandoned(s.roundNumber, s.players[this.humanIndex].score);
+      }
       this._aborted = true;
       el("help-modal").classList.add("hidden");
       this.seed = Math.floor(Math.random() * 0xffffffff);
@@ -288,7 +298,14 @@ export class GameLoop {
       state.turnNumber += 1;
     }
 
+    const logBeforeScoring = state.eventLog.length;
     this.engine._endOfRoundScoring();
+    for (const e of state.eventLog.slice(logBeforeScoring)) {
+      if (e.event === EVT_SCORE_AWARDED) {
+        const humanOwned = e.player_id === state.players[this.humanIndex].playerId;
+        trackRouteScored(e.route_length as number, e.termination_reason as string, e.score as number, humanOwned);
+      }
+    }
     this.engine._discardTableau();
     this.engine._advanceRound();
 
@@ -319,6 +336,19 @@ export class GameLoop {
       (this.engine as any)._tryStartRoute(owned);
     } else {
       (this.engine as any)._updateRoutes(owned);
+    }
+
+    const action = ctx.passTurn ? "pass" : ctx.newRoute ? "new_route" : "extend";
+    trackCardPlayed(owned.cardType, action);
+    if (ctx.passTurn) trackPassTaken(state.roundNumber);
+
+    if (owned.cardType === CardType.NOISE) {
+      const noiseEvents = state.eventLog.slice(this._lastLogIdx).filter(e => e.event === EVT_ROUTE_INVALIDATED && e.reason === "noise");
+      trackNoisePlayed(noiseEvents.length);
+      for (const e of noiseEvents) {
+        const route = state.tableau.routes.find(r => r.routeId === e.route_id);
+        trackRouteDestroyed(route?.length ?? 0);
+      }
     }
 
     this._renderHeader(state);
@@ -360,6 +390,13 @@ export class GameLoop {
     const logBefore = state.eventLog.length;
     this.engine._runTurn(pIdx);
     const newEvents = state.eventLog.slice(logBefore);
+
+    for (const e of newEvents) {
+      if (e.event === EVT_ROUTE_INVALIDATED && e.reason === "noise") {
+        const route = state.tableau.routes.find(r => r.routeId === e.route_id);
+        trackRouteDestroyed(route?.length ?? 0);
+      }
+    }
 
     const playerId = state.players[pIdx].playerId;
 
