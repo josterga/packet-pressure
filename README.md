@@ -215,7 +215,7 @@ Use filters to insure your investment. A long route is a tempting noise target �
 
 ### ⚠ Noise
 
-Disrupts a specific channel, destroying all scoring-eligible routes (≥ 2 nodes) that output to it. Each noise card targets a fixed channel determined when the card is created — you don't choose the channel at play time.
+Disrupts a specific channel, destroying all scoring-eligible routes (≥ 2 nodes) that use it as an interior output. Each noise card targets a fixed channel determined when the card is created — you don't choose the channel at play time.
 
 ```
 ┌──────────────────┐
@@ -229,8 +229,8 @@ Disrupts a specific channel, destroying all scoring-eligible routes (≥ 2 nodes
 ```
 
 - The target channel is fixed and shown on the card — it cannot be changed when played
-- Playable only when at least one scoring-eligible route outputs to the card's fixed channel
-- All eligible routes outputting to that channel are immediately destroyed; their cards go to the discard pile. "Outputting to" means the route's **current exit channel** (its tail) — a route that passed through that channel earlier but now exits at a different channel is not affected.
+- Playable only when at least one scoring-eligible route uses the card's fixed channel as an interior output
+- All scoring-eligible routes where any **interior** node outputs to that channel are immediately destroyed — interior means any node except the route's last/exit node. A route whose only connection to that channel is as its exit output is **not** affected.
 - Destroyed routes do not carry over to the next round — they are gone
 - Routes shorter than 2 nodes are not affected
 - Watch out: noise destroys any route outputting to that channel, including your own
@@ -256,10 +256,10 @@ You still draw a card on a pass. You simply don't place anything in the tableau 
 
 A **legal play** is any card in your hand that has at least one valid target in the current tableau. A card is legal if:
 
-- It can extend a compatible open route (input channel matches the route's tail, output channel unvisited in that route, route not full)
+- It can extend a compatible open route (input channel matches the route's tail, output channel not already used in that route, route not full)
 - It can start a new route (route cap not reached, card type is relay/amplifier/filter)
 - It is a terminal and at least one open, non-full route has ≥ 2 nodes
-- It is a noise card and at least one scoring-eligible route outputs to the card's fixed channel
+- It is a noise card and at least one scoring-eligible route uses the card's fixed channel as an interior output
 
 If none of your cards qualify, you must pass.
 
@@ -269,12 +269,12 @@ If none of your cards qualify, you must pass.
 | ⊕ Amplifier     | Same as relay; ×2 score if exit node at round end |
 | ⊘ Filter        | Same as relay; absorbs noise targeting its input channel |
 | ⊣ Terminal      | Terminate any open, non-full route ≥ 2 nodes; earns terminal's own packet value |
-| ⚠ Noise         | Destroy all scoring-eligible routes whose output channel matches the card's fixed channel |
+| ⚠ Noise         | Destroy all scoring-eligible routes that use the card's fixed channel as an interior output |
 
 To extend a route, your card must:
 
 - Have an input channel matching the route's current tail (or be ANY)
-- Output to a channel the route hasn't yet visited (routes visit each channel at most once)
+- Output to a channel not already used as an output in that route (no output channel may appear twice)
 
 ---
 

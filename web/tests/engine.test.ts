@@ -129,6 +129,22 @@ describe("route extension", () => {
     const canExtend = (engine as any)._canExtend(s.tableau.routes[0], cReturn);
     expect(canExtend).toBe(false);
   });
+
+  it("does not extend when output channel already in route", () => {
+    const engine = makeEngine();
+    const s = engine.state;
+
+    // Route already has "01" in channelsInRoute
+    const c1 = makeCard("PKT-A", CardType.RELAY, "03", "01", 100, "P0");
+    addToTableau(engine, c1);
+    (engine as any)._tryStartRoute(c1);
+
+    // c2 input matches route tail ("01"), but output "01" is already in channelsInRoute
+    const c2 = makeCard("PKT-B", CardType.RELAY, "01", "01", 100, "P1");
+    registerCard(s, c2);
+    const canExtend = (engine as any)._canExtend(s.tableau.routes[0], c2);
+    expect(canExtend).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------

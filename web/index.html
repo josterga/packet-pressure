@@ -188,7 +188,7 @@
                 <div class="help-card-row"><span style="color:var(--rel)">⇒ Relay</span> — extends a route (input→output); starts a new route if the cap allows and no route can be extended</div>
                 <div class="help-card-row"><span style="color:var(--trm)">⊣ Terminal</span> — closes any open route (≥2 nodes); the terminal's own PKT value scores</div>
                 <div class="help-card-row"><span style="color:var(--amp)">⊕ Amplifier</span> — extends like a relay; if it's the exit node at scoring, value ×2</div>
-                <div class="help-card-row"><span>⚠ Noise</span> — targets a fixed channel; destroys all scoring routes whose current output channel matches — including your own; only legal when such a route exists</div>
+                <div class="help-card-row"><span>⚠ Noise</span> — targets a fixed channel; destroys all scoring routes that use it as an interior output (not the exit node) — including your own; only legal when such a route exists</div>
                 <div class="help-card-row"><span style="color:var(--flt)">⊘ Filter</span> — extends like a relay; if noise targets its input channel, the whole route is immune on that channel only</div>
               </div>
             </div>

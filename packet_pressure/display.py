@@ -177,7 +177,7 @@ def print_how_to_play(config: "GameConfig") -> None:
     _row("⇒", _TEAL,   "Relay",     "extends a route (input → output); starts new if cap allows and can't extend any")
     _row("⊣", _ORANGE, "Terminal",  "closes any open route (≥ 2 nodes); terminal's own value scores")
     _row("⊕", _PURPLE, "Amplifier", "extends like a relay; if exit node at scoring, value ×2")
-    _row("⚠", _RED,    "Noise",     "targets a fixed channel; destroys all scoring routes whose current output channel matches — including your own; only legal when such a route exists")
+    _row("⚠", _RED,    "Noise",     "targets a fixed channel; destroys all scoring routes that use it as an interior output (not the exit node) — including your own; only legal when such a route exists")
     _row("⊘", _GREEN,  "Filter",    "extends like a relay; if noise targets its input channel, the whole route is immune on that channel only")
 
     _section("SCORING")
