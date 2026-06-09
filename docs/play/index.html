@@ -15,13 +15,35 @@
         if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
       })();
     </script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5MP6TMCJDY"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-5MP6TMCJDY');
+    (function () {
+      var GA_ID = 'G-5MP6TMCJDY';
+      function loadGA() {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', GA_ID);
+      }
+      window.ppConsent = function (choice) {
+        localStorage.setItem('pp-consent', choice);
+        var b = document.getElementById('pp-consent-banner');
+        if (b) b.style.display = 'none';
+        if (choice === 'yes') loadGA();
+      };
+      var stored = localStorage.getItem('pp-consent');
+      if (stored === 'yes') { loadGA(); }
+      else if (!stored) {
+        document.addEventListener('DOMContentLoaded', function () {
+          var b = document.getElementById('pp-consent-banner');
+          if (b) b.style.display = 'flex';
+        });
+      }
+    })();
     </script>
     <script type="module" crossorigin src="/play/assets/index-CEjrvq9J.js"></script>
     <link rel="stylesheet" crossorigin href="/play/assets/index-D3CcRYh9.css">
@@ -38,6 +60,8 @@
             <span class="pp-topstrip__spacer"></span>
             <button id="btn-start-help" class="pp-topstrip__btn">↗ Full rules</button>
             <button id="btn-theme-toggle-start" class="pp-topstrip__btn">☾ Dark</button>
+            <a href="/privacy/" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Privacy</a>
+            <a href="/terms/" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Terms</a>
           </div>
 
           <div class="pp-landing__main">
@@ -105,6 +129,8 @@
               <button id="btn-hints-toggle" class="pp-topstrip__btn is-on">Hints: on</button>
               <button id="btn-theme-toggle" class="pp-topstrip__btn">☾ Dark</button>
               <button id="btn-help" class="pp-topstrip__btn">? Help</button>
+              <a href="/privacy/" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Privacy</a>
+              <a href="/terms/" target="_blank" rel="noopener" class="pp-topstrip__btn" style="text-decoration:none">Terms</a>
             </div>
           </div>
           <button id="btn-quit" class="pp-topstrip__btn"><span class="full">× Quit</span><span class="abbr">×</span></button>
@@ -222,5 +248,13 @@
       </div>
 
     </div>
+
+    <!-- Cookie consent banner -->
+    <div id="pp-consent-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--bg);border-top:1px solid var(--border);padding:12px 24px;font-family:inherit;font-size:13px;align-items:center;gap:16px;flex-wrap:wrap">
+      <span style="flex:1;min-width:200px;color:var(--dim)">We use analytics to understand how the game is played — no personal data collected. <a href="/privacy/" style="color:var(--rel)">Privacy policy</a></span>
+      <button onclick="ppConsent('yes')" style="background:var(--rel);color:#0a0f1e;border:none;padding:6px 16px;font-family:inherit;font-size:13px;cursor:pointer">Accept</button>
+      <button onclick="ppConsent('no')" style="background:none;color:var(--dim);border:1px solid var(--border);padding:6px 16px;font-family:inherit;font-size:13px;cursor:pointer">Decline</button>
+    </div>
+
   </body>
 </html>
