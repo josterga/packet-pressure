@@ -2,6 +2,10 @@
 
 A competitive routing game — routes are shared infrastructure. Anyone can extend them, anyone can steal them. You gain points by holding the endpoint at round end. · 3–5 players · ~20 min
 
+Playable in [browser](https://packetpressure.com/play)
+![a title header](assets/gameplay-wide.gif)
+
+
 ## Quickstart
 
 ```bash
