@@ -41,7 +41,7 @@ Be the first player to reach 2,000 points. If no one reaches the target, whoever
 3. Deal each player a starting hand of 4 cards.
 4. The player to the left of the dealer goes first.
 
-Why fewer seeds than players? Seeds per round = player count − 1, so one player each round has no seed to extend from — they must contest an existing route from the start.
+Why fewer seeds than players? Every shipped preset sets seeds per round to player count − 1, so one player each round has no seed to extend from — they must contest an existing route from the start. This isn't hardcoded: `seed_nodes_per_round` is an independent config field that happens to be set this way in every preset.
 
 ## The Tableau
 
@@ -91,9 +91,9 @@ Only relay, amplifier, and filter cards can start a new route. Terminal and nois
 
 Key rules:
 
-- Routes must be at least 2 nodes long to score.
+- Routes must be at least 2 nodes long to score (configurable via `route_min_length`; every shipped preset uses 2).
 - Each channel may be used as an **output** at most once per route — this caps route length at the number of channels (3 by default). Channels can appear in any order; the only constraint is that no channel has already been used as a card's output in that route. The entry channel (input of the first card) is not counted, so a route can output back to it later.
-- No more than [player count] routes can be open at the same time. Routes **close** when terminated by a terminal card or when they reach the hop limit — they can no longer be extended but stay in the tableau until round end. Closed routes do **not** count against the open-route cap, and can still be noised. A route broken by noise is **destroyed**: it's removed immediately, doesn't score, and doesn't carry over. The total number of open routes in the tableau can never exceed the player count.
+- No more than [player count] routes can be open at the same time — this is a fixed property of the game, not a per-preset setting. Routes **close** when terminated by a terminal card or when they reach the hop limit — they can no longer be extended but stay in the tableau until round end. Closed routes do **not** count against the open-route cap, and can still be noised. A route broken by noise is **destroyed**: it's removed immediately, doesn't score, and doesn't carry over. The total number of open routes in the tableau can never exceed the player count.
 
 ## Route Ownership
 
@@ -386,7 +386,11 @@ Key flags:
 | `no_special` | 4 | 3 | 3 | 4 | 2000 | 5 | 80 (relay only) | 3 |
 | `print` | 4 | 3 | 3 | 4 | 2000 | 5 | 80 (fixed distribution) | 3 |
 
-Three rules govern routing across all presets: seeds per round = player count − 1 (one player each round has no seed to extend from the start); max concurrent open routes = player count; hop limit = channel count (routes cannot revisit a channel, so these two constraints are equivalent).
+Two of these relationships are fixed properties of the engine, not per-preset settings: max concurrent open routes always equals player count, and the hop limit always equals the channel count (routes can't revisit a channel, so a route tops out once every channel has been used once as an output). Channel count itself is configurable — `competitive` already runs 4 channels instead of the default 3 — so the hop limit scales automatically if you add channels.
+
+Seed count is different: seeds per round = player count − 1 is a convention every shipped preset follows (so exactly one player starts each round without a seed to extend), but it's an independent config field, not derived automatically — a custom config could set it differently.
+
+Physical/IRL play isn't limited to the shipped presets — player count and channel count can both be adjusted, and the derived values (hop limit, max open routes) scale with them automatically. The `--interactive`/`--solo`/simulation modes just run whichever preset's fixed config is passed in via `--preset`.
 
 `competitive` uses amplifier multiplier ×3 (all other presets use the default ×2).
 

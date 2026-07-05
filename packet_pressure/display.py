@@ -155,7 +155,7 @@ def print_how_to_play(config: "GameConfig") -> None:
 
     _section("ROUTES")
     print("    " + _dim("A route chains when each node's output channel matches"))
-    print("    " + _dim("the next node's input channel. Routes need 2+ nodes to"))
+    print("    " + _dim(f"the next node's input channel. Routes need {config.route_min_length}+ nodes to"))
     print("    " + _dim(f"score. Max {config.route_max_hops} hops; max {config.max_open_routes} routes open at once."))
     print("    " + _dim("No output channel can appear twice in the same route."))
     print("    " + _dim("Any player can extend any open route. The player who places"))
@@ -163,7 +163,7 @@ def print_how_to_play(config: "GameConfig") -> None:
     print("    " + _dim("until they close (hop limit reached or terminal played on them)."))
 
     _section("CARRY")
-    print("    " + _dim("Routes under 2 nodes at round end carry into the next"))
+    print("    " + _dim(f"Routes under {config.route_min_length} nodes at round end carry into the next"))
     print("    " + _dim("round — they don't score and aren't discarded."))
 
     _section("ROUND STRUCTURE")
@@ -181,7 +181,7 @@ def print_how_to_play(config: "GameConfig") -> None:
     _row("⊘", _GREEN,  "Filter",    "extends like a relay; if noise targets its input channel, the whole route is immune on that channel only")
 
     _section("SCORING")
-    print("    " + _dim("At the end of each round, all valid routes (≥ 2 nodes) score."))
+    print("    " + _dim(f"At the end of each round, all valid routes (≥ {config.route_min_length} nodes) score."))
     print("    " + _dim("PKT on each card is its packet value — the points you score if it's your exit node."))
     print("    " + _dim("Only the exit node's packet value counts — no sum."))
     print("    " + _dim("The exit node's owner collects the points."))
