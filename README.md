@@ -128,7 +128,7 @@ The player who scored the most points in a round goes first next round. On a tie
 ---
 
 ## Card Types
-
+ 
 ### ⇒ Relay Node
 
 Forwards a packet from one channel to another. The backbone of every route.
